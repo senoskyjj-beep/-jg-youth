@@ -1,0 +1,304 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-color: #0f172a;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
+
+#root {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 520px;
+    padding: 24px 18px 48px;
+}
+
+/* ── Buttons ── */
+.btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    margin: 7px 0;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 15px;
+    transition: opacity 0.2s, transform 0.1s;
+    font-family: inherit;
+}
+.btn:active { opacity: 0.8; transform: scale(0.98); }
+.btn-reg   { background-color: #22c55e; color: white; }
+.btn-check { background-color: #3b82f6; color: white; }
+.btn-admin { background-color: #334155; color: #cbd5e1; }
+.btn-wa    { background-color: #22c55e; color: white; font-size: 13px; padding: 8px 14px; width: auto; border-radius: 9px; }
+.btn-wa-parent { background-color: #f59e0b; color: white; font-size: 13px; padding: 8px 14px; width: auto; border-radius: 9px; }
+.btn-danger { background-color: #ef4444; color: white; }
+.btn-export { background-color: #22c55e; color: white; padding: 10px 18px; width: auto; font-size: 13px; border-radius: 10px; }
+
+/* ── Inputs ── */
+.input {
+    width: 100%;
+    padding: 13px 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 2px solid #334155;
+    background: #1e293b;
+    color: white;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.input:focus { border-color: #6c63ff; }
+.input option { background: #1e293b; }
+
+/* ── Member Cards ── */
+.card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #1e293b;
+    padding: 13px 15px;
+    border-radius: 13px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border-left: 5px solid #22c55e;
+    transition: background 0.15s;
+}
+.card:hover { background: #263449; }
+.card-absent { border-left-color: #f59e0b; }
+
+/* ── Stats row ── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.stat-box {
+    background: #1e293b;
+    padding: 14px;
+    border-radius: 13px;
+    text-align: center;
+    border-top: 4px solid #6c63ff;
+}
+.stat-num { font-size: 28px; font-weight: 900; }
+.stat-lbl { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+/* ── Absent card ── */
+.absent-card {
+    background: #1e293b;
+    border: 2px solid #f59e0b44;
+    border-radius: 13px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+.absent-info { flex: 1; min-width: 160px; }
+.absent-name { font-weight: 700; font-size: 15px; }
+.absent-meta { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+.wa-btns { display: flex; flex-direction: column; gap: 7px; }
+
+/* ── Tabs ── */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+.tab {
+    background: #1e293b;
+    border: 2px solid #334155;
+    color: #94a3b8;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+}
+.tab.active {
+    background: #6c63ff;
+    border-color: #6c63ff;
+    color: #fff;
+}
+
+/* ── Table ── */
+.tbl-wrap { overflow-x: auto; margin-top: 6px; }
+table { border-collapse: collapse; font-size: 12px; min-width: 500px; width: 100%; }
+th { background: #0f172a; color: #6ee7b7; padding: 9px 11px; text-align: left; font-weight: 700; white-space: nowrap; }
+td { padding: 9px 11px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+tr:nth-child(even) td { background: #182032; }
+.tick  { color: #22c55e; font-weight: 700; text-align: center; }
+.cross { color: #ef4444; font-weight: 700; text-align: center; }
+
+/* ── Modal ── */
+.modal-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200;
+}
+.modal-card {
+    background: #1e293b;
+    padding: 26px 22px;
+    border-radius: 20px;
+    width: 92%;
+    max-width: 420px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+.privacy-box {
+    padding: 13px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #334155;
+}
+
+/* ── PIN screen ── */
+.pin-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f172a;
+}
+.pin-box {
+    background: #1e293b;
+    border-radius: 24px;
+    padding: 36px 28px;
+    max-width: 320px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+.pin-dots { display: flex; justify-content: center; gap: 14px; margin: 18px 0; }
+.pin-dot {
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    background: #334155;
+    transition: background 0.15s;
+}
+.pin-dot.filled { background: #6ee7b7; }
+.numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 68px);
+    gap: 11px;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+.num-btn {
+    height: 62px;
+    border-radius: 13px;
+    border: none;
+    background: #334155;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s;
+}
+.num-btn:active { background: #475569; }
+.num-del { background: #3f1515; color: #f87171; }
+
+/* ── Page titles ── */
+.page-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── Home screen ── */
+.home-wrap { text-align: center; padding-top: 30px; }
+.home-cross { font-size: 52px; margin-bottom: 8px; }
+.home-title { font-size: 28px; font-weight: 700; }
+.home-church { color: #6ee7b7; font-size: 15px; font-weight: 600; margin: 4px 0 6px; }
+.home-sub { color: #475569; font-size: 13px; margin-bottom: 28px; }
+.home-footer { color: #334155; font-size: 12px; margin-top: 22px; }
+
+/* ── Success ── */
+.success-circle {
+    width: 68px; height: 68px;
+    border-radius: 50%;
+    background: #22c55e;
+    color: #fff;
+    font-size: 30px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+}
+
+/* ── Age badge ── */
+.age-tag { font-size: 13px; color: #6ee7b7; font-weight: 600; margin-top: -8px; margin-bottom: 10px; }
+
+/* ── Badge (absent count) ── */
+.badge {
+    background: #ef4444;
+    color: #fff;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    margin-left: auto;
+}
+
+/* ── QR box ── */
+.qr-box {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.qr-url { font-size: 11px; color: #64748b; word-break: break-all; max-width: 230px; text-align: center; }
+
+/* ── Report card ── */
+.report-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 13px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+}
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.report-label { font-weight: 700; font-size: 15px; }
+.report-pct { font-weight: 900; font-size: 19px; }
+
+/* ── Section title ── */
+.section-title { font-size: 15px; font-weight: 700; color: #94a3b8; margin: 20px 0 10px; }
+
+/* ── Misc ── */
+.empty-msg { color: #475569; font-style: italic; font-size: 14px; }
+.flex-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.green { color: #22c55e; font-weight: 700; }
+.amber { color: #f59e0b; font-weight: 700; }
+.red   { color: #ef4444; font-weight: 700; }
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60%  { transform: translateX(-8px); }
+    40%, 80%  { transform: translateX(8px); }
+}
+.shake { animation: shake 0.4s; }
