@@ -170,8 +170,10 @@ function toSMS(num,msg){
 
 async function syncGoogle(payload){
   if(!GOOGLE_URL||GOOGLE_URL.includes("PASTE"))return;
-  try{await fetch(GOOGLE_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});}
-  catch(e){console.log("Sync:",e);}
+  try{
+    var body=Object.assign({token:SYNC_TOKEN},payload);
+    await fetch(GOOGLE_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+  }catch(e){console.log("Sync:",e);}
 }
 
 // ── EXPORT HELPERS ──────────────────────────────────────────
@@ -2630,7 +2632,8 @@ function App(){
   async function loadFromGoogle(){
     setSyncing(true);setSyncError(false);
     try{
-      var res=await fetch(GOOGLE_URL,{method:"GET"});
+      var url=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN);
+      var res=await fetch(url,{method:"GET"});
       var json=await res.json();
       if(json.status==="ok"){
         var local=loadData();
