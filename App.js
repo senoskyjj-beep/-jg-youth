@@ -13,7 +13,7 @@ function msgAbsent(name) {
   return "Hi " + name + "! \u2764\ufe0f\n\nWe noticed you have not been with us recently at Jeremiah Generation and we truly miss you!\n\nYou are loved, valued, and we care about you deeply as brothers and sisters in Christ.\n\nPsalm 139:14 - You are fearfully and wonderfully made. Wonderful are God's works.\n\nIf there is anything we can do, or if you need someone to talk to, please do not hesitate to reach out. You are always welcome.\n\nWe hope to see you this Friday! God bless you! \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
 }
 function msgParentAbsent(youthName, parentName) {
-  return "Hi " + (parentName||"Parent") + ",\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nWe have noticed that " + youthName + " has not been with us for the past few sessions and we are genuinely concerned.\n\nWe care deeply about each young person and their wellbeing. If there is anything we can do to help, or any reason " + youthName + " has not been attending, please feel free to reach out. We are here to support your family.\n\nProverbs 22:6 - Train up a child in the way he should go; even when he is old he will not depart from it.\n\nWe would love to welcome " + youthName + " back. God bless your family! \ud83d\ude4f\nEmily Bilali - JG Youth Leader\nLiving Waters Fellowship";
+  return "Hi " + (parentName||"Parent") + ",\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nWe have noticed that " + youthName + " has not been with us for the past few sessions and we are genuinely concerned.\n\nWe care deeply about each young person and their wellbeing. If there is anything we can do to help, or any reason " + youthName + " has not been attending, please feel free to reach out. We are here to support your family.\n\nProverbs 22:6 - Train up a child in the way he should go; even when he is old he will not depart from it.\n\nWe would love to welcome " + youthName + " back. God bless your family! \ud83d\ude4f\nJG Youth Leadership\nLiving Waters Fellowship";
 }
 
 var SCHOOLS = [
@@ -1107,8 +1107,10 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
             <div className="absent-meta">Visits: {vc(m)} · Last: {lc(m)||"never"}</div>
           </div>
           <div className="wa-btns">
-            <a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{display:"block",background:"#6c63ff",color:"#fff",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center",marginBottom:4}}>💜 Encourage</a>
-            <a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{display:"block",background:"#be185d",color:"#fff",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center"}}>❤️ Parent</a>
+            <a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{display:"block",background:"#6c63ff",color:"#fff",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center",marginBottom:4}}>💜 Encourage WA</a>
+            {toSMS(m.phone)&&<a href={toSMS(m.phone,msgAbsent(m.name))} style={{display:"block",background:"#0891b2",color:"#fff",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center",marginBottom:4}}>📱 Encourage SMS</a>}
+            <a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{display:"block",background:"#be185d",color:"#fff",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center"}}>❤️ Parent WA</a>
+            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName))} style={{display:"block",background:"#7c2d12",color:"#fff",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center"}}>📱 Parent SMS</a>}
           </div>
         </div>);
       })}
@@ -1145,8 +1147,10 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
           <div style={{fontSize:12,color:"#94a3b8",marginTop:6}}>📞 {m.phone||"?"} · 🏫 {m.school||"?"} · Visits: {visits}</div>
           {m.visitReason&&<div style={{fontSize:12,color:"#e879f9",marginTop:6,background:"#1a0a1e",padding:"4px 10px",borderRadius:8,display:"inline-block"}}>💫 {m.visitReason}</div>}
           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:10}}>
-            <a href={toWA(m.whatsapp||m.phone,msgVisitor(m.name))} target="_blank" style={{background:"#a855f7",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>💜 Thank You</a>
-            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Chat</a>
+            <a href={toWA(m.whatsapp||m.phone,msgVisitor(m.name))} target="_blank" style={{background:"#a855f7",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>💜 Thank You WA</a>
+            {toSMS(m.phone)&&<a href={toSMS(m.phone,msgVisitor(m.name))} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Thank You SMS</a>}
+            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Chat WA</a>
+            {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0369a1",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Chat SMS</a>}
           </div>
         </div>);
       })}
@@ -1181,8 +1185,10 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
           <div style={{fontSize:12,color:"#94a3b8"}}>📞 {m.phone||"?"} · 👨‍👩‍👦 {m.parentPhone||"?"}</div>
         </div>
         <div style={{display:"flex",gap:6}}>
-          <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">Youth</a>
-          <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">Parent</a>
+          <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Youth</a>
+          {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 SMS</a>}
+          <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">💬 Parent</a>
+          {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Parent SMS</a>}
         </div>
       </div>);})}
     </div>
@@ -1367,7 +1373,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         var L=JSON.parse(localStorage.getItem("jg_leaders")||"[]").find(function(x){return x.id===lid;});
         if(L)lname=L.name+" "+L.surname;
       }
-      if(role==="senior")return(<div style={{background:"linear-gradient(90deg,#fbbf24,#f59e0b)",color:"#000",textAlign:"center",padding:"8px 12px",fontSize:12,fontWeight:700,marginBottom:10,borderRadius:8}}>⭐ Senior Leader: {lname} · You can message & view reports. Cannot delete (ask Emily).</div>);
+      if(role==="senior")return(<div style={{background:"linear-gradient(90deg,#fbbf24,#f59e0b)",color:"#000",textAlign:"center",padding:"8px 12px",fontSize:12,fontWeight:700,marginBottom:10,borderRadius:8}}>⭐ Senior Leader: {lname} · You can message & view reports. Cannot delete (ask Joshua or Priscilla).</div>);
       return null;
     })()}
     <div style={{textAlign:"center",marginBottom:14}}>
@@ -1442,10 +1448,14 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         {absentOn(lastDate).map(function(m){return(<div key={m.id} style={{background:"#1e293b",borderRadius:12,padding:"12px 14px",marginBottom:9,display:"flex",flexWrap:"wrap",alignItems:"center",gap:10}}>
           <div style={{flex:1}}><strong>{m.name} {m.surname}</strong><div style={{fontSize:13,color:"#94a3b8"}}>Phone: {m.phone||"?"} | Parent: {m.parentPhone||"?"}</div></div>
           <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">Youth</a>
-            <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">Parent</a>
-            <a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>Encourage</a>
-            <a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>Parent Concern</a>
+            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Youth</a>
+            {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 SMS</a>}
+            <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">💬 Parent</a>
+            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 P.SMS</a>}
+            <a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>💜 Encourage WA</a>
+            {toSMS(m.phone)&&<a href={toSMS(m.phone,msgAbsent(m.name))} style={{background:"#4f46e5",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Encourage SMS</a>}
+            <a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>❤️ Parent WA</a>
+            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Parent SMS</a>}
           </div>
         </div>);})}
       </div>}
@@ -1485,8 +1495,10 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
           {m.visitReason&&<div style={{fontSize:12,color:"#e879f9",marginBottom:10,background:"#1a0a1e",padding:"4px 10px",borderRadius:8,display:"inline-block"}}>💫 {m.visitReason}</div>}
           <div style={{marginBottom:8}}></div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <a href={toWA(m.whatsapp||m.phone,msgVisitor(m.name))} target="_blank" style={{background:"#a855f7",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>Thank You Message</a>
-            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">Chat</a>
+            <a href={toWA(m.whatsapp||m.phone,msgVisitor(m.name))} target="_blank" style={{background:"#a855f7",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>💜 Thank You WA</a>
+            {toSMS(m.phone)&&<a href={toSMS(m.phone,msgVisitor(m.name))} style={{background:"#7e22ce",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Thank You SMS</a>}
+            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Chat WA</a>
+            {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Chat SMS</a>}
           </div>
         </div>);
       })}
@@ -1503,8 +1515,10 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
           <div style={{fontSize:12,color:"#94a3b8"}}>Parent: {m.parentName||""} {m.parentSurname||""} | {m.parentPhone||"?"}</div>
         </div>
         <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-          <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">Youth</a>
-          <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">Parent</a>
+          <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Youth</a>
+          {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 SMS</a>}
+          <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">💬 Parent</a>
+          {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 P.SMS</a>}
         </div>
       </div>);})}
     </div>}
@@ -1534,10 +1548,14 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
             <span>Parent: {m.parentName||""} {m.parentSurname||""}</span><span>Parent Phone: {m.parentPhone||"?"}</span>
           </div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">Youth</a>
-            <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">Parent</a>
-            {wk>=3&&<a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>Encourage</a>}
-            {wk>=3&&<a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>Parent Concern</a>}
+            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Youth</a>
+            {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 SMS</a>}
+            <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">💬 Parent</a>
+            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 P.SMS</a>}
+            {wk>=3&&<a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>💜 Encourage WA</a>}
+            {wk>=3&&toSMS(m.phone)&&<a href={toSMS(m.phone,msgAbsent(m.name))} style={{background:"#4f46e5",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Encourage SMS</a>}
+            {wk>=3&&<a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>❤️ Parent WA</a>}
+            {wk>=3&&toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Parent SMS</a>}
           </div>
         </div>);
       })}
@@ -1625,10 +1643,14 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
                   <span style={{fontSize:12,color:"#475569",marginLeft:6}}>{vc_} total visits</span>
                 </div>
                 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                  <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa" style={{fontSize:11,padding:"4px 8px"}}>Youth</a>
-                  <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent" style={{fontSize:11,padding:"4px 8px"}}>Parent</a>
-                  {wk>=3&&<a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>Encourage</a>}
-                  {wk>=3&&<a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>Parent</a>}
+                  <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa" style={{fontSize:11,padding:"4px 8px"}}>💬</a>
+                  {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>📱</a>}
+                  <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent" style={{fontSize:11,padding:"4px 8px"}}>P💬</a>
+                  {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>P📱</a>}
+                  {wk>=3&&<a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>💜WA</a>}
+                  {wk>=3&&toSMS(m.phone)&&<a href={toSMS(m.phone,msgAbsent(m.name))} style={{background:"#4f46e5",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>📱Enc</a>}
+                  {wk>=3&&<a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>❤️WA</a>}
+                  {wk>=3&&toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>❤️📱</a>}
                 </div>
               </div>);
             })
@@ -2774,7 +2796,7 @@ function App(){
 
       {/* Footer */}
       <p style={{color:"#334155",fontSize:11,marginTop:20,textAlign:"center"}}>
-        Leader: Emily Bilali · Living Waters Fellowship
+        Joshua & Priscilla · Living Waters Fellowship
       </p>
     </div>
 
