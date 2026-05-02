@@ -1,8 +1,9 @@
 const { useState, useEffect } = React;
 
 var GOOGLE_URL = "https://script.google.com/macros/s/AKfycbyYg7kuH2DVSKsFL555ERLMrUgVIh8yYEPmJ8_MwjDu788AgNH2mbpK6T7jecjoAXxd/exec";
-var ADMIN_PIN  = "91977";
-var ADMIN_PIN2 = "91976";
+var ADMIN_PIN  = "91977";  // Joshua
+var ADMIN_PIN2 = "91976";  // Priscilla
+var ADMIN_PIN3 = "91975";  // Pastor Billy
 var WA_GROUP   = "https://chat.whatsapp.com/EfcayPaEFQd2tA7PukASuK?mode=gi_t";
 var SYNC_TOKEN = "JG2026LiveWaters";
 
@@ -490,8 +491,8 @@ function PinScreen({onSuccess}){
       // Check master PIN (91977) or any Senior Leader PIN (format: 2026X where X = leader number)
       var leaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");
       var matchedLeader=leaders.find(function(L){return L.pin===next;});
-      if(next===ADMIN_PIN||next===ADMIN_PIN2){
-        // Master full access (Joshua or Priscilla)
+      if(next===ADMIN_PIN||next===ADMIN_PIN2||next===ADMIN_PIN3){
+        // Master full access (Joshua, Priscilla or Pastor Billy)
         localStorage.setItem("jg_admin_role","master");
         setTimeout(function(){onSuccess();},200);
       } else if(matchedLeader && matchedLeader.role==="Senior"){
@@ -1430,7 +1431,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         var L=JSON.parse(localStorage.getItem("jg_leaders")||"[]").find(function(x){return x.id===lid;});
         if(L)lname=L.name+" "+L.surname;
       }
-      if(role==="senior")return(<div style={{background:"linear-gradient(90deg,#fbbf24,#f59e0b)",color:"#000",textAlign:"center",padding:"8px 12px",fontSize:12,fontWeight:700,marginBottom:10,borderRadius:8}}>⭐ Senior Leader: {lname} · You can message & view reports. Cannot delete (ask Joshua or Priscilla).</div>);
+      if(role==="senior")return(<div style={{background:"linear-gradient(90deg,#fbbf24,#f59e0b)",color:"#000",textAlign:"center",padding:"8px 12px",fontSize:12,fontWeight:700,marginBottom:10,borderRadius:8}}>⭐ Senior Leader: {lname} · You can message & view reports. Cannot delete (ask Joshua, Priscilla or Pastor Billy).</div>);
       return null;
     })()}
     <div style={{textAlign:"center",marginBottom:14}}>
@@ -2194,7 +2195,7 @@ function LeadersTab(){
       <p style={{color:"#fbbf24",fontSize:12,fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>⭐ SENIOR LEADERS (admin access)</p>
       {seniors.map(function(L){
         var loginCount=getLoginLog(L.id).length;
-        var pinMsg="Hi "+L.name+"! \u270�\ufe0f\n\nYou have been registered as a *Senior Leader* at Jeremiah Generation - Living Waters Fellowship.\n\n*Your PIN: "+L.pin+"*\n\nTo access the admin portal:\n1. Open the portal\n2. Triple-tap the banner photo (3 quick taps)\n3. Enter your PIN: *"+L.pin+"*\n\nYou can view members, send messages and view reports. Keep your PIN private.\n\nGod bless!\nJoshua & Priscilla\nJG Youth Leadership";
+        var pinMsg="Hi "+L.name+"! \u271d\ufe0f\n\nYou have been registered as a *Senior Leader* at Jeremiah Generation Youth - Living Waters Fellowship.\n\n*Your PIN: "+L.pin+"*\n\n*How to access the admin portal:*\n1. Open the portal: https://senoskyjj-beep.github.io/-jg-youth/\n2. Scroll down and tap *Leadership Admin* button\n3. Enter your PIN: *"+L.pin+"*\n\n*What you can do as Senior Leader:*\n\u2705 View all registered members\n\u2705 View who checked in today\n\u2705 View all visitors\n\u2705 Send WhatsApp & SMS to youth and parents\n\u2705 View absent members and send messages\n\u2705 View attendance reports\n\u2705 Mark members added to WA group\n\n*What you cannot do:*\n\u274c Delete members (only Main Leaders can)\n\u274c Reset data\n\u274c Manage other leaders\n\nPlease keep your PIN private and do not share it.\n\nGod bless! \ud83d\ude4f\nJoshua, Priscilla & Pastor Billy\nJG Youth Leadership - Living Waters Fellowship";
         return(<div key={L.id} style={{background:"linear-gradient(135deg,#1e293b,#1e1b4b)",border:"2px solid #fbbf2444",borderRadius:13,padding:"14px 16px",marginBottom:10}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
             <div style={{flex:1,minWidth:160}}>
@@ -2218,7 +2219,7 @@ function LeadersTab(){
     {juniors.length>0&&(<div>
       <p style={{color:"#86efac",fontSize:12,fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>🌱 JUNIOR LEADERS (home tiles only)</p>
       {juniors.map(function(L){
-        var pinMsg="Hi "+L.name+"! ✝️\n\nYou have been registered as a *Junior Leader* at Jeremiah Generation - Living Waters Fellowship.\n\n*Your PIN: "+L.pin+"*\n\nHow to use your PIN:\n1. Open the portal: https://senoskyjj-beep.github.io/-jg-youth/\n2. Tap any of the 3 number tiles on the home screen (Registered / Here Today / Visitors)\n3. Enter your PIN: *"+L.pin+"*\n4. You can now see who is registered, who checked in today, and who is visiting\n\nKeep your PIN private!\n\nGod bless!\nJoshua & Priscilla\nJG Youth Leadership";
+        var pinMsg="Hi "+L.name+"! \u271d\ufe0f\n\nYou have been registered as a *Junior Leader* at Jeremiah Generation Youth - Living Waters Fellowship.\n\n*Your PIN: "+L.pin+"*\n\n*How to use your PIN:*\n1. Open the portal: https://senoskyjj-beep.github.io/-jg-youth/\n2. On the home screen tap any of the 3 number tiles:\n   - *Registered* = see all registered members\n   - *Here Today* = see who checked in today\n   - *Visitors Today* = see today's visitors\n3. Enter your PIN: *"+L.pin+"*\n\nThis allows you to see member names and help with check-in if needed.\n\nPlease keep your PIN private and do not share it.\n\nGod bless! \ud83d\ude4f\nJoshua, Priscilla & Pastor Billy\nJG Youth Leadership - Living Waters Fellowship";
         return(<div key={L.id} style={{background:"#1e293b",border:"2px solid #22c55e22",borderRadius:13,padding:"12px 14px",marginBottom:10}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
             <div style={{flex:1,minWidth:160}}>
@@ -2903,7 +2904,7 @@ function App(){
 
       {/* Footer */}
       <p style={{color:"#334155",fontSize:11,marginTop:20,textAlign:"center"}}>
-        Joshua & Priscilla · Living Waters Fellowship
+        Joshua, Priscilla & Pastor Billy · Living Waters Fellowship
       </p>
     </div>
 
