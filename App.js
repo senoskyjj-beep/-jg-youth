@@ -9,6 +9,9 @@ var SYNC_TOKEN = "JG2026LiveWaters";
 function msgVisitor(name) {
   return "Hi " + name + "! \u2764\ufe0f\n\nThank you so much for visiting Jeremiah Generation - Living Waters Fellowship. We truly loved having you and hope you felt welcome!\n\nYou are special. God has a great plan for your life.\n\nJeremiah 29:11 - For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.\n\nWe hope to see you again this Friday! God bless you! \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
 }
+function msgParentVisitor(youthName, parentName) {
+  return "Hi " + (parentName||"Parent") + " \u2764\ufe0f\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nWe just wanted to say THANK YOU for allowing " + youthName + " to visit us today. It was such a blessing!\n\nProverbs 22:6 - Train up a child in the way he should go; even when he is old he will not depart from it.\n\nWe would love to see " + youthName + " again! God bless your family! \ud83d\ude4f\nJG Youth Leadership\nLiving Waters Fellowship";
+}
 function msgAbsent(name) {
   return "Hi " + name + "! \u2764\ufe0f\n\nWe noticed you have not been with us recently at Jeremiah Generation and we truly miss you!\n\nYou are loved, valued, and we care about you deeply as brothers and sisters in Christ.\n\nPsalm 139:14 - You are fearfully and wonderfully made. Wonderful are God's works.\n\nIf there is anything we can do, or if you need someone to talk to, please do not hesitate to reach out. You are always welcome.\n\nWe hope to see you this Friday! God bless you! \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
 }
@@ -1140,6 +1143,8 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
             {toSMS(m.phone)&&<a href={toSMS(m.phone,msgVisitor(m.name))} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Thank You SMS</a>}
             <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Chat WA</a>
             {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0369a1",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Chat SMS</a>}
+            {toWA(m.parentPhone)&&<a href={toWA(m.parentPhone,msgParentVisitor(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>❤️ Thank Parent WA</a>}
+            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentVisitor(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Thank Parent SMS</a>}
           </div>
         </div>);
       })}
@@ -1488,6 +1493,8 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
             {toSMS(m.phone)&&<a href={toSMS(m.phone,msgVisitor(m.name))} style={{background:"#7e22ce",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Thank You SMS</a>}
             <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Chat WA</a>
             {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Chat SMS</a>}
+            {toWA(m.parentPhone)&&<a href={toWA(m.parentPhone,msgParentVisitor(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>❤️ Thank Parent WA</a>}
+            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentVisitor(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Thank Parent SMS</a>}
           </div>
         </div>);
       })}
