@@ -249,12 +249,110 @@ function toSMS(num,msg){
   return "sms:"+i+sep+"body="+encodeURIComponent(msg);
 }
 
+// ── PENDING SYNC QUEUE ──────────────────────────────────────
+// Any syncGoogle() that fails (network down, Apps Script error,
+// 5G dropout, timeout) is saved to localStorage and retried
+// automatically every 30 seconds. The queue is also visible in
+// Admin → Pending Sync so leaders can see what hasn't gone through.
+var PENDING_KEY = "jg_pending_sync";
+
+function loadPendingQueue(){
+  try{ return JSON.parse(localStorage.getItem(PENDING_KEY)||"[]"); }
+  catch(e){ return []; }
+}
+function savePendingQueue(q){
+  try{ localStorage.setItem(PENDING_KEY,JSON.stringify(q)); }catch(e){}
+}
+function addToPendingQueue(payload,errMsg){
+  var q=loadPendingQueue();
+  q.push({
+    id:"p_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),
+    payload:payload,
+    queuedAt:new Date().toISOString(),
+    attempts:1,
+    lastError:errMsg||"network error"
+  });
+  // Cap queue size to avoid runaway memory if Sheets is down for days
+  if(q.length>500)q=q.slice(-500);
+  savePendingQueue(q);
+  // Notify any open Pending Sync screen
+  try{ window.dispatchEvent(new Event("jg_pending_changed")); }catch(e){}
+}
+function removeFromPendingQueue(id){
+  var q=loadPendingQueue().filter(function(x){return x.id!==id;});
+  savePendingQueue(q);
+  try{ window.dispatchEvent(new Event("jg_pending_changed")); }catch(e){}
+}
+
+// One-shot POST. Returns true on success, false on failure.
+// IMPORTANT: with mode "no-cors" the browser cannot read the response,
+// so we treat a completed fetch (no thrown error) as success. A thrown
+// error (offline, DNS fail, CORS preflight refused) means failure.
+async function postToGoogle(payload){
+  if(!GOOGLE_URL||GOOGLE_URL.includes("PASTE"))return false;
+  var body=Object.assign({token:SYNC_TOKEN},payload);
+  // 15-second timeout so the iPhone doesn't hang forever on a stalled connection
+  var ctrl=("AbortController" in window)?new AbortController():null;
+  var timer=ctrl?setTimeout(function(){ctrl.abort();},15000):null;
+  try{
+    await fetch(GOOGLE_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(body),
+      signal:ctrl?ctrl.signal:undefined
+    });
+    if(timer)clearTimeout(timer);
+    return true;
+  }catch(e){
+    if(timer)clearTimeout(timer);
+    console.log("Sync fail:",e&&e.message||e);
+    return false;
+  }
+}
+
+// Public sync. Tries once; on failure, queues for retry.
 async function syncGoogle(payload){
   if(!GOOGLE_URL||GOOGLE_URL.includes("PASTE"))return;
+  // If we already have stuff queued, attempt to flush first so order is preserved
+  var queued=loadPendingQueue();
+  if(queued.length>0){
+    await flushPendingQueue();
+  }
+  var ok=await postToGoogle(payload);
+  if(!ok)addToPendingQueue(payload,"initial send failed");
+}
+
+// Try to send everything in the queue. Stops on first failure
+// to preserve order and avoid hammering a down endpoint.
+var _flushing=false;
+async function flushPendingQueue(){
+  if(_flushing)return {sent:0,remaining:loadPendingQueue().length};
+  _flushing=true;
+  var sent=0;
   try{
-    var body=Object.assign({token:SYNC_TOKEN},payload);
-    await fetch(GOOGLE_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
-  }catch(e){console.log("Sync:",e);}
+    var q=loadPendingQueue();
+    for(var i=0;i<q.length;i++){
+      var item=q[i];
+      var ok=await postToGoogle(item.payload);
+      if(ok){
+        removeFromPendingQueue(item.id);
+        sent++;
+      }else{
+        // Bump attempt counter and stop; next tick will retry
+        var cur=loadPendingQueue();
+        var idx=cur.findIndex(function(x){return x.id===item.id;});
+        if(idx>=0){
+          cur[idx].attempts=(cur[idx].attempts||0)+1;
+          cur[idx].lastError="retry failed";
+          savePendingQueue(cur);
+        }
+        break;
+      }
+    }
+  }finally{
+    _flushing=false;
+  }
+  return {sent:sent,remaining:loadPendingQueue().length};
 }
 
 // ── EXPORT HELPERS ──────────────────────────────────────────
@@ -1096,6 +1194,7 @@ function VibeDashboard({data,setData,onExit,onRefresh,syncing,switchStyle}){
           {label:"Export",emoji:"📥",view:"export",grad:gradients.export},
           {label:"Spreadsheet",emoji:"📋",view:"sheet",grad:"linear-gradient(135deg,#475569,#64748b)"},
           {label:"Import",emoji:"📤",view:"import",grad:gradients.import},
+          {label:"Pending Sync",emoji:"⏳",view:"pending",grad:"linear-gradient(135deg,#f59e0b,#ef4444)"},
           {label:"QR Code",emoji:"📱",view:"qr",grad:gradients.qr},
         ].map(function(t){return(
           <button key={t.label} onClick={function(){setView(t.view);}} style={{
@@ -1326,6 +1425,7 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
 
   if(t==="export")return <ExportTab members={members} checkins={checkins} feedback={feedback}/>;
   if(t==="import")return <ImportTab data={data} setData={setData}/>;
+  if(t==="pending")return <PendingSyncTab/>;
   if(t==="qr")return <QRTab/>;
   return <p>Unknown view</p>;
 }
@@ -1407,6 +1507,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
     {id:"export",label:"Export"},
     {id:"import",label:"Import"},
     {id:"reset",label:"⚙️ Reset"},
+    {id:"pending",label:"⏳ Pending Sync",badge:loadPendingQueue().length},
     {id:"qr",label:"QR Code"},
   ];
 
@@ -1801,6 +1902,8 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
     {tab==="reset"&&<ResetTab data={data} setData={setData}/>}
 
     {tab==="import"&&<ImportTab data={data} setData={setData}/>}
+
+    {tab==="pending"&&<PendingSyncTab/>}
 
     {tab==="qr"&&<QRTab/>}
 
@@ -2473,6 +2576,100 @@ function ResetTab({data,setData}){
   </div>);
 }
 
+// PENDING SYNC TAB - shows what failed to reach Google Sheets
+function PendingSyncTab(){
+  var [items,setItems]=useState(loadPendingQueue());
+  var [busy,setBusy]=useState(false);
+  var [msg,setMsg]=useState("");
+
+  useEffect(function(){
+    function refresh(){setItems(loadPendingQueue());}
+    var t=setInterval(refresh,2000);
+    window.addEventListener("jg_pending_changed",refresh);
+    return function(){
+      clearInterval(t);
+      window.removeEventListener("jg_pending_changed",refresh);
+    };
+  },[]);
+
+  async function retryNow(){
+    setBusy(true);setMsg("Sending...");
+    var r=await flushPendingQueue();
+    setItems(loadPendingQueue());
+    setMsg("Sent "+r.sent+". "+r.remaining+" still pending.");
+    setBusy(false);
+  }
+  function clearOne(id){
+    if(!window.confirm("Remove this item from the queue without sending? This means it will NOT be saved to Google Sheets."))return;
+    removeFromPendingQueue(id);
+    setItems(loadPendingQueue());
+  }
+  function clearAll(){
+    if(!window.confirm("Clear ALL pending items? They will NOT be sent to Google Sheets. Use this only if you've already added them manually."))return;
+    savePendingQueue([]);
+    setItems([]);
+    try{window.dispatchEvent(new Event("jg_pending_changed"));}catch(e){}
+  }
+
+  function describe(item){
+    var p=item.payload||{};
+    if(p.type==="REGISTRATION")return "📝 Registration: "+(p.name||"")+" "+(p.surname||"");
+    if(p.type==="CHECKIN")return "✅ Check-in: "+(p.name||"")+" "+(p.surname||"")+" ("+(p.date||"")+")";
+    if(p.type==="DELETE_MEMBER")return "🗑️ Delete member id "+(p.id||"");
+    if(p.type==="MESSAGE_LOG")return "💬 Message log: "+(p.memberId||"")+" via "+(p.channel||"");
+    if(p.type==="FEEDBACK")return "💭 Feedback ("+(p.date||"")+")";
+    return p.type||"Unknown";
+  }
+
+  return(<div>
+    <p className="page-title">⏳ Pending Sync ({items.length})</p>
+    <p style={{color:"#94a3b8",fontSize:13,marginTop:0}}>
+      These actions were performed on this device but have not yet been saved to Google Sheets — usually because the connection dropped. They retry automatically every 30 seconds and whenever the device comes back online.
+    </p>
+
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+      <button onClick={retryNow} disabled={busy||items.length===0}
+        style={{background:items.length===0?"#1e293b":"#22c55e",color:items.length===0?"#475569":"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontWeight:700,cursor:items.length===0||busy?"not-allowed":"pointer",fontFamily:"inherit"}}>
+        {busy?"Sending...":"🔄 Retry Now"}
+      </button>
+      {items.length>0&&<button onClick={clearAll}
+        style={{background:"transparent",color:"#ef4444",border:"1px solid #ef4444",borderRadius:8,padding:"8px 14px",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+        🗑️ Discard All
+      </button>}
+    </div>
+
+    {msg&&<p style={{color:"#6ee7b7",fontSize:13,marginTop:0}}>{msg}</p>}
+
+    {items.length===0?(
+      <div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:"14px 16px"}}>
+        <p className="green" style={{margin:0}}>✓ Nothing pending — everything on this device has been saved to Google Sheets.</p>
+      </div>
+    ):(
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {items.map(function(item){
+          var when=new Date(item.queuedAt);
+          var whenStr=when.toLocaleString();
+          return(<div key={item.id} style={{background:"#1e293b",border:"1px solid #334155",borderRadius:10,padding:"10px 12px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>{describe(item)}</div>
+                <div style={{fontSize:11,color:"#64748b",marginTop:3}}>
+                  Queued {whenStr} · {item.attempts||1} attempt{(item.attempts||1)>1?"s":""}
+                  {item.lastError?" · "+item.lastError:""}
+                </div>
+              </div>
+              <button onClick={function(){clearOne(item.id);}}
+                style={{background:"transparent",color:"#ef4444",border:"1px solid #ef4444",borderRadius:6,padding:"4px 8px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
+                Discard
+              </button>
+            </div>
+          </div>);
+        })}
+      </div>
+    )}
+  </div>);
+}
+
 // IMPORT TAB
 function ImportTab({data,setData}){
   var [preview,setPreview]=useState([]);
@@ -2770,18 +2967,41 @@ function App(){
   var [syncing,setSyncing]=useState(false);
   var [lastSync,setLastSync]=useState(null);
   var [syncError,setSyncError]=useState(false);
+  var [pendingCount,setPendingCount]=useState(loadPendingQueue().length);
+
+  // Keep the home-screen pending badge in sync with the queue
+  useEffect(function(){
+    function refresh(){setPendingCount(loadPendingQueue().length);}
+    var t=setInterval(refresh,3000);
+    window.addEventListener("jg_pending_changed",refresh);
+    return function(){clearInterval(t);window.removeEventListener("jg_pending_changed",refresh);};
+  },[]);
 
   useEffect(function(){
     // Check Friday 1AM reset on every load
     checkFridayReset();
     loadFromGoogle();
+    // Try to flush any leftover pending items from a previous session right away
+    flushPendingQueue();
     // Auto-refresh every 5 minutes so all devices stay in sync.
     // Pauses during registration and check-in to protect in-progress work.
     var interval=setInterval(function(){
       if(screen==="register"||screen==="checkin")return;
       loadFromGoogle();
     },300000); // 5 minutes = 300000ms
-    return function(){clearInterval(interval);};
+    // Pending-sync retry loop: every 30s, attempt to flush queued sync items.
+    // This is what catches the "iPhone registered 49 people but Sheets never got them" case.
+    var retryInterval=setInterval(function(){
+      if(loadPendingQueue().length>0)flushPendingQueue();
+    },30000);
+    // Also flush whenever the device regains connectivity
+    var onOnline=function(){ flushPendingQueue(); };
+    window.addEventListener("online",onOnline);
+    return function(){
+      clearInterval(interval);
+      clearInterval(retryInterval);
+      window.removeEventListener("online",onOnline);
+    };
   },[]);
 
   async function loadFromGoogle(){
@@ -2883,6 +3103,10 @@ function App(){
         ⚠️ Using local data. <span style={{textDecoration:"underline",cursor:"pointer"}} onClick={loadFromGoogle}>Retry</span>
       </p>}
       {lastSync&&!syncing&&!syncError&&<p style={{color:"#334155",fontSize:11,margin:"0 0 12px",textAlign:"center"}}>✓ Synced {lastSync}</p>}
+      {pendingCount>0&&<div onClick={function(){setScreen("pin");}} style={{background:"#3a1f00",border:"1px solid #f59e0b",borderRadius:10,padding:"8px 12px",margin:"0 0 12px",textAlign:"center",cursor:"pointer",maxWidth:440,width:"100%"}}>
+        <span style={{color:"#fbbf24",fontSize:12,fontWeight:600}}>⏳ {pendingCount} item{pendingCount>1?"s":""} not yet saved to Google Sheets</span>
+        <div style={{color:"#94a3b8",fontSize:10,marginTop:2}}>Retrying automatically · tap to view (admin)</div>
+      </div>}
 
       {/* Stats strip - tappable with PIN */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:24,width:"100%",maxWidth:440}}>
