@@ -136,7 +136,7 @@ function isThisWeek(dateStr){
   var d=new Date(dateStr+"T00:00:00");
   return d>=lastFriday();
 }
-function calcAge(dob){ if(!dob)return null; var b=new Date(dob),n=new Date(),a=n.getFullYear()-b.getFullYear(),mo=n.getMonth()-b.getMonth(); if(mo<0||(mo===0&&n.getDate()<b.getDate()))a--; return a; }
+function calcAge(dob){ if(!dob)return null; try{ var b=new Date(dob.split("T")[0]+"T12:00:00"),n=new Date(); if(isNaN(b.getTime()))return null; var a=n.getFullYear()-b.getFullYear(),mo=n.getMonth()-b.getMonth(); if(mo<0||(mo===0&&n.getDate()<b.getDate()))a--; return(a>=5&&a<=30)?a:null; }catch(e){return null;} }
 function toWA(num,msg){
   if(!num||String(num).trim()===""||String(num).trim()==="?"||String(num).trim()==="N/A")return null;
   var d=String(num).replace(/\D/g,"");
@@ -149,9 +149,32 @@ function waLink(num,msg,label,style){
   if(!href)return null;
   return <a href={href} target="_blank" style={style}>{label}</a>;
 }
-function weeksAgo(dateStr){ if(!dateStr)return 999; return Math.floor((new Date()-new Date(dateStr))/(7*24*60*60*1000)); }
+function weeksAgo(dateStr){ 
+  if(!dateStr)return 0; 
+  try{
+    var d=new Date(dateStr);
+    if(isNaN(d.getTime()))return 0;
+    var w=Math.floor((new Date()-d)/(7*24*60*60*1000));
+    return w<0?0:w>52?52:w; // cap at 52 weeks (1 year)
+  }catch(e){return 0;}
+}
 function sortAlpha(arr){ return (arr||[]).slice().sort(function(a,b){ var na=(a.name+" "+a.surname).toLowerCase(),nb=(b.name+" "+b.surname).toLowerCase(); return na<nb?-1:na>nb?1:0; }); }
 function statusBadge(s){ if(s==="Member")return{bg:"#0d2818",col:"#86efac",bd:"#22c55e"}; if(s==="Returning Visitor")return{bg:"#1c1504",col:"#fcd34d",bd:"#f59e0b"}; return{bg:"#1a0a1e",col:"#e879f9",bd:"#a855f7"}; }
+// Returns true if member profile is missing any required info
+function isProfileIncomplete(m){
+  if(!m)return true;
+  // Missing any of these = incomplete
+  if(!m.name||!m.surname)return true;
+  if(!m.phone||m.phone==="?"||m.phone==="Member"||m.phone==="Visitor")return true;
+  if(!m.school||m.school==="?")return true;
+  if(!m.birthday||m.birthday==="?")return true;
+  if(!m.parentName||m.parentName==="?")return true;
+  if(!m.parentPhone||m.parentPhone==="?"||m.parentPhone==="Member")return true;
+  // No photo = incomplete
+  if(!m.photo&&!localStorage.getItem("ph_"+m.id))return true;
+  return false;
+}
+
 function computeStatus(m,checkins){ if(m.originalStatus==="Member")return "Member"; var v=(checkins||[]).filter(function(c){return c.memberId===m.id;}).length; return v>=3?"Member":v>=2?"Returning Visitor":"Visitor"; }
 function visitCount(m,checkins){ return (checkins||[]).filter(function(c){return c.memberId===m.id;}).length; }
 function lastCheckin(m,checkins){ var mc=(checkins||[]).filter(function(c){return c.memberId===m.id;}).map(function(c){return c.date;}).sort(); return mc[mc.length-1]||null; }
@@ -818,7 +841,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile}){
   var sorted=sortAlpha(members);
   var results=search.length>=1?sorted.filter(function(m){return (m.name+" "+m.surname).toLowerCase().includes(search.toLowerCase());}):sorted;
 
-  function tap(m){if(m.incomplete){setSelected(m);setStep("incomplete");return;}setSelected(m);setStep("ask");setIsAnon(false);setCat("");setMessage("");}
+  function tap(m){if(isProfileIncomplete(m)){setSelected(m);setStep("incomplete");return;}setSelected(m);setStep("ask");setIsAnon(false);setCat("");setMessage("");}
 
   function doCheckin(fb){
     try{
@@ -1131,7 +1154,7 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
   var lastDate=allDates[allDates.length-1]||todayDate;
   function vc(m){return visitCount(m,checkins);}
   function lc(m){return lastCheckin(m,checkins);}
-  function wa(m){return weeksAgo(lc(m));}
+  function wa(m){var last=lc(m); if(last)return weeksAgo(last); var reg=m.registeredOn||todayStr(); return weeksAgo(reg);}
   function absentOn(d){var ids=checkins.filter(function(c){return c.date===d;}).map(function(c){return c.memberId;});return members.filter(function(m){return !ids.includes(m.id);});}
   function updateMember(id,changes){var u=Object.assign({},data,{members:members.map(function(m){return m.id===id?Object.assign({},m,changes):m;})});setData(u);saveData(u);}
   function deleteMember(id){
@@ -1339,7 +1362,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
   function absentOn(d){var ids=checkins.filter(function(c){return c.date===d;}).map(function(c){return c.memberId;});return members.filter(function(m){return !ids.includes(m.id);});}
   function vc(m){return visitCount(m,checkins);}
   function lc(m){return lastCheckin(m,checkins);}
-  function wa(m){return weeksAgo(lc(m));}
+  function wa(m){var last=lc(m); if(last)return weeksAgo(last); var reg=m.registeredOn||todayStr(); return weeksAgo(reg);}
 
   function updateMember(id,changes){var u=Object.assign({},data,{members:members.map(function(m){return m.id===id?Object.assign({},m,changes):m;})});setData(u);saveData(u);}
   function deleteMember(id){
@@ -1371,7 +1394,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
     {id:"leader_attendance",label:"📋 Leader Log"},
     {id:"events",label:"📅 Events"},
     {id:"absent",label:"Absent",badge:absentToday.length},
-    {id:"sent",label:"✅ Sent",badge:(function(){return absentToday.filter(function(m){return fullyMessagedToday(m.id);}).length;})()},
+    {id:"sent",label:"✅ Sent",badge:(function(){return absentToday.filter(function(m){return wasMessagedToday(m.id);}).length;})()},
     {id:"suggestions",label:"Suggestions",badge:unreadFb},
     {id:"visitors",label:"Visitors",badge:allVisitors.filter(function(m){return wa(m)<=1;}).length},
     {id:"contacts",label:"Contacts"},
@@ -1479,9 +1502,9 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
 
     {tab==="absent"&&<div>
       <p className="page-title">Absent Today</p>
-      <p style={{color:"#94a3b8",fontSize:12,marginBottom:12}}>Message auto-selected by weeks absent. ✅ = sent. After both youth + parent messaged → moves to Sent tab.</p>
+      <p style={{color:"#94a3b8",fontSize:12,marginBottom:12}}>Message auto-selected by weeks absent. ✅ = sent. After ANY message sent → person moves to Sent tab.</p>
       {absentToday.length===0&&<div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:16}}><p className="green" style={{margin:0}}>🎉 No absentees today!</p></div>}
-      {absentToday.filter(function(m){return !fullyMessagedToday(m.id);}).map(function(m){
+      {absentToday.filter(function(m){return !wasMessagedToday(m.id);}).map(function(m){
         var wk=wa(m);
         var youthMsg=msgAbsentByWeek(m.name,wk);
         var parentMsg=msgParentAbsentByWeek(m.name,m.parentName,wk);
@@ -1506,18 +1529,18 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
           </div>
         </div>);
       })}
-      {absentToday.filter(function(m){return fullyMessagedToday(m.id);}).length>0&&
+      {absentToday.filter(function(m){return wasMessagedToday(m.id);}).length>0&&
         <div style={{marginTop:12,background:"#0d2818",borderRadius:12,padding:"10px 14px"}}>
-          <p style={{color:"#86efac",fontWeight:700,fontSize:13,margin:0}}>✅ {absentToday.filter(function(m){return fullyMessagedToday(m.id);}).length} fully messaged — see Sent tab</p>
+          <p style={{color:"#86efac",fontWeight:700,fontSize:13,margin:0}}>✅ {absentToday.filter(function(m){return wasMessagedToday(m.id);}).length} fully messaged — see Sent tab</p>
         </div>}
     </div>}
 
     {tab==="sent"&&<div>
       <p className="page-title">✅ Sent Today</p>
-      <p style={{color:"#94a3b8",fontSize:12,marginBottom:12}}>Absent members where both youth AND parent were messaged today. Resets Friday 1AM.</p>
-      {absentToday.filter(function(m){return fullyMessagedToday(m.id);}).length===0&&
+      <p style={{color:"#94a3b8",fontSize:12,marginBottom:12}}>Absent members where at least one message was sent today (WA or SMS to youth or parent). Resets Friday 1AM.</p>
+      {absentToday.filter(function(m){return wasMessagedToday(m.id);}).length===0&&
         <p className="empty-msg">No one fully messaged yet today.</p>}
-      {absentToday.filter(function(m){return fullyMessagedToday(m.id);}).map(function(m){
+      {absentToday.filter(function(m){return wasMessagedToday(m.id);}).map(function(m){
         var wk=wa(m);
         var msgs=getMessagesSent(m.id);
         var sentTimes=msgs.map(function(x){return x.channel+" at "+x.time;}).join(" · ");
