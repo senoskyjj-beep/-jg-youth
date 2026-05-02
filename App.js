@@ -2625,7 +2625,10 @@ function App(){
   }
   function closeHomeTilePopup(){setHomeTilePopup(null);setHomeTilePinUnlocked(false);setHomeTilePin("");setHomeTilePinError(false);}
   var [data,setData]=useState(function(){return withPhotos(loadData());});
-  var [screen,setScreen]=useState("home");
+  // If admin role is already saved (e.g. page was refreshed), go straight back to admin
+  var [screen,setScreen]=useState(function(){
+    return localStorage.getItem("jg_admin_role") ? "admin" : "home";
+  });
   var [prefill,setPrefill]=useState(null);
   var [syncing,setSyncing]=useState(false);
   var [lastSync,setLastSync]=useState(null);
