@@ -780,19 +780,8 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile}){
       <p style={{margin:"0 0 8px",fontSize:14,color:"#fcd34d"}}>We have your name from our old register but need a few more details.</p>
       <p style={{margin:0,fontSize:13,color:"#94a3b8"}}>It only takes 2 minutes to complete!</p>
     </div>
-    <button className="btn btn-reg" style={{marginBottom:8}} onClick={function(){onCompleteProfile(selected);}}>Complete My Registration</button>
-    <button className="btn btn-admin" onClick={function(){
-      var skipKey="skip_"+selected.id;
-      var skipCount=parseInt(localStorage.getItem(skipKey)||"0");
-      if(skipCount>=1){
-        alert("You have already skipped once. Please complete your registration — it only takes 2 minutes!");
-        return;
-      }
-      localStorage.setItem(skipKey,"1");
-      setSelected(Object.assign({},selected,{incomplete:false}));
-      setStep("ask");setIsAnon(false);setCat("");setMessage("");
-    }}>Skip for now (allowed once only)</button>
-    <p style={{fontSize:11,color:"#475569",textAlign:"center",marginTop:4}}>⚠️ You can only skip this once. You must complete your profile next time.</p>
+    <button className="btn btn-reg" style={{marginBottom:8}} onClick={function(){onCompleteProfile(selected);}}>✅ Complete My Registration</button>
+    <p style={{fontSize:12,color:"#f59e0b",textAlign:"center",marginTop:8,fontWeight:600}}>⚠️ You must complete your registration before checking in.</p>
     <button className="btn btn-admin" style={{marginTop:6,color:"#475569"}} onClick={function(){setSelected(null);setStep("search");}}>Back</button>
   </div>);
 
