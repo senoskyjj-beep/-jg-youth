@@ -12,11 +12,36 @@ function msgVisitor(name) {
 function msgParentVisitor(youthName, parentName) {
   return "Hi " + (parentName||"Parent") + " \u2764\ufe0f\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nWe just wanted to say THANK YOU for allowing " + youthName + " to visit us today. It was such a blessing!\n\nProverbs 22:6 - Train up a child in the way he should go; even when he is old he will not depart from it.\n\nWe would love to see " + youthName + " again! God bless your family! \ud83d\ude4f\nJG Youth Leadership\nLiving Waters Fellowship";
 }
-function msgAbsent(name) {
-  return "Hi " + name + "! \u2764\ufe0f\n\nWe noticed you have not been with us recently at Jeremiah Generation and we truly miss you!\n\nYou are loved, valued, and we care about you deeply as brothers and sisters in Christ.\n\nPsalm 139:14 - You are fearfully and wonderfully made. Wonderful are God's works.\n\nIf there is anything we can do, or if you need someone to talk to, please do not hesitate to reach out. You are always welcome.\n\nWe hope to see you this Friday! God bless you! \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
+// ── ABSENCE MESSAGES (6 levels based on weeks absent) ──
+function msgAbsentByWeek(name, weeks) {
+  var w = weeks||1;
+  if(w===1) return "Hi "+name+"! \ud83d\udc4b\n\nWe noticed you weren't with us at Jeremiah Generation this Friday and we just wanted to say - we missed you! \ud83d\udc9b\n\nJeremiah 29:11 - \"For I know the plans I have for you,\" declares the Lord, \"plans to prosper you and not to harm you, plans to give you hope and a future.\"\n\nWe hope to see you this Friday! God bless \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
+  if(w===2) return "Hi "+name+"! \u271d\ufe0f\n\nIt has been 2 weeks and Jeremiah Generation hasn't been the same without you! You are missed more than you know. \ud83d\udc99\n\nPsalm 139:14 - \"You are fearfully and wonderfully made.\"\n\nYou matter to us and to God. We'd love to see you back this Friday! \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
+  if(w===3) return "Hi "+name+"! \ud83d\ude4f\n\n3 weeks have passed and we are genuinely thinking about you. You are an important part of our family at JG Youth and we feel your absence.\n\nHebrews 10:25 - \"Let us not give up meeting together, as some are in the habit of doing, but let us encourage one another.\"\n\nIs everything okay? We are here if you need anything. See you Friday! \ud83d\udc9b\nJG Youth - Living Waters Fellowship";
+  if(w===4) return "Hi "+name+"! \u2764\ufe0f\n\n4 weeks without seeing you at JG Youth. We want you to know that you are loved, valued and never forgotten.\n\nRomans 8:38-39 - \"Nothing can separate us from the love of God.\"\n\nWhatever you are going through, you don't have to face it alone. Our doors are always open. \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
+  if(w===5) return "Hi "+name+"! \ud83d\udc9c\n\n5 weeks have passed and not a Friday goes by that we don't think of you. You have a God-given purpose and a place in this family.\n\nIsaiah 41:10 - \"Do not fear, for I am with you. Do not be dismayed, for I am your God. I will strengthen you and help you.\"\n\nWe are praying for you by name. Please reach out anytime. We love you! \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
+  return "Hi "+name+"! \ud83d\ude4f\n\nIt has been "+w+" weeks since we last saw you at Jeremiah Generation. We have not forgotten you and we never will.\n\nPsalm 23:6 - \"Surely goodness and mercy shall follow me all the days of my life.\"\n\nGod has not forgotten you either. You are in our prayers every week. Please come back - your seat is waiting. We love you! \u271d\ufe0f\nJG Youth - Living Waters Fellowship";
 }
-function msgParentAbsent(youthName, parentName) {
-  return "Hi " + (parentName||"Parent") + ",\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nWe have noticed that " + youthName + " has not been with us for the past few sessions and we are genuinely concerned.\n\nWe care deeply about each young person and their wellbeing. If there is anything we can do to help, or any reason " + youthName + " has not been attending, please feel free to reach out. We are here to support your family.\n\nProverbs 22:6 - Train up a child in the way he should go; even when he is old he will not depart from it.\n\nWe would love to welcome " + youthName + " back. God bless your family! \ud83d\ude4f\nJG Youth Leadership\nLiving Waters Fellowship";
+function msgAbsent(name) { return msgAbsentByWeek(name, 1); }
+
+// ── PARENT ABSENCE MESSAGES (6 levels) ──
+function msgParentAbsentByWeek(youthName, parentName, weeks) {
+  var w = weeks||1;
+  var pn = parentName||"Parent";
+  if(w===1) return "Hi "+pn+"! \ud83d\udc4b\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nWe noticed "+youthName+" wasn't with us this Friday. We just wanted to check in and let you know we missed them!\n\nWe hope all is well with your family. \ud83d\ude4f\nJG Youth Leadership - Living Waters Fellowship";
+  if(w===2) return "Hi "+pn+"! \ud83d\ude4f\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\n"+youthName+" has been absent for 2 weeks now and we genuinely miss them in our group.\n\nProverbs 22:6 - \"Train up a child in the way he should go; even when he is old he will not depart from it.\"\n\nWe hope to see "+youthName+" back this Friday! God bless your family. \ud83d\udc9b\nJG Youth Leadership - Living Waters Fellowship";
+  if(w===3) return "Hi "+pn+"! \u2764\ufe0f\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nWe are reaching out because "+youthName+" has been absent for 3 weeks. We care deeply about each young person and their wellbeing.\n\nIs everything okay at home? If there is anything we can do to help or support your family, please don't hesitate to reach out.\n\nWe would love to welcome "+youthName+" back. \ud83d\ude4f\nJG Youth Leadership - Living Waters Fellowship";
+  if(w===4) return "Hi "+pn+"! \ud83d\udc99\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\n"+youthName+" has now been absent for 4 weeks. We want you to know that they are missed and prayed for by name every week.\n\nPsalm 127:3 - \"Children are a heritage from the Lord, offspring a reward from him.\"\n\nWe are here to support your family in any way we can. Please feel free to reach out. \ud83d\ude4f\nJG Youth Leadership - Living Waters Fellowship";
+  if(w===5) return "Hi "+pn+"! \ud83d\udc9c\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nWe are genuinely concerned as "+youthName+" has been absent for 5 weeks. We care deeply about their spiritual growth and wellbeing.\n\nJeremiah 29:11 - \"For I know the plans I have for you,\" declares the Lord.\n\nPlease know that our doors are always open and we would love to reconnect with your family. Is there anything we can do? \ud83d\ude4f\nJG Youth Leadership - Living Waters Fellowship";
+  return "Hi "+pn+"! \ud83d\ude4f\n\nThis is Jeremiah Generation Youth at Living Waters Fellowship.\n\nIt has been "+w+" weeks since "+youthName+" last attended. We have been praying for your family and we have not given up on them.\n\nJoshua 24:15 - \"As for me and my household, we will serve the Lord.\"\n\nWe would love to reconnect. Please reach out whenever you are ready. God bless your family! \u271d\ufe0f\nJG Youth Leadership - Living Waters Fellowship";
+}
+function msgParentAbsent(youthName, parentName) { return msgParentAbsentByWeek(youthName, parentName, 1); }
+
+// ── VISITOR RETURN MESSAGES (3 levels based on visit count) ──
+function msgVisitorReturn(name, visitCount) {
+  if(visitCount===2) return "Hi "+name+"! \ud83d\ude4f\n\nWow - it is so great to see you back at Jeremiah Generation for the second time! You truly are becoming part of our family. \ud83d\udc9b\n\nWe would love to officially welcome you as a *Member* of JG Youth! Simply reply YES to this message and we will get you registered. \ud83c\udf89\n\nGod bless!\nJG Youth - Living Waters Fellowship";
+  if(visitCount>=3) return "Hi "+name+"! \u271d\ufe0f\n\nThis is your *third visit* to Jeremiah Generation - God is clearly drawing you here! \ud83d\ude4f\n\nWe would love to officially register you as a *Member* of JG Youth. Just reply YES and we will take care of everything!\n\nYou belong here. God bless!\nJG Youth - Living Waters Fellowship";
+  return msgVisitor(name);
 }
 
 var SCHOOLS = [
@@ -139,9 +164,7 @@ function markMessageSent(memberId,channel,category){
     existing.push({channel:channel,category:category,time:new Date().toLocaleTimeString()});
     localStorage.setItem(key,JSON.stringify(existing));
   }
-  // Push to Google for the log
   syncGoogle({type:"MESSAGE_LOG",memberId:memberId,channel:channel,category:category,date:todayStr()});
-  // Trigger UI refresh
   setTimeout(function(){window.dispatchEvent(new Event("jg-refresh"));},100);
 }
 
@@ -154,6 +177,38 @@ function wasMessagedToday(memberId,channel){
   var msgs=getMessagesSent(memberId);
   if(channel)return msgs.some(function(m){return m.channel===channel;});
   return msgs.length>0;
+}
+
+// Returns true if BOTH youth AND parent have been messaged today (absent flow)
+function fullyMessagedToday(memberId){
+  var msgs=getMessagesSent(memberId);
+  var youthSent=msgs.some(function(m){return m.channel==="WA"||m.channel==="SMS";});
+  var parentSent=msgs.some(function(m){return m.channel==="WA-Parent"||m.channel==="SMS-Parent";});
+  return youthSent&&parentSent;
+}
+
+// Friday 1AM reset — clears all message sent records for the week
+// Returns true if we are past Friday 1AM and the reset hasn't been done yet this week
+function checkFridayReset(){
+  var now=new Date();
+  var day=now.getDay(); // 0=Sun,5=Fri
+  var hour=now.getHours();
+  // Friday=5, after 1AM
+  if(day===5&&hour>=1){
+    var resetKey="jg_friday_reset_"+now.getFullYear()+"_W"+getWeekNumber(now);
+    if(!localStorage.getItem(resetKey)){
+      // Clear all message logs
+      var keys=Object.keys(localStorage);
+      keys.forEach(function(k){if(k.startsWith("msg_"))localStorage.removeItem(k);});
+      localStorage.setItem(resetKey,"done");
+      console.log("Friday reset done");
+    }
+  }
+}
+
+function getWeekNumber(d){
+  var onejan=new Date(d.getFullYear(),0,1);
+  return Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);
 }
 
 // SMS link helper
@@ -1315,6 +1370,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
     {id:"leader_attendance",label:"📋 Leader Log"},
     {id:"events",label:"📅 Events"},
     {id:"absent",label:"Absent",badge:absentToday.length},
+    {id:"sent",label:"✅ Sent",badge:(function(){return absentToday.filter(function(m){return fullyMessagedToday(m.id);}).length;})()},
     {id:"suggestions",label:"Suggestions",badge:unreadFb},
     {id:"visitors",label:"Visitors",badge:allVisitors.filter(function(m){return wa(m)<=1;}).length},
     {id:"contacts",label:"Contacts"},
@@ -1422,44 +1478,60 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
 
     {tab==="absent"&&<div>
       <p className="page-title">Absent Today</p>
-      <p style={{color:"#94a3b8",fontSize:13,marginBottom:16}}>Green = Youth WhatsApp. Yellow = Parent WhatsApp. Purple = Encouragement to youth. Pink = Concern message to parent.</p>
-      {absentToday.length===0&&<div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:16}}><p className="green" style={{margin:0}}>No absentees today!</p></div>}
-      {absentToday.map(function(m){
-        var wk=wa(m); var highlight=wk>=3;
-        return(<div key={m.id} className="absent-card" style={{borderColor:highlight?"#ef4444":"#f59e0b44"}}>
+      <p style={{color:"#94a3b8",fontSize:12,marginBottom:12}}>Message auto-selected by weeks absent. ✅ = sent. After both youth + parent messaged → moves to Sent tab.</p>
+      {absentToday.length===0&&<div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:16}}><p className="green" style={{margin:0}}>🎉 No absentees today!</p></div>}
+      {absentToday.filter(function(m){return !fullyMessagedToday(m.id);}).map(function(m){
+        var wk=wa(m);
+        var youthMsg=msgAbsentByWeek(m.name,wk);
+        var parentMsg=msgParentAbsentByWeek(m.name,m.parentName,wk);
+        var yWA=wasMessagedToday(m.id,"WA"); var ySMS=wasMessagedToday(m.id,"SMS");
+        var pWA=wasMessagedToday(m.id,"WA-Parent"); var pSMS=wasMessagedToday(m.id,"SMS-Parent");
+        return(<div key={m.id} className="absent-card" style={{borderColor:wk>=5?"#ef4444":wk>=3?"#f59e0b":"#334155"}}>
           <div className="absent-info">
             {m.photo&&<img src={m.photo} width="42" height="42" style={{borderRadius:"50%",objectFit:"cover",float:"left",marginRight:10}}/>}
-            <div className="absent-name">{m.name} {m.surname}{highlight&&<span style={{background:"#ef444422",color:"#f87171",borderRadius:7,padding:"2px 7px",fontSize:11,fontWeight:700,marginLeft:8}}>{wk}+ weeks absent</span>}</div>
-            <div className="absent-meta">School: {m.school||"?"} | Phone: {m.phone||"?"}</div>
-            <div className="absent-meta">Parent: {m.parentName||""} {m.parentSurname||""} | {m.parentPhone||"?"}</div>
-            <div className="absent-meta">Total visits: {vc(m)} | Last: {lc(m)||"never"}</div>
+            <div className="absent-name">{m.name} {m.surname}
+              <span style={{background:wk>=5?"#ef444422":wk>=3?"#f59e0b22":"#1e293b",color:wk>=5?"#f87171":wk>=3?"#fcd34d":"#94a3b8",borderRadius:7,padding:"2px 7px",fontSize:11,fontWeight:700,marginLeft:8}}>{wk===1?"Week 1":wk+" weeks absent"}</span>
+            </div>
+            <div className="absent-meta">📞 {m.phone||"?"} | School: {m.school||"?"}</div>
+            <div className="absent-meta">👨‍👩‍👦 {m.parentName||""} {m.parentSurname||""} | {m.parentPhone||"?"}</div>
           </div>
           <div className="wa-btns">
-            {wasMessagedToday(m.id)&&<div style={{background:"#0d2818",color:"#86efac",borderRadius:8,padding:"4px 10px",fontSize:11,fontWeight:700,textAlign:"center",marginBottom:6}}>✓ Already messaged today</div>}
-            {toWA(m.whatsapp||m.phone)&&<a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" onClick={function(){markMessageSent(m.id,"WA","Absent-Youth");}} style={{display:"block",background:wasMessagedToday(m.id,"WA")?"#475569":"#6c63ff",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none",marginBottom:4,textAlign:"center",opacity:wasMessagedToday(m.id,"WA")?0.6:1}}>{wasMessagedToday(m.id,"WA")?"✓ ":"💜 "}WhatsApp Youth</a>}
-            {toSMS(m.phone)&&<a href={toSMS(m.phone,msgAbsent(m.name))} onClick={function(){markMessageSent(m.id,"SMS","Absent-Youth");}} style={{display:"block",background:wasMessagedToday(m.id,"SMS")?"#475569":"#0891b2",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none",marginBottom:4,textAlign:"center",opacity:wasMessagedToday(m.id,"SMS")?0.6:1}}>{wasMessagedToday(m.id,"SMS")?"✓ ":"📱 "}SMS Youth</a>}
-            {toWA(m.parentPhone)&&<a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" onClick={function(){markMessageSent(m.id,"WA-Parent","Absent-Parent");}} style={{display:"block",background:wasMessagedToday(m.id,"WA-Parent")?"#475569":"#be185d",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none",marginBottom:4,textAlign:"center",opacity:wasMessagedToday(m.id,"WA-Parent")?0.6:1}}>{wasMessagedToday(m.id,"WA-Parent")?"✓ ":"❤️ "}WhatsApp Parent</a>}
-            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName))} onClick={function(){markMessageSent(m.id,"SMS-Parent","Absent-Parent");}} style={{display:"block",background:wasMessagedToday(m.id,"SMS-Parent")?"#475569":"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center",opacity:wasMessagedToday(m.id,"SMS-Parent")?0.6:1}}>{wasMessagedToday(m.id,"SMS-Parent")?"✓ ":"📱 "}SMS Parent</a>}
-            {!toWA(m.whatsapp||m.phone)&&!toSMS(m.phone)&&<span style={{fontSize:11,color:"#475569"}}>No youth number</span>}
+            <p style={{fontSize:11,color:"#6ee7b7",fontWeight:700,marginBottom:6}}>Week {wk} message selected</p>
+            {toWA(m.whatsapp||m.phone)&&<a href={toWA(m.whatsapp||m.phone,youthMsg)} target="_blank" onClick={function(){markMessageSent(m.id,"WA","Absent-Youth");}} style={{display:"block",background:yWA?"#14532d":"#6c63ff",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none",marginBottom:4,textAlign:"center"}}>{yWA?"✅ Sent — Youth WA":"💜 WhatsApp Youth"}</a>}
+            {toSMS(m.phone)&&<a href={toSMS(m.phone,youthMsg)} onClick={function(){markMessageSent(m.id,"SMS","Absent-Youth");}} style={{display:"block",background:ySMS?"#14532d":"#0891b2",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none",marginBottom:4,textAlign:"center"}}>{ySMS?"✅ Sent — Youth SMS":"📱 SMS Youth"}</a>}
+            {toWA(m.parentPhone)&&<a href={toWA(m.parentPhone,parentMsg)} target="_blank" onClick={function(){markMessageSent(m.id,"WA-Parent","Absent-Parent");}} style={{display:"block",background:pWA?"#14532d":"#be185d",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none",marginBottom:4,textAlign:"center"}}>{pWA?"✅ Sent — Parent WA":"❤️ WhatsApp Parent"}</a>}
+            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,parentMsg)} onClick={function(){markMessageSent(m.id,"SMS-Parent","Absent-Parent");}} style={{display:"block",background:pSMS?"#14532d":"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center"}}>{pSMS?"✅ Sent — Parent SMS":"📱 SMS Parent"}</a>}
+            {!toWA(m.whatsapp||m.phone)&&!toSMS(m.phone)&&<span style={{fontSize:11,color:"#475569"}}>No youth number on file</span>}
           </div>
         </div>);
       })}
-      {lastDate!==todayDate&&<div>
-        <p className="section-title">Also absent last session ({lastDate}):</p>
-        {absentOn(lastDate).map(function(m){return(<div key={m.id} style={{background:"#1e293b",borderRadius:12,padding:"12px 14px",marginBottom:9,display:"flex",flexWrap:"wrap",alignItems:"center",gap:10}}>
-          <div style={{flex:1}}><strong>{m.name} {m.surname}</strong><div style={{fontSize:13,color:"#94a3b8"}}>Phone: {m.phone||"?"} | Parent: {m.parentPhone||"?"}</div></div>
-          <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Youth</a>
-            {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 SMS</a>}
-            <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">💬 Parent</a>
-            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 P.SMS</a>}
-            <a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>💜 Encourage WA</a>
-            {toSMS(m.phone)&&<a href={toSMS(m.phone,msgAbsent(m.name))} style={{background:"#4f46e5",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Encourage SMS</a>}
-            <a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>❤️ Parent WA</a>
-            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:9,padding:"7px 10px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Parent SMS</a>}
+      {absentToday.filter(function(m){return fullyMessagedToday(m.id);}).length>0&&
+        <div style={{marginTop:12,background:"#0d2818",borderRadius:12,padding:"10px 14px"}}>
+          <p style={{color:"#86efac",fontWeight:700,fontSize:13,margin:0}}>✅ {absentToday.filter(function(m){return fullyMessagedToday(m.id);}).length} fully messaged — see Sent tab</p>
+        </div>}
+    </div>}
+
+    {tab==="sent"&&<div>
+      <p className="page-title">✅ Sent Today</p>
+      <p style={{color:"#94a3b8",fontSize:12,marginBottom:12}}>Absent members where both youth AND parent were messaged today. Resets Friday 1AM.</p>
+      {absentToday.filter(function(m){return fullyMessagedToday(m.id);}).length===0&&
+        <p className="empty-msg">No one fully messaged yet today.</p>}
+      {absentToday.filter(function(m){return fullyMessagedToday(m.id);}).map(function(m){
+        var wk=wa(m);
+        var msgs=getMessagesSent(m.id);
+        var sentTimes=msgs.map(function(x){return x.channel+" at "+x.time;}).join(" · ");
+        return(<div key={m.id} style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:"14px 16px",marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
+            {m.photo&&<img src={m.photo} width="36" height="36" style={{borderRadius:"50%",objectFit:"cover"}}/>}
+            <div style={{flex:1}}>
+              <strong style={{color:"#86efac"}}>{m.name} {m.surname}</strong>
+              <div style={{fontSize:11,color:"#64748b"}}>Week {wk} message · {wk} week{wk!==1?"s":""} absent</div>
+            </div>
+            <span style={{fontSize:20}}>✅</span>
           </div>
-        </div>);})}
-      </div>}
+          <div style={{fontSize:11,color:"#475569"}}>{sentTimes}</div>
+        </div>);
+      })}
     </div>}
 
     {tab==="suggestions"&&<div>
@@ -2122,6 +2194,7 @@ function LeadersTab(){
       <p style={{color:"#fbbf24",fontSize:12,fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>⭐ SENIOR LEADERS (admin access)</p>
       {seniors.map(function(L){
         var loginCount=getLoginLog(L.id).length;
+        var pinMsg="Hi "+L.name+"! \u270�\ufe0f\n\nYou have been registered as a *Senior Leader* at Jeremiah Generation - Living Waters Fellowship.\n\n*Your PIN: "+L.pin+"*\n\nTo access the admin portal:\n1. Open the portal\n2. Triple-tap the banner photo (3 quick taps)\n3. Enter your PIN: *"+L.pin+"*\n\nYou can view members, send messages and view reports. Keep your PIN private.\n\nGod bless!\nJoshua & Priscilla\nJG Youth Leadership";
         return(<div key={L.id} style={{background:"linear-gradient(135deg,#1e293b,#1e1b4b)",border:"2px solid #fbbf2444",borderRadius:13,padding:"14px 16px",marginBottom:10}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
             <div style={{flex:1,minWidth:160}}>
@@ -2131,6 +2204,7 @@ function LeadersTab(){
               <div style={{fontSize:11,color:"#64748b",marginTop:4}}>{loginCount} login{loginCount!==1?"s":""} recorded</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:5}}>
+              {toWA(L.phone)&&<a href={toWA(L.phone,pinMsg)} target="_blank" style={{background:"#16a34a",color:"#fff",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,textDecoration:"none",textAlign:"center"}}>📲 Send PIN</a>}
               <button onClick={function(){setShowLog(L.id);}} style={{background:"#3b82f6",color:"#fff",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📋 Logins</button>
               <button onClick={function(){editLeader(L);}} style={{background:"#334155",color:"#cbd5e1",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✏️ Edit</button>
               <button onClick={function(){deleteLeader(L.id);}} style={{background:"#7f1d1d",color:"#fecaca",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑</button>
@@ -2142,20 +2216,23 @@ function LeadersTab(){
     </div>)}
 
     {juniors.length>0&&(<div>
-      <p style={{color:"#86efac",fontSize:12,fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>🌱 JUNIOR LEADERS (no admin access)</p>
-      {juniors.map(function(L){return(<div key={L.id} style={{background:"#1e293b",border:"2px solid #22c55e22",borderRadius:13,padding:"12px 14px",marginBottom:10}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
-          <div style={{flex:1,minWidth:160}}>
-            <strong style={{fontSize:14,color:"#86efac"}}>{L.name} {L.surname}</strong>
-            <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>📞 {L.phone||"—"}</div>
-            <div style={{fontSize:11,color:"#64748b",marginTop:2}}>PIN: {L.pin} (no admin)</div>
+      <p style={{color:"#86efac",fontSize:12,fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>🌱 JUNIOR LEADERS (home tiles only)</p>
+      {juniors.map(function(L){
+        var pinMsg="Hi "+L.name+"! ✝️\n\nYou have been registered as a *Junior Leader* at Jeremiah Generation - Living Waters Fellowship.\n\n*Your PIN: "+L.pin+"*\n\nHow to use your PIN:\n1. Open the portal: https://senoskyjj-beep.github.io/-jg-youth/\n2. Tap any of the 3 number tiles on the home screen (Registered / Here Today / Visitors)\n3. Enter your PIN: *"+L.pin+"*\n4. You can now see who is registered, who checked in today, and who is visiting\n\nKeep your PIN private!\n\nGod bless!\nJoshua & Priscilla\nJG Youth Leadership";
+        return(<div key={L.id} style={{background:"#1e293b",border:"2px solid #22c55e22",borderRadius:13,padding:"12px 14px",marginBottom:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
+            <div style={{flex:1,minWidth:160}}>
+              <strong style={{fontSize:14,color:"#86efac"}}>{L.name} {L.surname}</strong>
+              <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>📞 {L.phone||"—"}</div>
+              <div style={{fontSize:11,color:"#64748b",marginTop:2}}>PIN: {L.pin} (home tiles only)</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:5}}>
+              {toWA(L.phone)&&<a href={toWA(L.phone,pinMsg)} target="_blank" style={{background:"#16a34a",color:"#fff",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,textDecoration:"none",textAlign:"center"}}>📲 Send PIN</a>}
+              <button onClick={function(){editLeader(L);}} style={{background:"#334155",color:"#cbd5e1",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✏️</button>
+              <button onClick={function(){deleteLeader(L.id);}} style={{background:"#7f1d1d",color:"#fecaca",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑</button>
+            </div>
           </div>
-          <div style={{display:"flex",gap:5}}>
-            <button onClick={function(){editLeader(L);}} style={{background:"#334155",color:"#cbd5e1",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✏️</button>
-            <button onClick={function(){deleteLeader(L.id);}} style={{background:"#7f1d1d",color:"#fecaca",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑</button>
-          </div>
-        </div>
-      </div>);})}
+        </div>);})}
     </div>)}
 
     {leaders.length===0&&<p className="empty-msg">No leaders registered yet. Tap "Register New Leader" above.</p>}
@@ -2669,6 +2746,8 @@ function App(){
   var [syncError,setSyncError]=useState(false);
 
   useEffect(function(){
+    // Check Friday 1AM reset on every load
+    checkFridayReset();
     loadFromGoogle();
     // Auto-refresh every 5 minutes so all devices stay in sync.
     // Pauses during registration and check-in to protect in-progress work.
