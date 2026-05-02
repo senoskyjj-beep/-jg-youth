@@ -572,9 +572,11 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
     var photoNote=!form.photo;
     if(photoNote){setPhotoSkipped(true);}
     var existing=existingMembers.find(function(m){return m.name.toLowerCase()===form.name.toLowerCase()&&m.surname.toLowerCase()===form.surname.toLowerCase();});
+    // Mark incomplete if any key field is missing: photo, parent phone, birthday
+    var isIncomplete=!form.photo||!form.parentPhone||!form.birthday;
     var member=existing
-      ?Object.assign({},existing,form,{incomplete:false,wantsWhatsApp:form.wantsWhatsApp===true})
-      :Object.assign({},form,{id:String(Date.now()),originalStatus:form.status,wantsWhatsApp:form.wantsWhatsApp===true,visitReason:form.visitReason||"",registeredOn:todayStr(),incomplete:false});
+      ?Object.assign({},existing,form,{incomplete:isIncomplete,wantsWhatsApp:form.wantsWhatsApp===true})
+      :Object.assign({},form,{id:String(Date.now()),originalStatus:form.status,wantsWhatsApp:form.wantsWhatsApp===true,visitReason:form.visitReason||"",registeredOn:todayStr(),incomplete:isIncomplete});
     onDone(member,!existing);setDone(true);
   }
 
@@ -1154,7 +1156,7 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
   var lastDate=allDates[allDates.length-1]||todayDate;
   function vc(m){return visitCount(m,checkins);}
   function lc(m){return lastCheckin(m,checkins);}
-  function wa(m){var last=lc(m); if(last)return weeksAgo(last); var reg=m.registeredOn||todayStr(); return weeksAgo(reg);}
+  function wa(m){var last=lc(m); if(last)return weeksAgo(last); return 0; /* no checkin = 0 weeks, not 999 */}
   function absentOn(d){var ids=checkins.filter(function(c){return c.date===d;}).map(function(c){return c.memberId;});return members.filter(function(m){return !ids.includes(m.id);});}
   function updateMember(id,changes){var u=Object.assign({},data,{members:members.map(function(m){return m.id===id?Object.assign({},m,changes):m;})});setData(u);saveData(u);}
   function deleteMember(id){
@@ -1362,7 +1364,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
   function absentOn(d){var ids=checkins.filter(function(c){return c.date===d;}).map(function(c){return c.memberId;});return members.filter(function(m){return !ids.includes(m.id);});}
   function vc(m){return visitCount(m,checkins);}
   function lc(m){return lastCheckin(m,checkins);}
-  function wa(m){var last=lc(m); if(last)return weeksAgo(last); var reg=m.registeredOn||todayStr(); return weeksAgo(reg);}
+  function wa(m){var last=lc(m); if(last)return weeksAgo(last); return 0; /* no checkin = 0 weeks, not 999 */}
 
   function updateMember(id,changes){var u=Object.assign({},data,{members:members.map(function(m){return m.id===id?Object.assign({},m,changes):m;})});setData(u);saveData(u);}
   function deleteMember(id){
@@ -1642,7 +1644,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
             <button className="btn btn-danger" style={{width:"auto",padding:"6px 12px",fontSize:12}} onClick={function(){deleteMember(m.id);}}>Remove</button>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 16px",fontSize:12,color:"#94a3b8",marginBottom:10}}>
-            <span>Age: {calcAge(m.birthday)||"?"} ({m.birthday||"?"})</span><span>School: {m.school||"?"}</span>
+            <span>Age: {calcAge(m.birthday)||"?"}</span><span>School: {m.school||"?"}</span>
             <span>Phone: {m.phone||"?"}</span><span>Address: {m.address||"?"}</span>
             <span>Parent: {m.parentName||""} {m.parentSurname||""}</span><span>Parent Phone: {m.parentPhone||"?"}</span>
           </div>
