@@ -162,11 +162,10 @@ function toSMS(num,msg){
   var d=String(num).replace(/\D/g,"");
   if(d.length<9)return null;
   var i=d.startsWith("0")?"+27"+d.slice(1):d.startsWith("27")?"+"+d:"+27"+d;
-  // iOS uses sms:NUMBER&body= ; Android uses sms:NUMBER?body=
-  // Universal format that works on both: sms://NUMBER/?body= 
-  if(!msg)return "sms:"+i;
-  // Detect iOS user agent for correct separator
+  // Use sms: format - works on both iOS and Android
+  // iOS needs & separator, Android needs ?
   var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(!msg)return "sms:"+i;
   var sep=isIOS?"&":"?";
   return "sms:"+i+sep+"body="+encodeURIComponent(msg);
 }
@@ -477,6 +476,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
   });
   var [errors,setErrors]=useState({});
   var [done,setDone]=useState(false);
+  var [photoSkipped,setPhotoSkipped]=useState(false);
   var age=calcAge(form.birthday);
 
   function set(f,v){setForm(function(p){return Object.assign({},p,{[f]:v});});setErrors(function(e){return Object.assign({},e,{[f]:""}); });}
@@ -489,6 +489,9 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
 
   function submit(){
     if(!validate())return;
+    // If no photo taken, mark as skipped so leader knows to follow up
+    var photoNote=!form.photo;
+    if(photoNote){setPhotoSkipped(true);}
     var existing=existingMembers.find(function(m){return m.name.toLowerCase()===form.name.toLowerCase()&&m.surname.toLowerCase()===form.surname.toLowerCase();});
     var member=existing
       ?Object.assign({},existing,form,{incomplete:false,wantsWhatsApp:form.wantsWhatsApp===true})
@@ -498,9 +501,13 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
 
   if(done)return(<div className="card" style={{textAlign:"center",padding:"28px 16px"}}>
     <div className="success-circle">✓</div>
-    <h2 style={{margin:"0 0 8px"}}>{form.status==="Visitor"?"Welcome, Visitor!":"Checked In! ✝"}</h2>
-    <p style={{color:"#94a3b8",marginBottom:20}}>Welcome to Jeremiah Generation 🙏</p>
-    <button className="btn btn-reg" onClick={function(){setForm(blank);setDone(false);}}>Register another</button>
+    <h2 style={{margin:"0 0 8px"}}>{form.status==="Visitor"?"Welcome, Visitor!":"Registered! ✝"}</h2>
+    <p style={{color:"#94a3b8",marginBottom:16}}>Welcome to Jeremiah Generation 🙏</p>
+    {photoSkipped&&<div style={{background:"#1c1504",border:"2px solid #f59e0b",borderRadius:12,padding:"12px 16px",marginBottom:16,textAlign:"left"}}>
+      <p style={{color:"#fcd34d",fontWeight:700,fontSize:14,margin:"0 0 6px"}}>📸 No photo taken</p>
+      <p style={{color:"#94a3b8",fontSize:13,margin:0}}>Registration saved successfully! Please remember to take a photo next time you attend. Your leader has been notified.</p>
+    </div>}
+    <button className="btn btn-reg" onClick={function(){setForm(blank);setDone(false);setPhotoSkipped(false);}}>Register another</button>
     <button className="btn btn-admin" onClick={onBack}>Back to Home</button>
   </div>);
 
@@ -2014,10 +2021,30 @@ function LeadersTab(){
   }
 
   if(showForm){
+    // Get members list for the picker
+    var allMembers=JSON.parse(localStorage.getItem("jg_v6")||"{}").members||[];
+    var sortedMembers=sortAlpha(allMembers);
+
     return(<div>
       <p className="page-title">{editing?"Edit Leader":"➕ Register New Leader"}</p>
       <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Leaders are stored locally on this device only — not in Google Sheets.</p>
       <div style={{background:"#1e293b",borderRadius:13,padding:"16px"}}>
+
+        {/* Member picker - pick from existing members */}
+        {!editing&&<div style={{marginBottom:16}}>
+          <label style={{display:"block",fontSize:13,fontWeight:600,color:"#6ee7b7",marginBottom:6}}>👥 Pick from existing members</label>
+          <select className="input" style={{background:"#0f172a",color:"#fff"}} value=""
+            onChange={function(e){
+              var m=sortedMembers.find(function(x){return x.id===e.target.value;});
+              if(m){setForm(Object.assign({},form,{name:m.name,surname:m.surname,phone:m.phone||m.whatsapp||""}));}
+            }}>
+            <option value="">-- Select a member to auto-fill --</option>
+            {sortedMembers.map(function(m){
+              return <option key={m.id} value={m.id}>{m.name} {m.surname} {m.phone?"· "+m.phone:""}</option>;
+            })}
+          </select>
+          <p style={{fontSize:11,color:"#475569",marginTop:4}}>Or fill in manually below</p>
+        </div>}
         <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>First Name *</label>
         <input className="input" value={form.name} onChange={function(e){setForm(Object.assign({},form,{name:e.target.value}));}}/>
 
@@ -2643,10 +2670,12 @@ function App(){
 
   useEffect(function(){
     loadFromGoogle();
-    // Auto-refresh every 30 seconds so all devices stay in sync
+    // Auto-refresh every 5 minutes so all devices stay in sync.
+    // Pauses during registration and check-in to protect in-progress work.
     var interval=setInterval(function(){
+      if(screen==="register"||screen==="checkin")return;
       loadFromGoogle();
-    },30000);
+    },300000); // 5 minutes = 300000ms
     return function(){clearInterval(interval);};
   },[]);
 
