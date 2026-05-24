@@ -256,6 +256,77 @@ function toSMS(num,msg){
 // Admin → Pending Sync so leaders can see what hasn't gone through.
 var PENDING_KEY = "jg_pending_sync";
 
+// ── PHOTO RETRY QUEUE ────────────────────────────────────────
+// When a photo upload fails (bad signal, timeout, Apps Script quota),
+// the member ID is saved here. A background loop retries every 60s.
+// Once upload succeeds, the Drive URL is written back to the member
+// record and synced to Google Sheets — so photos appear on all devices.
+var PHOTO_QUEUE_KEY = "jg_pending_photos";
+
+function loadPhotoQueue(){
+  try{ return JSON.parse(localStorage.getItem(PHOTO_QUEUE_KEY)||"[]"); }
+  catch(e){ return []; }
+}
+function savePhotoQueue(q){
+  try{ localStorage.setItem(PHOTO_QUEUE_KEY,JSON.stringify(q)); }catch(e){}
+}
+function addToPhotoQueue(memberId){
+  var q=loadPhotoQueue();
+  if(q.find(function(x){return x.memberId===memberId;}))return;
+  q.push({memberId:memberId,queuedAt:new Date().toISOString(),attempts:0});
+  savePhotoQueue(q);
+  try{window.dispatchEvent(new Event("jg_pending_changed"));}catch(e){}
+}
+function removeFromPhotoQueue(memberId){
+  savePhotoQueue(loadPhotoQueue().filter(function(x){return x.memberId!==memberId;}));
+  try{window.dispatchEvent(new Event("jg_pending_changed"));}catch(e){}
+}
+
+// Upload one pending photo to Google Drive via Apps Script.
+// Returns true on success or if the item should be removed (no photo / member gone).
+// Returns false if it should stay in the queue for next retry.
+async function uploadPendingPhoto(item,members){
+  if(!GOOGLE_URL||GOOGLE_URL.includes("PASTE"))return false;
+  var memberId=item.memberId;
+  var member=(members||[]).find(function(m){return m.id===memberId;});
+  if(!member)return true; // member deleted — clear from queue
+  var photo=localStorage.getItem("ph_"+memberId);
+  if(!photo)return true; // no photo locally — nothing to send
+  if(photo.length>800000)return true; // photo too large for single request — skip
+  var body={
+    token:SYNC_TOKEN,type:"UPLOAD_PHOTO",
+    memberId:memberId,
+    name:member.name||"",surname:member.surname||"",
+    photoBase64:photo
+  };
+  var ctrl=("AbortController" in window)?new AbortController():null;
+  var timer=ctrl?setTimeout(function(){ctrl.abort();},20000):null;
+  try{
+    var res=await fetch(GOOGLE_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(body),
+      signal:ctrl?ctrl.signal:undefined
+    });
+    if(timer)clearTimeout(timer);
+    var json=JSON.parse(await res.text());
+    if(json.status==="ok"&&json.photoUrl){
+      // Write Drive URL back to Google Sheets member row.
+      // CRITICAL: send the FULL member object so existing fields don't get wiped out.
+      // Apps Script REGISTRATION handler does setValues() over the whole row.
+      var fullPayload=Object.assign({type:"REGISTRATION"},member,{photoUrl:json.photoUrl});
+      delete fullPayload.photo;        // don't resend base64
+      delete fullPayload.photoBase64;  // don't trigger another Drive save
+      syncGoogle(fullPayload);
+      return true;
+    }
+    return false;
+  }catch(e){
+    if(timer)clearTimeout(timer);
+    return false;
+  }
+}
+
 function loadPendingQueue(){
   try{ return JSON.parse(localStorage.getItem(PENDING_KEY)||"[]"); }
   catch(e){ return []; }
@@ -265,9 +336,19 @@ function savePendingQueue(q){
 }
 function addToPendingQueue(payload,errMsg){
   var q=loadPendingQueue();
+  // If payload has a large photoBase64, strip it before storing in the queue
+  // (to avoid blowing past localStorage's 5-10MB limit) and queue the photo
+  // separately. The photo data is already saved at "ph_"+memberId so we don't lose it.
+  var queuedPayload=payload;
+  if(payload&&payload.photoBase64&&payload.id){
+    queuedPayload=Object.assign({},payload);
+    delete queuedPayload.photoBase64;
+    // Queue the photo separately so it'll be uploaded after the data syncs
+    addToPhotoQueue(payload.id);
+  }
   q.push({
     id:"p_"+Date.now()+"_"+Math.random().toString(36).slice(2,7),
-    payload:payload,
+    payload:queuedPayload,
     queuedAt:new Date().toISOString(),
     attempts:1,
     lastError:errMsg||"network error"
@@ -2581,14 +2662,20 @@ function ResetTab({data,setData}){
   </div>);
 }
 
-// PENDING SYNC TAB - shows what failed to reach Google Sheets
+// PENDING SYNC TAB - shows what failed to reach Google Sheets or Drive
 function PendingSyncTab(){
   var [items,setItems]=useState(loadPendingQueue());
+  var [photos,setPhotos]=useState(loadPhotoQueue());
   var [busy,setBusy]=useState(false);
+  var [photoBusy,setPhotoBusy]=useState(false);
   var [msg,setMsg]=useState("");
+  var [photoMsg,setPhotoMsg]=useState("");
 
   useEffect(function(){
-    function refresh(){setItems(loadPendingQueue());}
+    function refresh(){
+      setItems(loadPendingQueue());
+      setPhotos(loadPhotoQueue());
+    }
     var t=setInterval(refresh,2000);
     window.addEventListener("jg_pending_changed",refresh);
     return function(){
@@ -2604,6 +2691,19 @@ function PendingSyncTab(){
     setMsg("Sent "+r.sent+". "+r.remaining+" still pending.");
     setBusy(false);
   }
+  async function retryPhotos(){
+    setPhotoBusy(true);setPhotoMsg("Uploading photos...");
+    var queue=loadPhotoQueue();
+    var currentMembers=loadData().members||[];
+    var sent=0;
+    for(var i=0;i<queue.length;i++){
+      var ok=await uploadPendingPhoto(queue[i],currentMembers);
+      if(ok){removeFromPhotoQueue(queue[i].memberId);sent++;}
+    }
+    setPhotos(loadPhotoQueue());
+    setPhotoMsg("Uploaded "+sent+". "+loadPhotoQueue().length+" still pending.");
+    setPhotoBusy(false);
+  }
   function clearOne(id){
     if(!window.confirm("Remove this item from the queue without sending? This means it will NOT be saved to Google Sheets."))return;
     removeFromPendingQueue(id);
@@ -2614,6 +2714,11 @@ function PendingSyncTab(){
     savePendingQueue([]);
     setItems([]);
     try{window.dispatchEvent(new Event("jg_pending_changed"));}catch(e){}
+  }
+  function clearPhoto(memberId){
+    if(!window.confirm("Remove this photo from the retry queue? The photo will stay on this device but will NOT be uploaded to Google Drive."))return;
+    removeFromPhotoQueue(memberId);
+    setPhotos(loadPhotoQueue());
   }
 
   function describe(item){
@@ -2627,30 +2732,30 @@ function PendingSyncTab(){
   }
 
   return(<div>
-    <p className="page-title">⏳ Pending Sync ({items.length})</p>
-    <p style={{color:"#94a3b8",fontSize:13,marginTop:0}}>
-      These actions were performed on this device but have not yet been saved to Google Sheets — usually because the connection dropped. They retry automatically every 30 seconds and whenever the device comes back online.
-    </p>
+    <p className="page-title">⏳ Pending Sync ({items.length+photos.length})</p>
 
-    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
+    {/* ── DATA SYNC SECTION ── */}
+    <p style={{color:"#fbbf24",fontSize:12,fontWeight:700,marginBottom:6}}>📋 DATA — Google Sheets ({items.length})</p>
+    <p style={{color:"#94a3b8",fontSize:12,marginTop:0,marginBottom:10}}>
+      Member data not yet saved to Google Sheets. Retries every 30 seconds.
+    </p>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
       <button onClick={retryNow} disabled={busy||items.length===0}
         style={{background:items.length===0?"#1e293b":"#22c55e",color:items.length===0?"#475569":"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontWeight:700,cursor:items.length===0||busy?"not-allowed":"pointer",fontFamily:"inherit"}}>
-        {busy?"Sending...":"🔄 Retry Now"}
+        {busy?"Sending...":"🔄 Retry Data Now"}
       </button>
       {items.length>0&&<button onClick={clearAll}
         style={{background:"transparent",color:"#ef4444",border:"1px solid #ef4444",borderRadius:8,padding:"8px 14px",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
         🗑️ Discard All
       </button>}
     </div>
-
     {msg&&<p style={{color:"#6ee7b7",fontSize:13,marginTop:0}}>{msg}</p>}
-
     {items.length===0?(
-      <div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:"14px 16px"}}>
-        <p className="green" style={{margin:0}}>✓ Nothing pending — everything on this device has been saved to Google Sheets.</p>
+      <div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:"12px 16px",marginBottom:20}}>
+        <p className="green" style={{margin:0}}>✓ All data saved to Google Sheets.</p>
       </div>
     ):(
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
         {items.map(function(item){
           var when=new Date(item.queuedAt);
           var whenStr=when.toLocaleString();
@@ -2664,6 +2769,47 @@ function PendingSyncTab(){
                 </div>
               </div>
               <button onClick={function(){clearOne(item.id);}}
+                style={{background:"transparent",color:"#ef4444",border:"1px solid #ef4444",borderRadius:6,padding:"4px 8px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
+                Discard
+              </button>
+            </div>
+          </div>);
+        })}
+      </div>
+    )}
+
+    {/* ── PHOTO SYNC SECTION ── */}
+    <p style={{color:"#fbbf24",fontSize:12,fontWeight:700,marginBottom:6}}>📸 PHOTOS — Google Drive ({photos.length})</p>
+    <p style={{color:"#94a3b8",fontSize:12,marginTop:0,marginBottom:10}}>
+      Photos not yet uploaded to Google Drive. Retries every 60 seconds. Photos only upload on a strong connection.
+    </p>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
+      <button onClick={retryPhotos} disabled={photoBusy||photos.length===0}
+        style={{background:photos.length===0?"#1e293b":"#3b82f6",color:photos.length===0?"#475569":"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontWeight:700,cursor:photos.length===0||photoBusy?"not-allowed":"pointer",fontFamily:"inherit"}}>
+        {photoBusy?"Uploading...":"📸 Retry Photos Now"}
+      </button>
+    </div>
+    {photoMsg&&<p style={{color:"#6ee7b7",fontSize:13,marginTop:0}}>{photoMsg}</p>}
+    {photos.length===0?(
+      <div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:"12px 16px"}}>
+        <p className="green" style={{margin:0}}>✓ All photos uploaded to Google Drive.</p>
+      </div>
+    ):(
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {photos.map(function(photo){
+          var member=loadData().members.find(function(m){return m.id===photo.memberId;})||{};
+          var when=new Date(photo.queuedAt).toLocaleString();
+          return(<div key={photo.memberId} style={{background:"#1e293b",border:"1px solid #334155",borderRadius:10,padding:"10px 12px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>
+                  📸 Photo: {member.name||"Unknown"} {member.surname||""}
+                </div>
+                <div style={{fontSize:11,color:"#64748b",marginTop:3}}>
+                  Queued {when} · {photo.attempts||0} attempt{(photo.attempts||0)!==1?"s":""}
+                </div>
+              </div>
+              <button onClick={function(){clearPhoto(photo.memberId);}}
                 style={{background:"transparent",color:"#ef4444",border:"1px solid #ef4444",borderRadius:6,padding:"4px 8px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
                 Discard
               </button>
@@ -2695,7 +2841,12 @@ function ImportTab({data,setData}){
     toAdd.forEach(function(m){
       var p=Object.assign({type:"REGISTRATION"},m);
       var savedPhoto=localStorage.getItem("ph_"+m.id);
-      if(savedPhoto&&savedPhoto.length<500000){p.photoBase64=savedPhoto;}
+      if(savedPhoto&&savedPhoto.length<500000){
+        p.photoBase64=savedPhoto;
+      } else if(savedPhoto){
+        // Photo too large to fit in registration call — queue separately
+        addToPhotoQueue(m.id);
+      }
       delete p.photo;
       syncGoogle(p);
     });
@@ -3002,17 +3153,46 @@ function App(){
       if(screen==="register"||screen==="checkin")return;
       loadFromGoogle();
     },300000); // 5 minutes = 300000ms
-    // Pending-sync retry loop: every 30s, attempt to flush queued sync items.
-    // This is what catches the "iPhone registered 49 people but Sheets never got them" case.
+    // Pending-sync retry loop: every 30s
     var retryInterval=setInterval(function(){
       if(loadPendingQueue().length>0)flushPendingQueue();
     },30000);
-    // Also flush whenever the device regains connectivity
-    var onOnline=function(){ flushPendingQueue(); };
+    // Photo retry loop: every 60s — tries to upload any photos that
+    // failed to reach Google Drive at registration time.
+    // Runs SEQUENTIALLY (one at a time) to avoid hammering Apps Script.
+    var photoFlushing=false;
+    async function flushOnePhoto(){
+      if(photoFlushing)return;
+      photoFlushing=true;
+      try{
+        var queue=loadPhotoQueue();
+        if(queue.length===0)return;
+        var currentMembers=loadData().members||[];
+        // Send one photo per tick — sequential, not parallel
+        var item=queue[0];
+        var ok=await uploadPendingPhoto(item,currentMembers);
+        if(ok){
+          removeFromPhotoQueue(item.memberId);
+        } else {
+          var q=loadPhotoQueue();
+          var idx=q.findIndex(function(x){return x.memberId===item.memberId;});
+          if(idx>=0){q[idx].attempts=(q[idx].attempts||0)+1;savePhotoQueue(q);}
+        }
+      }finally{
+        photoFlushing=false;
+      }
+    }
+    var photoInterval=setInterval(flushOnePhoto,60000);
+    // Also flush both queues when device comes back online
+    var onOnline=function(){
+      flushPendingQueue();
+      flushOnePhoto();
+    };
     window.addEventListener("online",onOnline);
     return function(){
       clearInterval(interval);
       clearInterval(retryInterval);
+      clearInterval(photoInterval);
       window.removeEventListener("online",onOnline);
     };
   },[]);
@@ -3070,13 +3250,18 @@ function App(){
     }
     if(isNew){
       var p=Object.assign({type:"REGISTRATION"},member);
-      // Send photo to Google Drive via Apps Script
-      // Photo is stored in localStorage under ph_{id}; send it as photoBase64
       var savedPhoto=localStorage.getItem("ph_"+member.id);
-      if(savedPhoto&&savedPhoto.length<500000){ // only send if under ~375KB to avoid timeout
+      if(savedPhoto&&savedPhoto.length<500000){
+        // Photo fits in registration call — Apps Script will save it to Drive in one shot.
+        // If the whole registration ends up queued (network down), the photoBase64 goes with it,
+        // so the photo retries with the data — no separate photo queue needed.
         p.photoBase64=savedPhoto;
+      } else if(savedPhoto){
+        // Photo too large to fit in registration call. Send the registration without it,
+        // then queue the photo for separate upload via UPLOAD_PHOTO endpoint.
+        addToPhotoQueue(member.id);
       }
-      delete p.photo; // don't send the in-memory blob, use photoBase64 above
+      delete p.photo;
       syncGoogle(p);
     }
     setData(updated);saveData(updated);
