@@ -620,7 +620,10 @@ function PinScreen({onSuccess}){
         // Senior leader has admin access but limited (no delete)
         localStorage.setItem("jg_admin_role","senior");
         localStorage.setItem("jg_admin_leader_id",matchedLeader.id);
-        localStorage.setItem("jg_login_log_"+Date.now(),JSON.stringify({leaderId:matchedLeader.id,name:matchedLeader.name,date:new Date().toISOString()}));
+        // FIX: sync login event to Google Sheets so Leader Log works on all devices
+        var logEntry={leaderId:matchedLeader.id,name:matchedLeader.name,date:new Date().toISOString()};
+        localStorage.setItem("jg_login_log_"+Date.now(),JSON.stringify(logEntry));
+        syncGoogle({type:"LEADER_LOGIN_LOG",leaderId:matchedLeader.id,name:matchedLeader.name,date:logEntry.date});
         setTimeout(function(){onSuccess();},200);
       } else {
         setShake(true);setTimeout(function(){setPin("");setShake(false);},700);
@@ -2162,6 +2165,8 @@ function LeadersTab(){
   function saveLeaders(arr){
     setLeaders(arr);
     localStorage.setItem("jg_leaders",JSON.stringify(arr));
+    // Sync full leaders list to Google Sheets so all devices share the same PINs
+    syncGoogle({type:"SYNC_LEADERS",leaders:arr});
   }
 
   function nextPin(){
@@ -2687,7 +2692,13 @@ function ImportTab({data,setData}){
     var updated=Object.assign({},data,{members:(data.members||[]).concat(toAdd),checkins:allCheckins});
     setData(updated);saveData(updated);
     setMsg("Imported "+toAdd.length+" youth and "+ck.length+" attendance records!");
-    toAdd.forEach(function(m){var p=Object.assign({type:"REGISTRATION"},m);delete p.photo;syncGoogle(p);});
+    toAdd.forEach(function(m){
+      var p=Object.assign({type:"REGISTRATION"},m);
+      var savedPhoto=localStorage.getItem("ph_"+m.id);
+      if(savedPhoto&&savedPhoto.length<500000){p.photoBase64=savedPhoto;}
+      delete p.photo;
+      syncGoogle(p);
+    });
     ck.forEach(function(c){syncGoogle({type:"CHECKIN",id:c.memberId,memberId:c.memberId,name:c.name||"",surname:c.surname||"",date:c.date,school:c.school||"",status:"Member"});});
   }
 
@@ -2948,7 +2959,9 @@ function App(){
     var leaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");
     // Both Senior AND Junior leaders can view names from home tiles
     var anyLeader=leaders.find(function(L){return L.pin===p;});
-    if(p===ADMIN_PIN||anyLeader){
+    // FIX: also accept Priscilla (ADMIN_PIN2) and Pastor Billy (ADMIN_PIN3)
+    var isMaster=p===ADMIN_PIN||p===ADMIN_PIN2||p===ADMIN_PIN3;
+    if(isMaster||anyLeader){
       setHomeTilePinUnlocked(true);
       setHomeTilePin("");
       setHomeTilePinError(false);
@@ -3025,8 +3038,20 @@ function App(){
         };
         merged.members=merged.members.map(function(m){
           var p=localStorage.getItem("ph_"+m.id);
-          return p?Object.assign({},m,{photo:p}):m;
+          // Prefer local photo; fall back to Google Drive URL if available
+          if(p) return Object.assign({},m,{photo:p});
+          if(m.photoUrl) return Object.assign({},m,{photo:m.photoUrl});
+          return m;
         });
+        // FIX: pull leaders from Google so PINs work on every device
+        if(json.leaders&&json.leaders.length>0){
+          // Merge: Google is authoritative, but keep any local leaders Google doesn't have yet
+          var googleLeaderIds=new Set(json.leaders.map(function(L){return L.id;}));
+          var localLeaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");
+          var localLeaderOnly=localLeaders.filter(function(L){return !googleLeaderIds.has(L.id);});
+          var mergedLeaders=json.leaders.concat(localLeaderOnly);
+          localStorage.setItem("jg_leaders",JSON.stringify(mergedLeaders));
+        }
         setData(merged);saveData(merged);setLastSync(new Date().toLocaleTimeString());
       }else{setSyncError(true);}
     }catch(e){console.log("Load:",e);setSyncError(true);}
@@ -3045,7 +3070,13 @@ function App(){
     }
     if(isNew){
       var p=Object.assign({type:"REGISTRATION"},member);
-      delete p.photo; // photos stored locally, not in Google Sheets text columns
+      // Send photo to Google Drive via Apps Script
+      // Photo is stored in localStorage under ph_{id}; send it as photoBase64
+      var savedPhoto=localStorage.getItem("ph_"+member.id);
+      if(savedPhoto&&savedPhoto.length<500000){ // only send if under ~375KB to avoid timeout
+        p.photoBase64=savedPhoto;
+      }
+      delete p.photo; // don't send the in-memory blob, use photoBase64 above
       syncGoogle(p);
     }
     setData(updated);saveData(updated);
@@ -3201,8 +3232,7 @@ function App(){
                       if(homeTilePin.length>=5)return;
                       var next=homeTilePin+k;
                       setHomeTilePin(next);
-                      if(next.length===4&&next===ADMIN_PIN){checkHomeTilePin(next);}
-                      else if(next.length===5){checkHomeTilePin(next);}
+                      if(next.length===5){checkHomeTilePin(next);}
                     }} style={{background:k==="del"?"#7f1d1d":"#1e293b",color:"#fff",border:"2px solid "+(k==="del"?"#7f1d1d":"#334155"),borderRadius:14,padding:"16px",fontSize:18,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{k==="del"?"⌫":k}</button>;
                   })}
                 </div>
