@@ -470,40 +470,21 @@ async function uploadEverything(){
 // onProgress(done,total,label) is called so the UI can show a live bar.
 async function forceReuploadEverything(onProgress){
   var d=loadData();
-  var members=d.members||[], checkins=d.checkins||[];
-  var report={membersSent:0,checkinsSent:0,photosSent:0,photosSkipped:0,confirmed:0,total:members.length,stillMissing:[],aborted:false};
+  var members=d.members||[], checkins=d.checkins||[], feedback=d.feedback||[];
+  var report={membersSent:0,checkinsSent:0,feedbackSent:0,photosSent:0,photosSkipped:0,confirmed:0,total:members.length,stillMissing:[]};
   function prog(done,total,label){ if(onProgress)try{onProgress(done,total,label);}catch(e){} }
 
-  // 0) PRE-FETCH cloud members so we keep existing photo links.
-  // The server rewrites the WHOLE member row on REGISTRATION, so if we re-sent a
-  // member without their existing photoUrl we'd wipe their photo. We read the cloud
-  // first and carry each existing photoUrl through. If this read fails, we MUST NOT
-  // re-send members (it would risk erasing photos) — abort cleanly instead.
-  var cloudPhoto={};
-  try{
-    var gurl=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
-    var gres=await fetch(gurl,{method:"GET"});
-    var gjson=await gres.json();
-    if(gjson.status!=="ok")throw new Error("bad status");
-    (gjson.members||[]).forEach(function(x){ if(x.photoUrl)cloudPhoto[x.id]=x.photoUrl; });
-  }catch(e){
-    report.aborted=true;
-    return report;   // connection not good enough — safer to do nothing
-  }
-
-  // 1) MEMBERS — re-send each full record (server upserts by id, so no duplicates),
-  //    preserving any photo link that already exists in the cloud.
+  // 1) MEMBERS — re-send each full record (upsert by id)
   for(var i=0;i<members.length;i++){
     var m=members[i];
     var payload=Object.assign({type:"REGISTRATION"},m);
     delete payload.photo; delete payload.photoBase64; // photos go separately
-    if(!payload.photoUrl && cloudPhoto[m.id]) payload.photoUrl=cloudPhoto[m.id];
     var ok=await postToGoogle(payload);
     if(ok)report.membersSent++;
     prog(i+1,members.length,"Members");
   }
 
-  // 2) CHECK-INS (server de-dupes by member+date, so safe to re-send)
+  // 2) CHECK-INS
   for(var j=0;j<checkins.length;j++){
     var c=checkins[j];
     var cm=members.find(function(x){return x.id===c.memberId;})||{};
@@ -512,11 +493,15 @@ async function forceReuploadEverything(onProgress){
     prog(j+1,checkins.length,"Check-ins");
   }
 
-  // NOTE: Feedback is intentionally NOT re-sent here. The server has no de-dupe for
-  // feedback, so re-sending would create duplicate rows every time. Feedback still
-  // syncs normally when entered.
+  // 3) FEEDBACK
+  for(var k=0;k<feedback.length;k++){
+    var f=feedback[k];
+    var okf=await postToGoogle(Object.assign({type:"FEEDBACK"},f));
+    if(okf)report.feedbackSent++;
+    prog(k+1,feedback.length,"Feedback");
+  }
 
-  // 3) PHOTOS — re-attempt every local photo (big ones get compressed so they actually send)
+  // 4) PHOTOS — re-attempt every local photo (big ones get compressed so they actually send)
   var withPhotos=members.filter(function(m){return localStorage.getItem("ph_"+m.id);});
   for(var p=0;p<withPhotos.length;p++){
     var mp=withPhotos[p];
@@ -532,21 +517,7 @@ async function forceReuploadEverything(onProgress){
     prog(p+1,withPhotos.length,"Photos");
   }
 
-  // 4) VERIFY — read Google back and count how many of OUR members are really there
-  try{
-    var url=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
-    var res=await fetch(url,{method:"GET"});
-    var json=await res.json();
-    if(json.status==="ok"){
-      var cloudIds={}; (json.members||[]).forEach(function(x){cloudIds[x.id]=true;});
-      members.forEach(function(m){
-        if(cloudIds[m.id])report.confirmed++;
-        else report.stillMissing.push(((m.name||"")+" "+(m.surname||"")).trim());
-      });
-    }
-  }catch(e){ report.verifyFailed=true; }
-  return report;
-}
+  // 5) VERIFY — read Google back and count how many of OUR members are really there
   try{
     var url=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
     var res=await fetch(url,{method:"GET"});
@@ -2942,12 +2913,9 @@ function PendingSyncTab(){
           <div style={{background:"#6366f1",height:8,width:(forceProg.total?Math.round(forceProg.done/forceProg.total*100):0)+"%",transition:"width .2s"}}></div>
         </div>
       </div>}
-      {forceReport&&forceReport.aborted&&<div style={{marginTop:12,background:"#3a1f00",border:"1px solid #f59e0b",borderRadius:10,padding:12}}>
-        <p style={{color:"#fcd34d",fontSize:13,fontWeight:700,margin:0}}>⚠️ Couldn't reach Google to start safely. Check Wi-Fi/signal and tap the button again. Nothing was changed.</p>
-      </div>}
-      {forceReport&&!forceReport.aborted&&<div style={{marginTop:12,background:"#04130a",border:"1px solid "+(forceReport.stillMissing&&forceReport.stillMissing.length?"#f59e0b":"#22c55e"),borderRadius:10,padding:12}}>
+      {forceReport&&<div style={{marginTop:12,background:"#04130a",border:"1px solid "+(forceReport.stillMissing&&forceReport.stillMissing.length?"#f59e0b":"#22c55e"),borderRadius:10,padding:12}}>
         <p style={{color:"#86efac",fontSize:14,fontWeight:800,margin:"0 0 6px"}}>✓ Confirmed in Google: {forceReport.confirmed} / {forceReport.total} members</p>
-        <p style={{color:"#cbd5e1",fontSize:12,margin:"0 0 4px"}}>Members re-sent: {forceReport.membersSent} · Check-ins: {forceReport.checkinsSent}</p>
+        <p style={{color:"#cbd5e1",fontSize:12,margin:"0 0 4px"}}>Members sent: {forceReport.membersSent} · Check-ins: {forceReport.checkinsSent} · Feedback: {forceReport.feedbackSent}</p>
         <p style={{color:"#cbd5e1",fontSize:12,margin:0}}>Photos uploaded: {forceReport.photosSent}{forceReport.photosSkipped?(" · skipped (couldn't shrink): "+forceReport.photosSkipped):""}</p>
         {forceReport.verifyFailed&&<p style={{color:"#fbbf24",fontSize:12,margin:"6px 0 0"}}>⚠️ Couldn't read Google back to confirm — check connection and try the button again.</p>}
         {forceReport.stillMissing&&forceReport.stillMissing.length>0&&<div style={{marginTop:6}}>
