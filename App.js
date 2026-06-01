@@ -3646,20 +3646,15 @@ function App(){
       </p>}
       {lastSync&&!syncing&&!syncError&&<p style={{color:"#334155",fontSize:11,margin:"0 0 12px",textAlign:"center"}}>✓ Synced {lastSync}</p>}
       {(pendingCount>0||photoCount>0)&&<div style={{background:"#3a1f00",border:"2px solid #f59e0b",borderRadius:14,padding:"14px 14px",margin:"0 0 16px",maxWidth:440,width:"100%",boxShadow:"0 0 22px rgba(245,158,11,0.35)"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:4}}>
           <span style={{fontSize:20}}>⚠️</span>
-          <span style={{color:"#fcd34d",fontSize:15,fontWeight:800}}>Not fully saved to the cloud</span>
-        </div>
-        <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-          <span style={{background:pendingCount>0?"#7c2d12":"#0d2818",color:pendingCount>0?"#fed7aa":"#86efac",border:"1px solid "+(pendingCount>0?"#f59e0b":"#22c55e"),borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>
-            {pendingCount>0?("📋 "+pendingCount+" registration"+(pendingCount===1?"":"s")+" → Sheets"):"📋 Registrations ✓"}
-          </span>
-          <span style={{background:photoCount>0?"#7c2d12":"#0d2818",color:photoCount>0?"#fed7aa":"#86efac",border:"1px solid "+(photoCount>0?"#f59e0b":"#22c55e"),borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>
-            {photoCount>0?("📷 "+photoCount+" photo"+(photoCount===1?"":"s")+" → Drive"):"📷 Photos ✓"}
+          <span style={{color:"#fcd34d",fontSize:15,fontWeight:800}}>
+            {pendingCount>0?(pendingCount+" "+(pendingCount===1?"person":"people")+" not saved to the cloud"):"Photos still uploading"}
           </span>
         </div>
         <p style={{color:"#fde68a",fontSize:12,textAlign:"center",margin:"0 0 10px"}}>
           📶 Make sure this phone has Wi-Fi or signal, then press Upload Now.
+          {photoCount>0&&pendingCount>0?(" ("+photoCount+" photo"+(photoCount===1?"":"s")+" too.)"):""}
         </p>
         <button onClick={homeUploadNow} disabled={homeUploading}
           style={{background:homeUploading?"#92610c":"#f59e0b",color:"#1a0f00",border:"none",borderRadius:12,padding:"14px",fontSize:16,fontWeight:900,width:"100%",cursor:homeUploading?"default":"pointer"}}>
