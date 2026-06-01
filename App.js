@@ -436,168 +436,6 @@ async function flushPendingQueue(){
   return {sent:sent,remaining:loadPendingQueue().length};
 }
 
-// Read back from Google Sheets and confirm a member actually landed there.
-// This is the RELIABLE check — not "we tried to send", but "it's really in the cloud".
-async function verifyMemberInCloud(memberId){
-  if(!GOOGLE_URL||GOOGLE_URL.includes("PASTE")||!memberId)return false;
-  try{
-    var url=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
-    var res=await fetch(url,{method:"GET"});
-    var json=await res.json();
-    if(json.status==="ok"){
-      return (json.members||[]).some(function(m){return m.id===memberId;});
-    }
-  }catch(e){ console.log("Verify fail:",e&&e.message||e); }
-  return false;
-}
-
-// Push EVERYTHING still waiting — data queue + photo queue — and report what's left.
-async function uploadEverything(){
-  await flushPendingQueue();
-  var pq=loadPhotoQueue();
-  var members=loadData().members||[];
-  for(var i=0;i<pq.length;i++){
-    var ok=await uploadPendingPhoto(pq[i],members);
-    if(ok)removeFromPhotoQueue(pq[i].memberId);
-  }
-  return {data:loadPendingQueue().length, photos:loadPhotoQueue().length};
-}
-
-// FORCE RE-UPLOAD: re-send the FULL local dataset to Google, even items the app
-// thinks are already saved. The Sheet upserts by ID, so re-sending fills the gaps
-// (the people that silently never landed) WITHOUT creating duplicates. Then it
-// reads Google back and reports how many of OUR members are truly confirmed there.
-// onProgress(done,total,label) is called so the UI can show a live bar.
-async function forceReuploadEverything(onProgress){
-  var d=loadData();
-  var members=d.members||[], checkins=d.checkins||[];
-  var report={membersSent:0,checkinsSent:0,photosSent:0,photosSkipped:0,confirmed:0,total:members.length,stillMissing:[],aborted:false};
-  function prog(done,total,label){ if(onProgress)try{onProgress(done,total,label);}catch(e){} }
-
-  // 0) PRE-FETCH cloud members so we keep existing photo links.
-  // The server rewrites the WHOLE member row on REGISTRATION, so if we re-sent a
-  // member without their existing photoUrl we'd wipe their photo. We read the cloud
-  // first and carry each existing photoUrl through. If this read fails, we MUST NOT
-  // re-send members (it would risk erasing photos) — abort cleanly instead.
-  var cloudPhoto={};
-  try{
-    var gurl=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
-    var gres=await fetch(gurl,{method:"GET"});
-    var gjson=await gres.json();
-    if(gjson.status!=="ok")throw new Error("bad status");
-    (gjson.members||[]).forEach(function(x){ if(x.photoUrl)cloudPhoto[x.id]=x.photoUrl; });
-  }catch(e){
-    report.aborted=true;
-    return report;   // connection not good enough — safer to do nothing
-  }
-
-  // 1) MEMBERS — re-send each full record (server upserts by id, so no duplicates),
-  //    preserving any photo link that already exists in the cloud.
-  for(var i=0;i<members.length;i++){
-    var m=members[i];
-    var payload=Object.assign({type:"REGISTRATION"},m);
-    delete payload.photo; delete payload.photoBase64; // photos go separately
-    if(!payload.photoUrl && cloudPhoto[m.id]) payload.photoUrl=cloudPhoto[m.id];
-    var ok=await postToGoogle(payload);
-    if(ok)report.membersSent++;
-    prog(i+1,members.length,"Members");
-  }
-
-  // 2) CHECK-INS (server de-dupes by member+date, so safe to re-send)
-  for(var j=0;j<checkins.length;j++){
-    var c=checkins[j];
-    var cm=members.find(function(x){return x.id===c.memberId;})||{};
-    var okc=await postToGoogle({type:"CHECKIN",id:c.memberId,memberId:c.memberId,name:cm.name||"",surname:cm.surname||"",date:c.date,school:cm.school||"",status:cm.originalStatus||cm.status||"Member"});
-    if(okc)report.checkinsSent++;
-    prog(j+1,checkins.length,"Check-ins");
-  }
-
-  // NOTE: Feedback is intentionally NOT re-sent here. The server has no de-dupe for
-  // feedback, so re-sending would create duplicate rows every time. Feedback still
-  // syncs normally when entered.
-
-  // 3) PHOTOS — re-attempt every local photo (big ones get compressed so they actually send)
-  var withPhotos=members.filter(function(m){return localStorage.getItem("ph_"+m.id);});
-  for(var p=0;p<withPhotos.length;p++){
-    var mp=withPhotos[p];
-    var raw=localStorage.getItem("ph_"+mp.id);
-    var toSend=raw;
-    if(raw && raw.length>800000){
-      var small=await shrinkPhoto(raw);            // compress instead of skipping
-      if(small && small.length<=800000) toSend=small;
-      else { report.photosSkipped++; prog(p+1,withPhotos.length,"Photos"); continue; }
-    }
-    var okp=await uploadPhotoData(mp,toSend);
-    if(okp){ report.photosSent++; removeFromPhotoQueue(mp.id); }
-    prog(p+1,withPhotos.length,"Photos");
-  }
-
-  // 4) VERIFY — read Google back and count how many of OUR members are really there
-  try{
-    var url=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
-    var res=await fetch(url,{method:"GET"});
-    var json=await res.json();
-    if(json.status==="ok"){
-      var cloudIds={}; (json.members||[]).forEach(function(x){cloudIds[x.id]=true;});
-      members.forEach(function(m){
-        if(cloudIds[m.id])report.confirmed++;
-        else report.stillMissing.push(((m.name||"")+" "+(m.surname||"")).trim());
-      });
-    }
-  }catch(e){ report.verifyFailed=true; }
-  return report;
-}
-  try{
-    var url=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
-    var res=await fetch(url,{method:"GET"});
-    var json=await res.json();
-    if(json.status==="ok"){
-      var cloudIds={}; (json.members||[]).forEach(function(x){cloudIds[x.id]=true;});
-      members.forEach(function(m){
-        if(cloudIds[m.id])report.confirmed++;
-        else report.stillMissing.push(((m.name||"")+" "+(m.surname||"")).trim());
-      });
-    }
-  }catch(e){ report.verifyFailed=true; }
-  return report;
-}
-
-// Compress a base64 image down so it fits under the send limit.
-function shrinkPhoto(dataUrl){
-  return new Promise(function(resolve){
-    try{
-      var img=new Image();
-      img.onload=function(){
-        var max=900, w=img.width, h=img.height;
-        if(w>h && w>max){ h=Math.round(h*max/w); w=max; }
-        else if(h>max){ w=Math.round(w*max/h); h=max; }
-        var cv=document.createElement("canvas"); cv.width=w; cv.height=h;
-        cv.getContext("2d").drawImage(img,0,0,w,h);
-        resolve(cv.toDataURL("image/jpeg",0.7));
-      };
-      img.onerror=function(){resolve(null);};
-      img.src=dataUrl;
-    }catch(e){resolve(null);}
-  });
-}
-
-// Send one photo's base64 to Drive and write the returned URL back to the member row.
-async function uploadPhotoData(member,photoBase64){
-  if(!photoBase64)return false;
-  var body={token:SYNC_TOKEN,type:"UPLOAD_PHOTO",memberId:member.id,name:member.name||"",surname:member.surname||"",photoBase64:photoBase64};
-  try{
-    var res=await fetch(GOOGLE_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
-    var json=JSON.parse(await res.text());
-    if(json.status==="ok"&&json.photoUrl){
-      var full=Object.assign({type:"REGISTRATION"},member,{photoUrl:json.photoUrl});
-      delete full.photo; delete full.photoBase64;
-      await postToGoogle(full);
-      return true;
-    }
-  }catch(e){}
-  return false;
-}
-
 // ── EXPORT HELPERS ──────────────────────────────────────────
 function buildAllSheets(members,checkins,feedback){
   var dates=[...new Set((checkins||[]).map(function(c){return c.date;}))].sort();
@@ -2832,17 +2670,6 @@ function PendingSyncTab(){
   var [photoBusy,setPhotoBusy]=useState(false);
   var [msg,setMsg]=useState("");
   var [photoMsg,setPhotoMsg]=useState("");
-  var [forceBusy,setForceBusy]=useState(false);
-  var [forceProg,setForceProg]=useState(null);   // {done,total,label}
-  var [forceReport,setForceReport]=useState(null);
-
-  async function runForceReupload(){
-    if(!window.confirm("Re-upload EVERYTHING to Google (all members, check-ins, feedback and photos)?\n\nThis is safe — it fills in anything that never uploaded and won't create duplicates. It can take a few minutes. Keep this page open and stay on Wi-Fi."))return;
-    setForceBusy(true);setForceReport(null);setForceProg({done:0,total:1,label:"Starting"});
-    var rep=await forceReuploadEverything(function(done,total,label){setForceProg({done:done,total:total,label:label});});
-    setForceProg(null);setForceReport(rep);setForceBusy(false);
-    setItems(loadPendingQueue());setPhotos(loadPhotoQueue());
-  }
 
   useEffect(function(){
     function refresh(){
@@ -2894,24 +2721,6 @@ function PendingSyncTab(){
     setPhotos(loadPhotoQueue());
   }
 
-  // BACKFILL — scan every member with a local photo and queue them for Drive upload.
-  // Useful one-off operation to push pre-V11 photos (which never reached Drive) up to Drive.
-  function backfillAllPhotos(){
-    var members=loadData().members||[];
-    var found=0,skipped=0;
-    members.forEach(function(m){
-      if(!m.id)return;
-      var photo=localStorage.getItem("ph_"+m.id);
-      if(!photo){skipped++;return;}
-      // Skip if member already has a Drive URL (already uploaded)
-      if(m.photoUrl&&m.photoUrl.indexOf("drive.google.com")>=0){skipped++;return;}
-      addToPhotoQueue(m.id);
-      found++;
-    });
-    setPhotos(loadPhotoQueue());
-    setPhotoMsg("Queued "+found+" photo"+(found===1?"":"s")+" for upload. ("+skipped+" already uploaded or no photo.)");
-  }
-
   function describe(item){
     var p=item.payload||{};
     if(p.type==="REGISTRATION")return "📝 Registration: "+(p.name||"")+" "+(p.surname||"");
@@ -2924,38 +2733,6 @@ function PendingSyncTab(){
 
   return(<div>
     <p className="page-title">⏳ Pending Sync ({items.length+photos.length})</p>
-
-    {/* ── FORCE RE-UPLOAD EVERYTHING ── */}
-    <div style={{background:"#0c1e3a",border:"2px solid #6366f1",borderRadius:14,padding:14,marginBottom:18}}>
-      <p style={{color:"#c7d2fe",fontSize:14,fontWeight:800,margin:"0 0 4px"}}>🔁 Re-upload Everything to Google</p>
-      <p style={{color:"#94a3b8",fontSize:12,margin:"0 0 10px"}}>
-        Re-sends ALL members, check-ins, feedback and photos — including anything that quietly never saved.
-        Safe: it fills the gaps and won't create duplicates. Big photos are compressed so they actually go up. Stay on Wi-Fi.
-      </p>
-      <button onClick={runForceReupload} disabled={forceBusy}
-        style={{background:forceBusy?"#3730a3":"#6366f1",color:"#fff",border:"none",borderRadius:10,padding:"14px",fontSize:15,fontWeight:800,width:"100%",cursor:forceBusy?"default":"pointer",fontFamily:"inherit"}}>
-        {forceBusy?"⏳ Re-uploading… please wait":"🔁 Re-upload Everything Now"}
-      </button>
-      {forceProg&&<div style={{marginTop:10}}>
-        <p style={{color:"#a5b4fc",fontSize:12,margin:"0 0 4px"}}>{forceProg.label}: {forceProg.done} / {forceProg.total}</p>
-        <div style={{background:"#1e293b",borderRadius:6,height:8,overflow:"hidden"}}>
-          <div style={{background:"#6366f1",height:8,width:(forceProg.total?Math.round(forceProg.done/forceProg.total*100):0)+"%",transition:"width .2s"}}></div>
-        </div>
-      </div>}
-      {forceReport&&forceReport.aborted&&<div style={{marginTop:12,background:"#3a1f00",border:"1px solid #f59e0b",borderRadius:10,padding:12}}>
-        <p style={{color:"#fcd34d",fontSize:13,fontWeight:700,margin:0}}>⚠️ Couldn't reach Google to start safely. Check Wi-Fi/signal and tap the button again. Nothing was changed.</p>
-      </div>}
-      {forceReport&&!forceReport.aborted&&<div style={{marginTop:12,background:"#04130a",border:"1px solid "+(forceReport.stillMissing&&forceReport.stillMissing.length?"#f59e0b":"#22c55e"),borderRadius:10,padding:12}}>
-        <p style={{color:"#86efac",fontSize:14,fontWeight:800,margin:"0 0 6px"}}>✓ Confirmed in Google: {forceReport.confirmed} / {forceReport.total} members</p>
-        <p style={{color:"#cbd5e1",fontSize:12,margin:"0 0 4px"}}>Members re-sent: {forceReport.membersSent} · Check-ins: {forceReport.checkinsSent}</p>
-        <p style={{color:"#cbd5e1",fontSize:12,margin:0}}>Photos uploaded: {forceReport.photosSent}{forceReport.photosSkipped?(" · skipped (couldn't shrink): "+forceReport.photosSkipped):""}</p>
-        {forceReport.verifyFailed&&<p style={{color:"#fbbf24",fontSize:12,margin:"6px 0 0"}}>⚠️ Couldn't read Google back to confirm — check connection and try the button again.</p>}
-        {forceReport.stillMissing&&forceReport.stillMissing.length>0&&<div style={{marginTop:6}}>
-          <p style={{color:"#fcd34d",fontSize:12,fontWeight:700,margin:"0 0 2px"}}>Still not in Google ({forceReport.stillMissing.length}):</p>
-          <p style={{color:"#fde68a",fontSize:11,margin:0}}>{forceReport.stillMissing.join(", ")}</p>
-        </div>}
-      </div>}
-    </div>
 
     {/* ── DATA SYNC SECTION ── */}
     <p style={{color:"#fbbf24",fontSize:12,fontWeight:700,marginBottom:6}}>📋 DATA — Google Sheets ({items.length})</p>
@@ -3010,10 +2787,6 @@ function PendingSyncTab(){
       <button onClick={retryPhotos} disabled={photoBusy||photos.length===0}
         style={{background:photos.length===0?"#1e293b":"#3b82f6",color:photos.length===0?"#475569":"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontWeight:700,cursor:photos.length===0||photoBusy?"not-allowed":"pointer",fontFamily:"inherit"}}>
         {photoBusy?"Uploading...":"📸 Retry Photos Now"}
-      </button>
-      <button onClick={backfillAllPhotos}
-        style={{background:"linear-gradient(135deg,#a855f7,#7c3aed)",color:"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-        ⬆️ Upload All Photos to Drive
       </button>
     </div>
     {photoMsg&&<p style={{color:"#6ee7b7",fontSize:13,marginTop:0}}>{photoMsg}</p>}
@@ -3326,51 +3099,6 @@ function ImportTab({data,setData}){
   </div>);
 }
 
-// ── POST-REGISTRATION CONFIRMATION ──────────────────────────
-// Shows after a young person registers. Tells the leader CLEARLY whether the
-// registration actually reached Google Sheets, with an Upload Now button if not.
-function ConfirmScreen({confirm,onUpload,onDone,uploading}){
-  var c=confirm||{};
-  var name=((c.member&&c.member.name)||"")+" "+((c.member&&c.member.surname)||"");
-  var box={maxWidth:440,width:"100%",borderRadius:18,padding:"28px 22px",textAlign:"center"};
-
-  if(c.status==="saving"||uploading){
-    return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{...box,background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"1px solid #334155"}}>
-        <div style={{fontSize:42,marginBottom:10}}>⏳</div>
-        <p style={{color:"#e2e8f0",fontSize:18,fontWeight:800,margin:"0 0 6px"}}>Saving to the cloud…</p>
-        <p style={{color:"#94a3b8",fontSize:13,margin:0}}>Checking that {name.trim()||"this person"} reached Google Sheets. Please keep the app open.</p>
-      </div>
-    </div>);
-  }
-
-  if(c.status==="ok"){
-    return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{...box,background:"#0d2818",border:"1px solid #22c55e"}}>
-        <div style={{fontSize:46,marginBottom:8}}>✅</div>
-        <p style={{color:"#86efac",fontSize:20,fontWeight:900,margin:"0 0 6px"}}>Saved to the cloud!</p>
-        <p style={{color:"#bbf7d0",fontSize:15,margin:"0 0 4px"}}>{name.trim()} is now in Google Sheets.</p>
-        {c.photoPending
-          ? <p style={{color:"#fbbf24",fontSize:12,margin:"8px 0 0"}}>📷 Photo still uploading in the background — that's okay, it will finish on its own.</p>
-          : <p style={{color:"#4ade80",fontSize:12,margin:"8px 0 0"}}>Everything synced. 🙌</p>}
-      </div>
-      <button onClick={onDone} style={{marginTop:22,background:"#22c55e",color:"#04130a",border:"none",borderRadius:14,padding:"16px",fontSize:17,fontWeight:800,width:"100%",maxWidth:440,cursor:"pointer"}}>Done</button>
-    </div>);
-  }
-
-  // status === "pending" — NOT in the cloud yet
-  return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
-    <div style={{...box,background:"#3a1f00",border:"2px solid #f59e0b"}}>
-      <div style={{fontSize:46,marginBottom:8}}>⚠️</div>
-      <p style={{color:"#fcd34d",fontSize:20,fontWeight:900,margin:"0 0 6px"}}>Saved on this phone only</p>
-      <p style={{color:"#fde68a",fontSize:15,margin:"0 0 4px"}}>{name.trim()} is NOT in the cloud yet.</p>
-      <p style={{color:"#fbbf24",fontSize:13,margin:"10px 0 0"}}>📶 Check that this phone has Wi-Fi or signal, then press the button below.</p>
-    </div>
-    <button onClick={onUpload} style={{marginTop:22,background:"#f59e0b",color:"#1a0f00",border:"none",borderRadius:14,padding:"18px",fontSize:18,fontWeight:900,width:"100%",maxWidth:440,cursor:"pointer",boxShadow:"0 0 24px rgba(245,158,11,0.45)"}}>⬆️  Upload Now</button>
-    <button onClick={onDone} style={{marginTop:12,background:"transparent",color:"#94a3b8",border:"1px solid #475569",borderRadius:14,padding:"12px",fontSize:14,fontWeight:600,width:"100%",maxWidth:440,cursor:"pointer"}}>Continue (it will keep retrying)</button>
-  </div>);
-}
-
 // ROOT APP
 function App(){
   var [homeTilePopup,setHomeTilePopup]=useState(null);
@@ -3404,15 +3132,10 @@ function App(){
   var [lastSync,setLastSync]=useState(null);
   var [syncError,setSyncError]=useState(false);
   var [pendingCount,setPendingCount]=useState(loadPendingQueue().length);
-  var [photoCount,setPhotoCount]=useState(loadPhotoQueue().length);
-  var [confirm,setConfirm]=useState(null);          // post-registration confirmation
-  var [confirmBusy,setConfirmBusy]=useState(false);
-  var [homeUploading,setHomeUploading]=useState(false);
-  var [homeUploadMsg,setHomeUploadMsg]=useState("");
 
-  // Keep the home-screen pending badge in sync with both queues
+  // Keep the home-screen pending badge in sync with the queue
   useEffect(function(){
-    function refresh(){setPendingCount(loadPendingQueue().length);setPhotoCount(loadPhotoQueue().length);}
+    function refresh(){setPendingCount(loadPendingQueue().length);}
     var t=setInterval(refresh,3000);
     window.addEventListener("jg_pending_changed",refresh);
     return function(){clearInterval(t);window.removeEventListener("jg_pending_changed",refresh);};
@@ -3554,54 +3277,6 @@ function App(){
     }
   }
 
-  // Register, then SHOW the leader whether it really reached the cloud.
-  async function registerAndConfirm(member,isNew){
-    handleRegistered(member,isNew);   // local save + first send attempt (queues on failure)
-    setConfirm({status:"saving",member:member});
-    setScreen("confirm");
-    var ok=false;
-    // Give the first POST a moment, flush the queue, then read back from Sheets.
-    // Try a few times — Apps Script can take a second to write the row.
-    for(var i=0;i<3;i++){
-      await new Promise(function(r){setTimeout(r,1500);});
-      await flushPendingQueue();
-      ok=await verifyMemberInCloud(member.id);
-      if(ok)break;
-    }
-    var photoPending=loadPhotoQueue().some(function(p){return p.memberId===member.id;});
-    setConfirm({status:ok?"ok":"pending",member:member,photoPending:photoPending});
-    setPendingCount(loadPendingQueue().length);setPhotoCount(loadPhotoQueue().length);
-  }
-
-  // "Upload Now" on the confirmation screen — push everything, re-check the cloud.
-  async function confirmUploadNow(){
-    if(!confirm||!confirm.member)return;
-    var mid=confirm.member.id;
-    setConfirmBusy(true);
-    var ok=false;
-    for(var i=0;i<3;i++){
-      await uploadEverything();
-      ok=await verifyMemberInCloud(mid);
-      if(ok)break;
-      await new Promise(function(r){setTimeout(r,1500);});
-    }
-    var photoPending=loadPhotoQueue().some(function(p){return p.memberId===mid;});
-    setConfirm({status:ok?"ok":"pending",member:confirm.member,photoPending:photoPending});
-    setPendingCount(loadPendingQueue().length);setPhotoCount(loadPhotoQueue().length);
-    setConfirmBusy(false);
-  }
-
-  // Global "Upload Now" on the home screen — anyone can press it, no PIN.
-  async function homeUploadNow(){
-    setHomeUploading(true);setHomeUploadMsg("Uploading…");
-    var r=await uploadEverything();
-    setPendingCount(loadPendingQueue().length);setPhotoCount(loadPhotoQueue().length);
-    var left=r.data+r.photos;
-    setHomeUploadMsg(left===0?"✓ All uploaded!":left+" still waiting — check Wi-Fi/signal and try again");
-    setHomeUploading(false);
-    loadFromGoogle();
-  }
-
   // Count attendance for the active event day (today if Friday, or latest event, or last Friday)
   var eventDate=getActiveEventDate(data.events);
   // Get unique member IDs who checked in on event date  
@@ -3614,8 +3289,7 @@ function App(){
     return m&&m.originalStatus==="Visitor";
   }).length;
 
-  if(screen==="register")return(<div className="container"><RegistrationForm existingMembers={data.members||[]} prefill={prefill} onDone={function(m,isNew){setPrefill(null);registerAndConfirm(m,isNew);}} onBack={function(){setPrefill(null);setScreen("home");}}/></div>);
-  if(screen==="confirm")return(<div className="container"><ConfirmScreen confirm={confirm} uploading={confirmBusy} onUpload={confirmUploadNow} onDone={function(){setConfirm(null);setScreen("home");}}/></div>);
+  if(screen==="register")return(<div className="container"><RegistrationForm existingMembers={data.members||[]} prefill={prefill} onDone={function(m,isNew){setPrefill(null);handleRegistered(m,isNew);setScreen("home");}} onBack={function(){setPrefill(null);setScreen("home");}}/></div>);
   if(screen==="checkin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}}/></div>);
   if(screen==="pin")return <PinScreen onSuccess={function(){setScreen("admin");}}/>;
   if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){localStorage.removeItem("jg_admin_role");localStorage.removeItem("jg_admin_leader_id");setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
@@ -3645,27 +3319,9 @@ function App(){
         ⚠️ Using local data. <span style={{textDecoration:"underline",cursor:"pointer"}} onClick={loadFromGoogle}>Retry</span>
       </p>}
       {lastSync&&!syncing&&!syncError&&<p style={{color:"#334155",fontSize:11,margin:"0 0 12px",textAlign:"center"}}>✓ Synced {lastSync}</p>}
-      {(pendingCount>0||photoCount>0)&&<div style={{background:"#3a1f00",border:"2px solid #f59e0b",borderRadius:14,padding:"14px 14px",margin:"0 0 16px",maxWidth:440,width:"100%",boxShadow:"0 0 22px rgba(245,158,11,0.35)"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8}}>
-          <span style={{fontSize:20}}>⚠️</span>
-          <span style={{color:"#fcd34d",fontSize:15,fontWeight:800}}>Not fully saved to the cloud</span>
-        </div>
-        <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-          <span style={{background:pendingCount>0?"#7c2d12":"#0d2818",color:pendingCount>0?"#fed7aa":"#86efac",border:"1px solid "+(pendingCount>0?"#f59e0b":"#22c55e"),borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>
-            {pendingCount>0?("📋 "+pendingCount+" registration"+(pendingCount===1?"":"s")+" → Sheets"):"📋 Registrations ✓"}
-          </span>
-          <span style={{background:photoCount>0?"#7c2d12":"#0d2818",color:photoCount>0?"#fed7aa":"#86efac",border:"1px solid "+(photoCount>0?"#f59e0b":"#22c55e"),borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>
-            {photoCount>0?("📷 "+photoCount+" photo"+(photoCount===1?"":"s")+" → Drive"):"📷 Photos ✓"}
-          </span>
-        </div>
-        <p style={{color:"#fde68a",fontSize:12,textAlign:"center",margin:"0 0 10px"}}>
-          📶 Make sure this phone has Wi-Fi or signal, then press Upload Now.
-        </p>
-        <button onClick={homeUploadNow} disabled={homeUploading}
-          style={{background:homeUploading?"#92610c":"#f59e0b",color:"#1a0f00",border:"none",borderRadius:12,padding:"14px",fontSize:16,fontWeight:900,width:"100%",cursor:homeUploading?"default":"pointer"}}>
-          {homeUploading?"⏳ Uploading…":"⬆️  Upload Now"}
-        </button>
-        {homeUploadMsg&&<p style={{color:homeUploadMsg.indexOf("✓")>=0?"#86efac":"#fbbf24",fontSize:12,textAlign:"center",margin:"8px 0 0"}}>{homeUploadMsg}</p>}
+      {pendingCount>0&&<div onClick={function(){setScreen("pin");}} style={{background:"#3a1f00",border:"1px solid #f59e0b",borderRadius:10,padding:"8px 12px",margin:"0 0 12px",textAlign:"center",cursor:"pointer",maxWidth:440,width:"100%"}}>
+        <span style={{color:"#fbbf24",fontSize:12,fontWeight:600}}>⏳ {pendingCount} item{pendingCount>1?"s":""} not yet saved to Google Sheets</span>
+        <div style={{color:"#94a3b8",fontSize:10,marginTop:2}}>Retrying automatically · tap to view (admin)</div>
       </div>}
 
       {/* Stats strip - tappable with PIN */}
