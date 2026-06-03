@@ -110,10 +110,24 @@ body {
 
 /* ── Tabs ── */
 .tabs {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
     gap: 8px;
     margin-bottom: 18px;
-    flex-wrap: wrap;
+}
+/* Uniform square-ish tiles in the admin nav (auto-fits 2 across on phones, 3-4 on tablets) */
+.tabs .tab {
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.2;
+    padding: 12px 8px;
+    border-radius: 12px;
+}
+.tabs .tab .badge {
+    margin-left: 5px;
 }
 .tab {
     background: #1e293b;
