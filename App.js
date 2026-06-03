@@ -162,6 +162,25 @@ function sortAlpha(arr){ return (arr||[]).slice().sort(function(a,b){ var na=(a.
 // Normalised identity key for matching the same person across phones (trim, lowercase, collapse spaces)
 function memberKey(m){ var n=String((m&&m.name)||"").trim().toLowerCase().replace(/\s+/g," "); var s=String((m&&m.surname)||"").trim().toLowerCase().replace(/\s+/g," "); return n+"|"+s; }
 function phoneKey(p){ var d=String(p||"").replace(/\D/g,""); if(d.length>9)d=d.slice(-9); return d.length>=9?d:""; }
+// Turn any Google Drive link into one that actually renders inside an <img>.
+// Drive's old "uc?export=view&id=" links no longer embed (Google redirects them to a
+// scan/sign-in page), so we rewrite to the lh3 image host. The Drive file must be shared
+// "Anyone with the link can view". Already-embeddable or non-Drive URLs pass through unchanged.
+function driveImg(url){
+  var u=String(url||"").trim();
+  if(!u || u.indexOf("googleusercontent.com")>=0) return u;
+  var m=u.match(/[?&]id=([A-Za-z0-9_-]+)/) || u.match(/\/d\/([A-Za-z0-9_-]+)/);
+  return m ? ("https://lh3.googleusercontent.com/d/"+m[1]+"=s400") : u;
+}
+// Best displayable image for a member: a locally cached data: photo if present, otherwise
+// the embeddable Drive link. Also repairs old non-embeddable Drive links that earlier
+// versions may have cached into the photo slot. Returns null if there's nothing to show.
+function resolvePhoto(m){
+  var c=(m&&m.id)?localStorage.getItem("ph_"+m.id):null;
+  if(c && c.indexOf("data:")===0) return c;            // genuine local photo
+  if(c) return driveImg(c);                            // a URL string got cached — normalise it
+  return (m&&m.photoUrl) ? driveImg(m.photoUrl) : null;
+}
 // Pick the "best" record among duplicates: prefer photo, then most filled fields, then oldest id
 function memberScore(m){ var s=0; if(m.photoUrl||localStorage.getItem("ph_"+m.id))s+=100; ["phone","parentName","parentPhone","school","birthday","address"].forEach(function(f){ if(m[f]&&String(m[f]).trim()&&String(m[f])!=="?")s+=5; }); return s; }
 function statusBadge(s){ if(s==="Member")return{bg:"#0d2818",col:"#86efac",bd:"#22c55e"}; if(s==="Returning Visitor")return{bg:"#1c1504",col:"#fcd34d",bd:"#f59e0b"}; return{bg:"#1a0a1e",col:"#e879f9",bd:"#a855f7"}; }
@@ -297,7 +316,13 @@ async function uploadPendingPhoto(item,members){
   if(!member)return true; // member deleted — clear from queue
   var photo=localStorage.getItem("ph_"+memberId);
   if(!photo)return true; // no photo locally — nothing to send
-  if(photo.length>800000)return true; // photo too large for single request — skip
+  if(photo.indexOf("data:")!==0)return true; // cached value is a URL, not a captured photo — already on Drive
+  if(photo.length>800000){
+    // Too big for one request — COMPRESS it (don't silently drop it like before).
+    var smaller=await shrinkPhoto(photo);
+    if(smaller && smaller.length<=800000){ photo=smaller; }
+    else { return false; } // couldn't shrink yet — keep it queued and retry, never lose it
+  }
   var body={
     token:SYNC_TOKEN,type:"UPLOAD_PHOTO",
     memberId:memberId,
@@ -535,8 +560,10 @@ async function forceReuploadEverything(onProgress){
   // feedback, so re-sending would create duplicate rows every time. Feedback still
   // syncs normally when entered.
 
-  // 3) PHOTOS — re-attempt every local photo (big ones get compressed so they actually send)
-  var withPhotos=members.filter(function(m){return localStorage.getItem("ph_"+m.id);});
+  // 3) PHOTOS — re-attempt every genuine captured photo (big ones get compressed so they
+  //    actually send). A cached value that is a URL (not a data: photo) is already on Drive,
+  //    so we skip it — re-uploading a URL string would create a junk file.
+  var withPhotos=members.filter(function(m){var c=localStorage.getItem("ph_"+m.id);return c&&c.indexOf("data:")===0;});
   for(var p=0;p<withPhotos.length;p++){
     var mp=withPhotos[p];
     var raw=localStorage.getItem("ph_"+mp.id);
@@ -544,10 +571,11 @@ async function forceReuploadEverything(onProgress){
     if(raw && raw.length>800000){
       var small=await shrinkPhoto(raw);            // compress instead of skipping
       if(small && small.length<=800000) toSend=small;
-      else { report.photosSkipped++; prog(p+1,withPhotos.length,"Photos"); continue; }
+      else { report.photosSkipped++; addToPhotoQueue(mp.id); prog(p+1,withPhotos.length,"Photos"); continue; } // keep for background retry
     }
     var okp=await uploadPhotoData(mp,toSend);
     if(okp){ report.photosSent++; removeFromPhotoQueue(mp.id); }
+    else { addToPhotoQueue(mp.id); }              // upload failed — keep it queued, don't lose it
     prog(p+1,withPhotos.length,"Photos");
   }
 
@@ -953,7 +981,7 @@ function exportPDF(members,checkins,feedback){
     var memberPhotoHtml="<h2 style='color:#1e293b;border-left:4px solid #6c63ff;padding-left:8px;font-size:13px;'>Member Directory with Photos</h2>";
     memberPhotoHtml+="<div style='display:flex;flex-wrap:wrap;gap:10px;'>";
     sortAlpha(members).forEach(function(m){
-      var photo=localStorage.getItem("ph_"+m.id);
+      var photo=resolvePhoto(m);
       var status=computeStatus(m,checkins);
       var visits=visitCount(m,checkins);
       var statusCol=status==="Member"?"#22c55e":status==="Returning Visitor"?"#f59e0b":"#a855f7";
@@ -3714,11 +3742,8 @@ function App(){
           feedback:local.feedback||[]
         };
         merged.members=merged.members.map(function(m){
-          var p=localStorage.getItem("ph_"+m.id);
-          // Prefer local photo; fall back to Google Drive URL if available
-          if(p) return Object.assign({},m,{photo:p});
-          if(m.photoUrl) return Object.assign({},m,{photo:m.photoUrl});
-          return m;
+          var ph=resolvePhoto(m);
+          return ph ? Object.assign({},m,{photo:ph}) : m;
         });
         // FIX: pull leaders from Google so PINs work on every device
         if(json.leaders&&json.leaders.length>0){
