@@ -603,37 +603,137 @@ async function uploadPhotoData(member,photoBase64){
   return false;
 }
 
+// ── DEDUP HELPERS ───────────────────────────────────────────
+// A field counts as "empty" if it is blank or a placeholder "?".
+function dupBlank(v){ var s=String(v==null?"":v).trim(); return s===""||s==="?"; }
+// Normalise a birthday to YYYY-MM-DD for comparison (drops any time portion).
+function dupBday(v){ var s=String(v==null?"":v).trim(); if(!s||s==="?")return ""; return s.split("T")[0]; }
+// Strong identifiers — used to tell apart two DIFFERENT people who share a name.
+function dupStrongIds(m){ return { ph:phoneKey(m.phone), pph:phoneKey(m.parentPhone), bd:dupBday(m.birthday) }; }
+// Two records CONFLICT when a strong identifier is present on both and differs.
+// (A blank on either side is not a conflict — it just means we don't know yet.)
+function dupConflict(a,b){
+  var x=dupStrongIds(a), y=dupStrongIds(b);
+  if(x.ph  && y.ph  && x.ph !==y.ph ) return true;
+  if(x.pph && y.pph && x.pph!==y.pph) return true;
+  if(x.bd  && y.bd  && x.bd !==y.bd ) return true;
+  return false;
+}
+// OVER-MERGE GUARD: split a same-name group into clusters where nobody conflicts
+// with anyone else in their cluster. Two "John Smith"s with different phones/
+// birthdays end up in separate clusters and are kept as separate people.
+function dupCluster(group){
+  var clusters=[];
+  group.forEach(function(m){
+    var placed=false;
+    for(var c=0;c<clusters.length;c++){
+      if(clusters[c].every(function(x){return !dupConflict(x,m);})){ clusters[c].push(m); placed=true; break; }
+    }
+    if(!placed) clusters.push([m]);
+  });
+  return clusters;
+}
+// FIELD-LEVEL MERGE: fill the winner's empty fields from the losers (best-first),
+// so a deleted duplicate's unique info is never lost. Returns {member, filled}.
+var DUP_MERGE_FIELDS=["phone","whatsapp","parentName","parentSurname","parentPhone","school","address","birthday","grade","invitedBy","visitReason"];
+function dupMergeInto(winner, losers){
+  var out=Object.assign({}, winner), filled=0;
+  DUP_MERGE_FIELDS.forEach(function(f){
+    if(dupBlank(out[f])){
+      for(var i=0;i<losers.length;i++){ if(!dupBlank(losers[i][f])){ out[f]=losers[i][f]; filled++; break; } }
+    }
+  });
+  if(dupBlank(out.photoUrl)){
+    for(var i=0;i<losers.length;i++){ if(!dupBlank(losers[i].photoUrl)){ out.photoUrl=losers[i].photoUrl; filled++; break; } }
+  }
+  return { member:out, filled:filled };
+}
+
 // CLEAN DUPLICATES: find people who appear more than once (same name, or same phone),
-// keep the best record of each, move their attendance onto the kept one, and delete the
-// extra rows from Google. Safe: attendance is preserved; only true duplicates are removed.
+// keep the best record of each, MERGE the others' unique info onto it, move their
+// attendance onto it, and delete the extra rows from Google.
+// Safe: attendance is preserved; only true duplicates are removed; same-name-but-
+// different-person records (conflicting phone/parent phone/birthday) are kept apart.
 // onProgress(done,total) drives the progress bar.
 async function cleanDuplicates(onProgress){
   var d=loadData();
   var members=d.members||[], checkins=d.checkins||[];
-  // Group members by identity (name key; fall back to phone key)
+  // Group members by identity (name key; fall back to phone key, else their own id)
   var byKey={};
   members.forEach(function(m){
-    var k=memberKey(m); if(k==="|"||k===""){ k="phone:"+phoneKey(m.phone)||("id:"+m.id); }
+    var k=memberKey(m);
+    if(k==="|"||k===""){ var pk=phoneKey(m.phone); k = pk ? ("phone:"+pk) : ("id:"+m.id); }
     (byKey[k]=byKey[k]||[]).push(m);
   });
-  var report={groupsFound:0, removed:0, kept:0, mergedNames:[], failed:0};
-  var keep=[]; var toDelete=[]; var ckRemap={};
+  var report={groupsFound:0, removed:0, kept:0, mergedNames:[], failed:0, fieldsFilled:0, winnersUpdated:0, collisions:[], cloudUnavailable:false};
+  var keep=[]; var toDelete=[]; var ckRemap={}; var winnerUpserts=[];
+
   Object.keys(byKey).forEach(function(k){
-    var g=byKey[k];
-    if(g.length===1){ keep.push(g[0]); return; }
-    report.groupsFound++;
-    g.sort(function(a,b){ return memberScore(b)-memberScore(a); });
-    var winner=g[0]; keep.push(winner);
-    report.mergedNames.push(((winner.name||"")+" "+(winner.surname||"")).trim()+" (×"+g.length+")");
-    for(var i=1;i<g.length;i++){ toDelete.push(g[i]); ckRemap[g[i].id]=winner.id; }
+    var group=byKey[k];
+    if(group.length===1){ keep.push(group[0]); return; }
+    group.sort(function(a,b){ return memberScore(b)-memberScore(a); });   // strongest record first
+    var clusters=dupCluster(group);                                       // over-merge guard
+    if(clusters.length>1){
+      report.collisions.push(((group[0].name||"")+" "+(group[0].surname||"")).trim()+" — "+clusters.length+" different people kept separate");
+    }
+    clusters.forEach(function(cl){
+      if(cl.length===1){ keep.push(cl[0]); return; }
+      report.groupsFound++;
+      var winner=cl[0], losers=cl.slice(1);
+      var mg=dupMergeInto(winner, losers);                                 // field-level merge
+      report.fieldsFilled+=mg.filled;
+      // carry a local photo onto the winner if it has none of its own
+      if(!localStorage.getItem("ph_"+winner.id)){
+        for(var li=0; li<losers.length; li++){
+          var lp=localStorage.getItem("ph_"+losers[li].id);
+          if(lp){ try{ localStorage.setItem("ph_"+winner.id, lp); }catch(e){} break; }
+        }
+      }
+      if(mg.filled>0) winnerUpserts.push(mg.member);
+      keep.push(mg.member);
+      report.mergedNames.push(((mg.member.name||"")+" "+(mg.member.surname||"")).trim()+" (×"+cl.length+")");
+      losers.forEach(function(L){ toDelete.push(L); ckRemap[L.id]=winner.id; });
+    });
   });
+
   // Re-point local check-ins from removed dups to the kept record, de-duped
   var seen={}, mergedCk=[];
   checkins.map(function(c){ return ckRemap[c.memberId]?Object.assign({},c,{memberId:ckRemap[c.memberId]}):c; })
     .forEach(function(c){ var kk=c.memberId+"_"+c.date; if(!seen[kk]){seen[kk]=true;mergedCk.push(c);} });
 
-  // For each duplicate being removed: first push its attendance onto the winner (server de-dupes),
-  // then delete the duplicate row from Google.
+  var totalSteps=winnerUpserts.length+toDelete.length, step=0;
+  function bump(){ step++; if(onProgress)try{onProgress(step,totalSteps);}catch(e){} }
+
+  // 1) Persist enriched winners FIRST. The server rewrites the whole member row, so
+  //    we read the cloud and carry each winner's existing photoUrl through — otherwise
+  //    re-saving could wipe their photo. If the cloud can't be read, skip the upserts:
+  //    the merged fields stay saved locally and sync on the next "Re-upload Everything".
+  if(winnerUpserts.length){
+    var cloudPhoto={}, cloudOK=false;
+    try{
+      var gurl=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
+      var gres=await fetch(gurl,{method:"GET"});
+      var gjson=await gres.json();
+      if(gjson.status==="ok"){ cloudOK=true; (gjson.members||[]).forEach(function(x){ if(x.photoUrl)cloudPhoto[x.id]=x.photoUrl; }); }
+    }catch(e){}
+    if(cloudOK){
+      for(var u=0; u<winnerUpserts.length; u++){
+        var W=winnerUpserts[u];
+        var payload=Object.assign({type:"REGISTRATION"}, W);
+        delete payload.photo; delete payload.photoBase64;
+        if(!payload.photoUrl && cloudPhoto[W.id]) payload.photoUrl=cloudPhoto[W.id];
+        var okW=await postToGoogle(payload);
+        if(okW)report.winnersUpdated++;
+        bump();
+      }
+    } else {
+      report.cloudUnavailable=true;
+      for(var s2=0;s2<winnerUpserts.length;s2++) bump();   // still advance the bar
+    }
+  }
+
+  // 2) For each duplicate being removed: push its attendance onto the winner (server
+  //    de-dupes), then delete the duplicate row from Google.
   for(var i=0;i<toDelete.length;i++){
     var dup=toDelete[i], winnerId=ckRemap[dup.id];
     var dupCks=checkins.filter(function(c){return c.memberId===dup.id;});
@@ -642,9 +742,11 @@ async function cleanDuplicates(onProgress){
       await postToGoogle({type:"CHECKIN",id:winnerId,memberId:winnerId,name:w.name||"",surname:w.surname||"",date:dupCks[j].date,school:w.school||"",status:w.originalStatus||w.status||"Member"});
     }
     var del=await postToGoogle({type:"DELETE_MEMBER",id:dup.id});
-    if(del)report.removed++; else report.failed++;
-    if(onProgress)try{onProgress(i+1,toDelete.length);}catch(e){}
+    if(del){ report.removed++; try{localStorage.removeItem("ph_"+dup.id);}catch(e){} }
+    else report.failed++;
+    bump();
   }
+
   var cleaned=Object.assign({},d,{members:keep,checkins:mergedCk});
   saveData(cleaned);
   try{ window.dispatchEvent(new Event("jg-refresh")); }catch(e){}
@@ -3032,14 +3134,14 @@ function PendingSyncTab(){
     <div style={{background:"#1e1433",border:"2px solid #a855f7",borderRadius:14,padding:14,marginBottom:18}}>
       <p style={{color:"#e9d5ff",fontSize:14,fontWeight:800,margin:"0 0 4px"}}>🧹 Clean Duplicates</p>
       <p style={{color:"#94a3b8",fontSize:12,margin:"0 0 10px"}}>
-        Finds people listed more than once (same name or same phone), keeps the best record, moves their attendance onto it, and deletes the extra copies from Google. Attendance is kept. Stay on Wi-Fi.
+        Finds people listed more than once (same name or same phone), keeps the best record, fills in any details only the extra copies had, moves their attendance onto it, then deletes the extra copies from Google. Two different people who share a name (different phone, parent phone or birthday) are kept separate. Attendance is kept. Stay on Wi-Fi.
       </p>
       <button onClick={runCleanDuplicates} disabled={dupBusy}
         style={{background:dupBusy?"#6b21a8":"#a855f7",color:"#fff",border:"none",borderRadius:10,padding:"14px",fontSize:15,fontWeight:800,width:"100%",cursor:dupBusy?"default":"pointer",fontFamily:"inherit"}}>
         {dupBusy?"⏳ Cleaning…":"🧹 Find & Remove Duplicates"}
       </button>
       {dupProg&&<div style={{marginTop:10}}>
-        <p style={{color:"#d8b4fe",fontSize:12,margin:"0 0 4px"}}>Removing duplicates: {dupProg.done} / {dupProg.total}</p>
+        <p style={{color:"#d8b4fe",fontSize:12,margin:"0 0 4px"}}>Cleaning up: {dupProg.done} / {dupProg.total}</p>
         <div style={{background:"#1e293b",borderRadius:6,height:8,overflow:"hidden"}}>
           <div style={{background:"#a855f7",height:8,width:(dupProg.total?Math.round(dupProg.done/dupProg.total*100):0)+"%",transition:"width .2s"}}></div>
         </div>
@@ -3047,6 +3149,12 @@ function PendingSyncTab(){
       {dupReport&&<div style={{marginTop:12,background:"#04130a",border:"1px solid #22c55e",borderRadius:10,padding:12}}>
         <p style={{color:"#86efac",fontSize:14,fontWeight:800,margin:"0 0 6px"}}>✓ {dupReport.groupsFound===0?"No duplicates found — your list is clean!":("Cleaned up "+dupReport.groupsFound+" duplicated "+(dupReport.groupsFound===1?"person":"people"))}</p>
         <p style={{color:"#cbd5e1",fontSize:12,margin:0}}>People now: {dupReport.kept} · Duplicate copies removed: {dupReport.removed}{dupReport.failed?(" · couldn't remove: "+dupReport.failed):""}</p>
+        {dupReport.fieldsFilled>0&&<p style={{color:"#86efac",fontSize:12,margin:"4px 0 0"}}>🧩 Filled in {dupReport.fieldsFilled} missing detail{dupReport.fieldsFilled===1?"":"s"} from the extra copies{dupReport.winnersUpdated?(" ("+dupReport.winnersUpdated+" saved to Google)"):""}.</p>}
+        {dupReport.cloudUnavailable&&<p style={{color:"#fbbf24",fontSize:11,margin:"4px 0 0"}}>⚠️ Couldn't reach Google to save the filled-in details — they're saved on this phone. Run "Re-upload Everything" once you're back on Wi-Fi.</p>}
+        {dupReport.collisions&&dupReport.collisions.length>0&&<div style={{marginTop:8,background:"#1c1504",border:"1px solid #f59e0b",borderRadius:8,padding:"8px 10px"}}>
+          <p style={{color:"#fcd34d",fontSize:12,fontWeight:700,margin:"0 0 2px"}}>⚠️ Same name, different people — kept separate:</p>
+          <p style={{color:"#fde68a",fontSize:11,margin:0}}>{dupReport.collisions.join(" · ")}</p>
+        </div>}
         {dupReport.mergedNames&&dupReport.mergedNames.length>0&&<div style={{marginTop:6}}>
           <p style={{color:"#a5b4fc",fontSize:12,fontWeight:700,margin:"0 0 2px"}}>Merged:</p>
           <p style={{color:"#cbd5e1",fontSize:11,margin:0}}>{dupReport.mergedNames.join(", ")}</p>
