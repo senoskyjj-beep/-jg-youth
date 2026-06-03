@@ -899,7 +899,7 @@ function exportPDF(members,checkins,feedback){
 }
 
 // PIN
-function PinScreen({onSuccess}){
+function PinScreen({onSuccess,onBack}){
   var [pin,setPin]=useState(""); var [shake,setShake]=useState(false);
   var [checking,setChecking]=useState(false);
   function press(k){
@@ -931,9 +931,10 @@ function PinScreen({onSuccess}){
     }
   }
   return(<div className="pin-page"><div className="pin-box">
+    {onBack&&<div style={{textAlign:"left",marginBottom:6}}><button onClick={onBack} style={{background:"transparent",border:"none",color:"#64748b",fontSize:14,cursor:"pointer",fontFamily:"inherit",padding:0}}>← Home</button></div>}
     <div style={{fontSize:36,marginBottom:8}}>✝</div>
     <h2 style={{margin:"0 0 4px"}}>Admin Access</h2>
-    <p style={{color:"#94a3b8",fontSize:14,margin:"0 0 6px"}}>Enter your 4-digit PIN</p>
+    <p style={{color:"#94a3b8",fontSize:14,margin:"0 0 6px"}}>Enter your 5-digit PIN</p>
     <div className={"pin-dots"+(shake?" shake":"")} style={{display:"flex",justifyContent:"center",gap:12,margin:"18px 0"}}>
       {[0,1,2,3,4].map(function(i){return <div key={i} className={"pin-dot"+(pin.length>i?" filled":"")}/>;  })}
     </div>
@@ -1053,6 +1054,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
   }
 
   return(<div>
+    <button className="btn btn-admin" onClick={onBack} style={{marginBottom:12}}>← Home</button>
     <div style={{textAlign:"center",marginBottom:18}}>
       <div style={{display:"inline-block",background:form.status==="Visitor"?"linear-gradient(135deg,#a855f7,#6c63ff)":"linear-gradient(135deg,#22c55e,#10b981)",color:"#fff",padding:"6px 16px",borderRadius:20,fontSize:13,fontWeight:700,marginBottom:8}}>
         {form.status==="Visitor"?"🙋 Visitor Registration":"✝ Member Registration"}
@@ -1329,7 +1331,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
         <h2 style={{margin:"0 0 8px",color:"#86efac"}}>Welcome, {leaderDone.name}!</h2>
         <p style={{color:"#94a3b8",fontSize:14,margin:"0 0 20px"}}>You are checked in as {leaderDone.role} Leader.</p>
         <button className="btn btn-reg" onClick={function(){setLeaderDone(null);setLeaderQuery("");}}>Check In Another Leader</button>
-        <button className="btn btn-admin" onClick={function(){setMode("youth");setLeaderDone(null);}}>← Done</button>
+        <button className="btn btn-admin" onClick={function(){setLeaderDone(null);onBack();}}>← Done</button>
       </div>);
     }
     var matchedLeaders=leaders.filter(function(L){
@@ -1337,7 +1339,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
       return (L.name+" "+L.surname).toLowerCase().includes(leaderQuery.toLowerCase());
     });
     return(<div>
-      <button onClick={function(){setMode("youth");}} className="btn btn-admin" style={{marginBottom:14}}>← Back to Youth Check-in</button>
+      <button onClick={onBack} className="btn btn-admin" style={{marginBottom:14}}>← Home</button>
       <p className="page-title">⭐ Leader Check-In</p>
       <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Tap your name to mark yourself as present today.</p>
       <input className="input" placeholder="Search your name..." value={leaderQuery} onChange={function(e){setLeaderQuery(e.target.value);}}/>
@@ -1357,9 +1359,9 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
   }
 
   return(<div>
-    <h3 className="page-title">Check In</h3>
-    <button onClick={function(){setMode("leader");}} style={{width:"100%",background:"linear-gradient(135deg,#fbbf24,#f59e0b)",color:"#fff",border:"none",borderRadius:12,padding:"11px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:10}}>⭐ I am a Leader (Leader Check-In)</button>
-    <p style={{color:"#94a3b8",fontSize:13,marginBottom:10}}>Or search your name below to check in as youth.</p>
+    <button className="btn btn-admin" onClick={onBack} style={{marginBottom:12}}>← Home</button>
+    <h3 className="page-title">✅ Member Check-In</h3>
+    <p style={{color:"#94a3b8",fontSize:13,marginBottom:10}}>Search your name to check in.</p>
     <input className="input" placeholder="Search your name..." value={search} onChange={function(e){setSearch(e.target.value);}} autoFocus/>
     {results.map(function(m){
       var status=computeStatus(m,checkins);
@@ -3728,7 +3730,7 @@ function App(){
   if(screen==="confirm")return(<div className="container"><ConfirmScreen confirm={confirm} uploading={confirmBusy} onUpload={confirmUploadNow} onDone={function(){setConfirm(null);setScreen("home");}}/></div>);
   if(screen==="checkin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}}/></div>);
   if(screen==="leadercheckin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}} initialMode="leader"/></div>);
-  if(screen==="pin")return <PinScreen onSuccess={function(){setScreen("admin");}}/>;
+  if(screen==="pin")return <PinScreen onSuccess={function(){setScreen("admin");}} onBack={function(){setScreen("home");}}/>;
   if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){localStorage.removeItem("jg_admin_role");localStorage.removeItem("jg_admin_leader_id");localStorage.removeItem("jg_admin_pin");setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
 
   return(<div style={{minHeight:"100vh",background:"#000",display:"flex",flexDirection:"column"}}>
