@@ -159,6 +159,11 @@ function weeksAgo(dateStr){
   }catch(e){return 0;}
 }
 function sortAlpha(arr){ return (arr||[]).slice().sort(function(a,b){ var na=(a.name+" "+a.surname).toLowerCase(),nb=(b.name+" "+b.surname).toLowerCase(); return na<nb?-1:na>nb?1:0; }); }
+// Normalised identity key for matching the same person across phones (trim, lowercase, collapse spaces)
+function memberKey(m){ var n=String((m&&m.name)||"").trim().toLowerCase().replace(/\s+/g," "); var s=String((m&&m.surname)||"").trim().toLowerCase().replace(/\s+/g," "); return n+"|"+s; }
+function phoneKey(p){ var d=String(p||"").replace(/\D/g,""); if(d.length>9)d=d.slice(-9); return d.length>=9?d:""; }
+// Pick the "best" record among duplicates: prefer photo, then most filled fields, then oldest id
+function memberScore(m){ var s=0; if(m.photoUrl||localStorage.getItem("ph_"+m.id))s+=100; ["phone","parentName","parentPhone","school","birthday","address"].forEach(function(f){ if(m[f]&&String(m[f]).trim()&&String(m[f])!=="?")s+=5; }); return s; }
 function statusBadge(s){ if(s==="Member")return{bg:"#0d2818",col:"#86efac",bd:"#22c55e"}; if(s==="Returning Visitor")return{bg:"#1c1504",col:"#fcd34d",bd:"#f59e0b"}; return{bg:"#1a0a1e",col:"#e879f9",bd:"#a855f7"}; }
 // Returns true if member profile is missing any required info
 function isProfileIncomplete(m){
@@ -470,21 +475,40 @@ async function uploadEverything(){
 // onProgress(done,total,label) is called so the UI can show a live bar.
 async function forceReuploadEverything(onProgress){
   var d=loadData();
-  var members=d.members||[], checkins=d.checkins||[], feedback=d.feedback||[];
-  var report={membersSent:0,checkinsSent:0,feedbackSent:0,photosSent:0,photosSkipped:0,confirmed:0,total:members.length,stillMissing:[]};
+  var members=d.members||[], checkins=d.checkins||[];
+  var report={membersSent:0,checkinsSent:0,photosSent:0,photosSkipped:0,confirmed:0,total:members.length,stillMissing:[],aborted:false};
   function prog(done,total,label){ if(onProgress)try{onProgress(done,total,label);}catch(e){} }
 
-  // 1) MEMBERS — re-send each full record (upsert by id)
+  // 0) PRE-FETCH cloud members so we keep existing photo links.
+  // The server rewrites the WHOLE member row on REGISTRATION, so if we re-sent a
+  // member without their existing photoUrl we'd wipe their photo. We read the cloud
+  // first and carry each existing photoUrl through. If this read fails, we MUST NOT
+  // re-send members (it would risk erasing photos) — abort cleanly instead.
+  var cloudPhoto={};
+  try{
+    var gurl=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
+    var gres=await fetch(gurl,{method:"GET"});
+    var gjson=await gres.json();
+    if(gjson.status!=="ok")throw new Error("bad status");
+    (gjson.members||[]).forEach(function(x){ if(x.photoUrl)cloudPhoto[x.id]=x.photoUrl; });
+  }catch(e){
+    report.aborted=true;
+    return report;   // connection not good enough — safer to do nothing
+  }
+
+  // 1) MEMBERS — re-send each full record (server upserts by id, so no duplicates),
+  //    preserving any photo link that already exists in the cloud.
   for(var i=0;i<members.length;i++){
     var m=members[i];
     var payload=Object.assign({type:"REGISTRATION"},m);
     delete payload.photo; delete payload.photoBase64; // photos go separately
+    if(!payload.photoUrl && cloudPhoto[m.id]) payload.photoUrl=cloudPhoto[m.id];
     var ok=await postToGoogle(payload);
     if(ok)report.membersSent++;
     prog(i+1,members.length,"Members");
   }
 
-  // 2) CHECK-INS
+  // 2) CHECK-INS (server de-dupes by member+date, so safe to re-send)
   for(var j=0;j<checkins.length;j++){
     var c=checkins[j];
     var cm=members.find(function(x){return x.id===c.memberId;})||{};
@@ -493,15 +517,11 @@ async function forceReuploadEverything(onProgress){
     prog(j+1,checkins.length,"Check-ins");
   }
 
-  // 3) FEEDBACK
-  for(var k=0;k<feedback.length;k++){
-    var f=feedback[k];
-    var okf=await postToGoogle(Object.assign({type:"FEEDBACK"},f));
-    if(okf)report.feedbackSent++;
-    prog(k+1,feedback.length,"Feedback");
-  }
+  // NOTE: Feedback is intentionally NOT re-sent here. The server has no de-dupe for
+  // feedback, so re-sending would create duplicate rows every time. Feedback still
+  // syncs normally when entered.
 
-  // 4) PHOTOS — re-attempt every local photo (big ones get compressed so they actually send)
+  // 3) PHOTOS — re-attempt every local photo (big ones get compressed so they actually send)
   var withPhotos=members.filter(function(m){return localStorage.getItem("ph_"+m.id);});
   for(var p=0;p<withPhotos.length;p++){
     var mp=withPhotos[p];
@@ -517,7 +537,7 @@ async function forceReuploadEverything(onProgress){
     prog(p+1,withPhotos.length,"Photos");
   }
 
-  // 5) VERIFY — read Google back and count how many of OUR members are really there
+  // 4) VERIFY — read Google back and count how many of OUR members are really there
   try{
     var url=GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"token="+encodeURIComponent(SYNC_TOKEN)+"&_cb="+Date.now();
     var res=await fetch(url,{method:"GET"});
@@ -567,6 +587,55 @@ async function uploadPhotoData(member,photoBase64){
     }
   }catch(e){}
   return false;
+}
+
+// CLEAN DUPLICATES: find people who appear more than once (same name, or same phone),
+// keep the best record of each, move their attendance onto the kept one, and delete the
+// extra rows from Google. Safe: attendance is preserved; only true duplicates are removed.
+// onProgress(done,total) drives the progress bar.
+async function cleanDuplicates(onProgress){
+  var d=loadData();
+  var members=d.members||[], checkins=d.checkins||[];
+  // Group members by identity (name key; fall back to phone key)
+  var byKey={};
+  members.forEach(function(m){
+    var k=memberKey(m); if(k==="|"||k===""){ k="phone:"+phoneKey(m.phone)||("id:"+m.id); }
+    (byKey[k]=byKey[k]||[]).push(m);
+  });
+  var report={groupsFound:0, removed:0, kept:0, mergedNames:[], failed:0};
+  var keep=[]; var toDelete=[]; var ckRemap={};
+  Object.keys(byKey).forEach(function(k){
+    var g=byKey[k];
+    if(g.length===1){ keep.push(g[0]); return; }
+    report.groupsFound++;
+    g.sort(function(a,b){ return memberScore(b)-memberScore(a); });
+    var winner=g[0]; keep.push(winner);
+    report.mergedNames.push(((winner.name||"")+" "+(winner.surname||"")).trim()+" (×"+g.length+")");
+    for(var i=1;i<g.length;i++){ toDelete.push(g[i]); ckRemap[g[i].id]=winner.id; }
+  });
+  // Re-point local check-ins from removed dups to the kept record, de-duped
+  var seen={}, mergedCk=[];
+  checkins.map(function(c){ return ckRemap[c.memberId]?Object.assign({},c,{memberId:ckRemap[c.memberId]}):c; })
+    .forEach(function(c){ var kk=c.memberId+"_"+c.date; if(!seen[kk]){seen[kk]=true;mergedCk.push(c);} });
+
+  // For each duplicate being removed: first push its attendance onto the winner (server de-dupes),
+  // then delete the duplicate row from Google.
+  for(var i=0;i<toDelete.length;i++){
+    var dup=toDelete[i], winnerId=ckRemap[dup.id];
+    var dupCks=checkins.filter(function(c){return c.memberId===dup.id;});
+    var w=keep.find(function(m){return m.id===winnerId;})||{};
+    for(var j=0;j<dupCks.length;j++){
+      await postToGoogle({type:"CHECKIN",id:winnerId,memberId:winnerId,name:w.name||"",surname:w.surname||"",date:dupCks[j].date,school:w.school||"",status:w.originalStatus||w.status||"Member"});
+    }
+    var del=await postToGoogle({type:"DELETE_MEMBER",id:dup.id});
+    if(del)report.removed++; else report.failed++;
+    if(onProgress)try{onProgress(i+1,toDelete.length);}catch(e){}
+  }
+  var cleaned=Object.assign({},d,{members:keep,checkins:mergedCk});
+  saveData(cleaned);
+  try{ window.dispatchEvent(new Event("jg-refresh")); }catch(e){}
+  report.kept=keep.length;
+  return report;
 }
 
 // ── EXPORT HELPERS ──────────────────────────────────────────
@@ -886,7 +955,9 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
     // If no photo taken, mark as skipped so leader knows to follow up
     var photoNote=!form.photo;
     if(photoNote){setPhotoSkipped(true);}
-    var existing=existingMembers.find(function(m){return m.name.toLowerCase()===form.name.toLowerCase()&&m.surname.toLowerCase()===form.surname.toLowerCase();});
+    var nkey=memberKey({name:form.name,surname:form.surname});
+    var fpk=phoneKey(form.phone);
+    var existing=existingMembers.find(function(m){ return memberKey(m)===nkey || (fpk && phoneKey(m.phone)===fpk); });
     // Mark incomplete if any key field is missing: photo, parent phone, birthday
     var isIncomplete=!form.photo||!form.parentPhone||!form.birthday;
     var member=existing
@@ -2806,6 +2877,9 @@ function PendingSyncTab(){
   var [forceBusy,setForceBusy]=useState(false);
   var [forceProg,setForceProg]=useState(null);   // {done,total,label}
   var [forceReport,setForceReport]=useState(null);
+  var [dupBusy,setDupBusy]=useState(false);
+  var [dupProg,setDupProg]=useState(null);
+  var [dupReport,setDupReport]=useState(null);
 
   async function runForceReupload(){
     if(!window.confirm("Re-upload EVERYTHING to Google (all members, check-ins, feedback and photos)?\n\nThis is safe — it fills in anything that never uploaded and won't create duplicates. It can take a few minutes. Keep this page open and stay on Wi-Fi."))return;
@@ -2813,6 +2887,13 @@ function PendingSyncTab(){
     var rep=await forceReuploadEverything(function(done,total,label){setForceProg({done:done,total:total,label:label});});
     setForceProg(null);setForceReport(rep);setForceBusy(false);
     setItems(loadPendingQueue());setPhotos(loadPhotoQueue());
+  }
+
+  async function runCleanDuplicates(){
+    if(!window.confirm("Find and remove duplicate people?\n\nThis keeps the best record of each person, moves their attendance onto it, and deletes the extra copies from Google. Attendance is kept. Stay on Wi-Fi."))return;
+    setDupBusy(true);setDupReport(null);setDupProg({done:0,total:1});
+    var rep=await cleanDuplicates(function(done,total){setDupProg({done:done,total:total});});
+    setDupProg(null);setDupReport(rep);setDupBusy(false);
   }
 
   useEffect(function(){
@@ -2913,15 +2994,45 @@ function PendingSyncTab(){
           <div style={{background:"#6366f1",height:8,width:(forceProg.total?Math.round(forceProg.done/forceProg.total*100):0)+"%",transition:"width .2s"}}></div>
         </div>
       </div>}
-      {forceReport&&<div style={{marginTop:12,background:"#04130a",border:"1px solid "+(forceReport.stillMissing&&forceReport.stillMissing.length?"#f59e0b":"#22c55e"),borderRadius:10,padding:12}}>
+      {forceReport&&forceReport.aborted&&<div style={{marginTop:12,background:"#3a1f00",border:"1px solid #f59e0b",borderRadius:10,padding:12}}>
+        <p style={{color:"#fcd34d",fontSize:13,fontWeight:700,margin:0}}>⚠️ Couldn't reach Google to start safely. Check Wi-Fi/signal and tap the button again. Nothing was changed.</p>
+      </div>}
+      {forceReport&&!forceReport.aborted&&<div style={{marginTop:12,background:"#04130a",border:"1px solid "+(forceReport.stillMissing&&forceReport.stillMissing.length?"#f59e0b":"#22c55e"),borderRadius:10,padding:12}}>
         <p style={{color:"#86efac",fontSize:14,fontWeight:800,margin:"0 0 6px"}}>✓ Confirmed in Google: {forceReport.confirmed} / {forceReport.total} members</p>
-        <p style={{color:"#cbd5e1",fontSize:12,margin:"0 0 4px"}}>Members sent: {forceReport.membersSent} · Check-ins: {forceReport.checkinsSent} · Feedback: {forceReport.feedbackSent}</p>
+        <p style={{color:"#cbd5e1",fontSize:12,margin:"0 0 4px"}}>Members re-sent: {forceReport.membersSent} · Check-ins: {forceReport.checkinsSent}</p>
         <p style={{color:"#cbd5e1",fontSize:12,margin:0}}>Photos uploaded: {forceReport.photosSent}{forceReport.photosSkipped?(" · skipped (couldn't shrink): "+forceReport.photosSkipped):""}</p>
         {forceReport.verifyFailed&&<p style={{color:"#fbbf24",fontSize:12,margin:"6px 0 0"}}>⚠️ Couldn't read Google back to confirm — check connection and try the button again.</p>}
         {forceReport.stillMissing&&forceReport.stillMissing.length>0&&<div style={{marginTop:6}}>
           <p style={{color:"#fcd34d",fontSize:12,fontWeight:700,margin:"0 0 2px"}}>Still not in Google ({forceReport.stillMissing.length}):</p>
           <p style={{color:"#fde68a",fontSize:11,margin:0}}>{forceReport.stillMissing.join(", ")}</p>
         </div>}
+      </div>}
+    </div>
+
+    {/* ── CLEAN DUPLICATES ── */}
+    <div style={{background:"#1e1433",border:"2px solid #a855f7",borderRadius:14,padding:14,marginBottom:18}}>
+      <p style={{color:"#e9d5ff",fontSize:14,fontWeight:800,margin:"0 0 4px"}}>🧹 Clean Duplicates</p>
+      <p style={{color:"#94a3b8",fontSize:12,margin:"0 0 10px"}}>
+        Finds people listed more than once (same name or same phone), keeps the best record, moves their attendance onto it, and deletes the extra copies from Google. Attendance is kept. Stay on Wi-Fi.
+      </p>
+      <button onClick={runCleanDuplicates} disabled={dupBusy}
+        style={{background:dupBusy?"#6b21a8":"#a855f7",color:"#fff",border:"none",borderRadius:10,padding:"14px",fontSize:15,fontWeight:800,width:"100%",cursor:dupBusy?"default":"pointer",fontFamily:"inherit"}}>
+        {dupBusy?"⏳ Cleaning…":"🧹 Find & Remove Duplicates"}
+      </button>
+      {dupProg&&<div style={{marginTop:10}}>
+        <p style={{color:"#d8b4fe",fontSize:12,margin:"0 0 4px"}}>Removing duplicates: {dupProg.done} / {dupProg.total}</p>
+        <div style={{background:"#1e293b",borderRadius:6,height:8,overflow:"hidden"}}>
+          <div style={{background:"#a855f7",height:8,width:(dupProg.total?Math.round(dupProg.done/dupProg.total*100):0)+"%",transition:"width .2s"}}></div>
+        </div>
+      </div>}
+      {dupReport&&<div style={{marginTop:12,background:"#04130a",border:"1px solid #22c55e",borderRadius:10,padding:12}}>
+        <p style={{color:"#86efac",fontSize:14,fontWeight:800,margin:"0 0 6px"}}>✓ {dupReport.groupsFound===0?"No duplicates found — your list is clean!":("Cleaned up "+dupReport.groupsFound+" duplicated "+(dupReport.groupsFound===1?"person":"people"))}</p>
+        <p style={{color:"#cbd5e1",fontSize:12,margin:0}}>People now: {dupReport.kept} · Duplicate copies removed: {dupReport.removed}{dupReport.failed?(" · couldn't remove: "+dupReport.failed):""}</p>
+        {dupReport.mergedNames&&dupReport.mergedNames.length>0&&<div style={{marginTop:6}}>
+          <p style={{color:"#a5b4fc",fontSize:12,fontWeight:700,margin:"0 0 2px"}}>Merged:</p>
+          <p style={{color:"#cbd5e1",fontSize:11,margin:0}}>{dupReport.mergedNames.join(", ")}</p>
+        </div>}
+        <p style={{color:"#fbbf24",fontSize:11,margin:"8px 0 0"}}>Now close and reopen the app so the cleaned list refreshes.</p>
       </div>}
     </div>
 
@@ -3453,9 +3564,21 @@ function App(){
         var googleMembers=json.members||[];
         var googleCheckins=json.checkins||[];
         var googleIds=new Set(googleMembers.map(function(m){return m.id;}));
-        var localOnly=(local.members||[]).filter(function(m){return !googleIds.has(m.id);});
+        // Build lookup of who's already in Google, by normalised name and by phone,
+        // so a LOCAL duplicate of the same person (different id) isn't re-added/re-uploaded.
+        var googleByKey={}, googleByPhone={};
+        googleMembers.forEach(function(m){ googleByKey[memberKey(m)]=m.id; var pk=phoneKey(m.phone); if(pk)googleByPhone[pk]=m.id; });
+        var idRemap={};   // localDupId -> googleId
+        var localOnly=(local.members||[]).filter(function(m){
+          if(googleIds.has(m.id))return false;                 // already in Google by id
+          var gid=googleByKey[memberKey(m)]||googleByPhone[phoneKey(m.phone)];
+          if(gid){ idRemap[m.id]=gid; return false; }           // same person, drop the local duplicate
+          return true;                                          // genuinely new on this device
+        });
+        // Move any check-ins from a dropped duplicate onto the kept Google record
+        var fixedLocalCk=(local.checkins||[]).map(function(c){ return idRemap[c.memberId]?Object.assign({},c,{memberId:idRemap[c.memberId]}):c; });
         var googleCkKeys=new Set(googleCheckins.map(function(c){return c.memberId+"_"+c.date;}));
-        var localCkOnly=(local.checkins||[]).filter(function(c){return !googleCkKeys.has(c.memberId+"_"+c.date);});
+        var localCkOnly=fixedLocalCk.filter(function(c){return !googleCkKeys.has(c.memberId+"_"+c.date);});
         var merged={
           members:googleMembers.concat(localOnly),
           checkins:googleCheckins.concat(localCkOnly),
@@ -3614,15 +3737,20 @@ function App(){
       </p>}
       {lastSync&&!syncing&&!syncError&&<p style={{color:"#334155",fontSize:11,margin:"0 0 12px",textAlign:"center"}}>✓ Synced {lastSync}</p>}
       {(pendingCount>0||photoCount>0)&&<div style={{background:"#3a1f00",border:"2px solid #f59e0b",borderRadius:14,padding:"14px 14px",margin:"0 0 16px",maxWidth:440,width:"100%",boxShadow:"0 0 22px rgba(245,158,11,0.35)"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:4}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8}}>
           <span style={{fontSize:20}}>⚠️</span>
-          <span style={{color:"#fcd34d",fontSize:15,fontWeight:800}}>
-            {pendingCount>0?(pendingCount+" "+(pendingCount===1?"person":"people")+" not saved to the cloud"):"Photos still uploading"}
+          <span style={{color:"#fcd34d",fontSize:15,fontWeight:800}}>Not fully saved to the cloud</span>
+        </div>
+        <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
+          <span style={{background:pendingCount>0?"#7c2d12":"#0d2818",color:pendingCount>0?"#fed7aa":"#86efac",border:"1px solid "+(pendingCount>0?"#f59e0b":"#22c55e"),borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>
+            {pendingCount>0?("📋 "+pendingCount+" registration"+(pendingCount===1?"":"s")+" → Sheets"):"📋 Registrations ✓"}
+          </span>
+          <span style={{background:photoCount>0?"#7c2d12":"#0d2818",color:photoCount>0?"#fed7aa":"#86efac",border:"1px solid "+(photoCount>0?"#f59e0b":"#22c55e"),borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>
+            {photoCount>0?("📷 "+photoCount+" photo"+(photoCount===1?"":"s")+" → Drive"):"📷 Photos ✓"}
           </span>
         </div>
         <p style={{color:"#fde68a",fontSize:12,textAlign:"center",margin:"0 0 10px"}}>
           📶 Make sure this phone has Wi-Fi or signal, then press Upload Now.
-          {photoCount>0&&pendingCount>0?(" ("+photoCount+" photo"+(photoCount===1?"":"s")+" too.)"):""}
         </p>
         <button onClick={homeUploadNow} disabled={homeUploading}
           style={{background:homeUploading?"#92610c":"#f59e0b",color:"#1a0f00",border:"none",borderRadius:12,padding:"14px",fontSize:16,fontWeight:900,width:"100%",cursor:homeUploading?"default":"pointer"}}>
