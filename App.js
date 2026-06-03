@@ -1,11 +1,11 @@
 const { useState, useEffect } = React;
 
 var GOOGLE_URL = "https://script.google.com/macros/s/AKfycbyYg7kuH2DVSKsFL555ERLMrUgVIh8yYEPmJ8_MwjDu788AgNH2mbpK6T7jecjoAXxd/exec";
-var ADMIN_PIN  = "91977";  // Joshua
-var ADMIN_PIN2 = "91976";  // Priscilla
-var ADMIN_PIN3 = "91975";  // Pastor Billy
+// Admin PINs are NOT stored in this file any more. They live server-side in the
+// Apps Script (Project Settings -> Script Properties) and are verified by the
+// server. The app sends the entered PIN to the server to be checked.
 var WA_GROUP   = "https://chat.whatsapp.com/EfcayPaEFQd2tA7PukASuK?mode=gi_t";
-var SYNC_TOKEN = "JG2026LiveWaters";
+var SYNC_TOKEN = "JG-LivingWaters-2026-9fXqR3";  // Must exactly match SYNC_TOKEN in the Apps Script Script Properties. NOTE: this is sent from the browser so it is NOT truly secret — rotate it if leaked. Delete/leader changes are protected by the server-side admin PIN instead.
 
 function msgVisitor(name) {
   return "Hi " + name + "! \u2764\ufe0f\n\nThank you so much for visiting Jeremiah Generation - Living Waters Fellowship. We truly loved having you and hope you felt welcome!\n\nYou are special. God has a great plan for your life.\n\nJeremiah 29:11 - For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.\n\nWe hope to see you again this Friday! God bless you! \ud83d\ude4f\nJG Youth - Living Waters Fellowship";
@@ -376,7 +376,7 @@ function removeFromPendingQueue(id){
 // error (offline, DNS fail, CORS preflight refused) means failure.
 async function postToGoogle(payload){
   if(!GOOGLE_URL||GOOGLE_URL.includes("PASTE"))return false;
-  var body=Object.assign({token:SYNC_TOKEN},payload);
+  var body=Object.assign({token:SYNC_TOKEN,pin:(localStorage.getItem("jg_admin_pin")||"")},payload);
   // 15-second timeout so the iPhone doesn't hang forever on a stalled connection
   var ctrl=("AbortController" in window)?new AbortController():null;
   var timer=ctrl?setTimeout(function(){ctrl.abort();},15000):null;
@@ -394,6 +394,20 @@ async function postToGoogle(payload){
     console.log("Sync fail:",e&&e.message||e);
     return false;
   }
+}
+
+// Ask the server whether an admin PIN is valid. PINs are NOT stored in this file;
+// the server checks them against Script Properties (master) and the Leaders sheet
+// (senior). Returns the server JSON, or null if offline/unreachable.
+async function verifyAdminPin(pin){
+  if(!GOOGLE_URL||GOOGLE_URL.includes("PASTE"))return null;
+  var ctrl=("AbortController" in window)?new AbortController():null;
+  var timer=ctrl?setTimeout(function(){ctrl.abort();},15000):null;
+  try{
+    var r=await fetch(GOOGLE_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({token:SYNC_TOKEN,type:"VERIFY_PIN",pin:String(pin)}),signal:ctrl?ctrl.signal:undefined});
+    if(timer)clearTimeout(timer);
+    return await r.json();
+  }catch(e){ if(timer)clearTimeout(timer); return null; }
 }
 
 // Public sync. Tries once; on failure, queues for retry.
@@ -887,30 +901,33 @@ function exportPDF(members,checkins,feedback){
 // PIN
 function PinScreen({onSuccess}){
   var [pin,setPin]=useState(""); var [shake,setShake]=useState(false);
+  var [checking,setChecking]=useState(false);
   function press(k){
+    if(checking)return;
     if(k==="del"){setPin(function(p){return p.slice(0,-1);});return;}
     if(pin.length>=5)return;
     var next=pin+k; setPin(next);
-    if(next.length===5){
-      // Check master PIN (91977) or any Senior Leader PIN (format: 2026X where X = leader number)
-      var leaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");
-      var matchedLeader=leaders.find(function(L){return L.pin===next;});
-      if(next===ADMIN_PIN||next===ADMIN_PIN2||next===ADMIN_PIN3){
-        // Master full access (Joshua, Priscilla or Pastor Billy)
-        localStorage.setItem("jg_admin_role","master");
-        setTimeout(function(){onSuccess();},200);
-      } else if(matchedLeader && matchedLeader.role==="Senior"){
-        // Senior leader has admin access but limited (no delete)
+    if(next.length===5){ verifyEntered(next); }
+  }
+  async function verifyEntered(entered){
+    // PINs are verified by the SERVER now — they are not in this file.
+    setChecking(true);
+    var res=await verifyAdminPin(entered);
+    setChecking(false);
+    if(res && res.status==="ok"){
+      // Remember the PIN on this device so admin actions (delete, leader sync)
+      // can prove they are authorised. Cleared on logout.
+      localStorage.setItem("jg_admin_pin",entered);
+      if(res.role==="senior"){
         localStorage.setItem("jg_admin_role","senior");
-        localStorage.setItem("jg_admin_leader_id",matchedLeader.id);
-        // FIX: sync login event to Google Sheets so Leader Log works on all devices
-        var logEntry={leaderId:matchedLeader.id,name:matchedLeader.name,date:new Date().toISOString()};
-        localStorage.setItem("jg_login_log_"+Date.now(),JSON.stringify(logEntry));
-        syncGoogle({type:"LEADER_LOGIN_LOG",leaderId:matchedLeader.id,name:matchedLeader.name,date:logEntry.date});
-        setTimeout(function(){onSuccess();},200);
+        if(res.leaderId)localStorage.setItem("jg_admin_leader_id",res.leaderId);
+        syncGoogle({type:"LEADER_LOGIN_LOG",leaderId:res.leaderId||"",name:res.name||"",date:new Date().toISOString()});
       } else {
-        setShake(true);setTimeout(function(){setPin("");setShake(false);},700);
+        localStorage.setItem("jg_admin_role","master");
       }
+      setTimeout(function(){onSuccess();},150);
+    } else {
+      setShake(true);setTimeout(function(){setPin("");setShake(false);},700);
     }
   }
   return(<div className="pin-page"><div className="pin-box">
@@ -3457,13 +3474,15 @@ function App(){
   var [homeTilePinError,setHomeTilePinError]=useState(false);
   var [homeTilePinUnlocked,setHomeTilePinUnlocked]=useState(false);
 
-  function checkHomeTilePin(p){
+  async function checkHomeTilePin(p){
     var leaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");
-    // Both Senior AND Junior leaders can view names from home tiles
-    var anyLeader=leaders.find(function(L){return L.pin===p;});
-    // FIX: also accept Priscilla (ADMIN_PIN2) and Pastor Billy (ADMIN_PIN3)
-    var isMaster=p===ADMIN_PIN||p===ADMIN_PIN2||p===ADMIN_PIN3;
-    if(isMaster||anyLeader){
+    // Any leader (Senior or Junior) can view names from home tiles. Their PINs
+    // live in the synced Leaders list on this device, so we can match locally.
+    var anyLeader=leaders.find(function(L){return String(L.pin)===String(p);});
+    var ok=!!anyLeader;
+    // A master PIN is NOT stored on the device — ask the server to confirm it.
+    if(!ok){ var res=await verifyAdminPin(p); ok=!!(res&&res.status==="ok"); }
+    if(ok){
       setHomeTilePinUnlocked(true);
       setHomeTilePin("");
       setHomeTilePinError(false);
@@ -3709,7 +3728,7 @@ function App(){
   if(screen==="confirm")return(<div className="container"><ConfirmScreen confirm={confirm} uploading={confirmBusy} onUpload={confirmUploadNow} onDone={function(){setConfirm(null);setScreen("home");}}/></div>);
   if(screen==="checkin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}}/></div>);
   if(screen==="pin")return <PinScreen onSuccess={function(){setScreen("admin");}}/>;
-  if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){localStorage.removeItem("jg_admin_role");localStorage.removeItem("jg_admin_leader_id");setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
+  if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){localStorage.removeItem("jg_admin_role");localStorage.removeItem("jg_admin_leader_id");localStorage.removeItem("jg_admin_pin");setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
 
   return(<div style={{minHeight:"100vh",background:"#000",display:"flex",flexDirection:"column"}}>
     {/* Banner Image Hero */}
