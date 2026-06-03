@@ -1209,8 +1209,8 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
 }
 
 // CHECK-IN
-function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile}){
-  var [mode,setMode]=useState("youth"); // youth or leader
+function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initialMode}){
+  var [mode,setMode]=useState(initialMode||"youth"); // youth or leader
   var [leaders,setLeaders]=useState(function(){return JSON.parse(localStorage.getItem("jg_leaders")||"[]");});
   var [leaderQuery,setLeaderQuery]=useState("");
   var [leaderDone,setLeaderDone]=useState(null);
@@ -2535,7 +2535,7 @@ function LeadersTab(){
 
     return(<div>
       <p className="page-title">{editing?"Edit Leader":"➕ Register New Leader"}</p>
-      <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Leaders are stored locally on this device only — not in Google Sheets.</p>
+      <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Leaders sync to Google Sheets, so their PINs work on every device. Senior leaders can log in to admin with their PIN.</p>
       <div style={{background:"#1e293b",borderRadius:13,padding:"16px"}}>
 
         {/* Member picker - pick from existing members */}
@@ -3727,6 +3727,7 @@ function App(){
   if(screen==="register")return(<div className="container"><RegistrationForm existingMembers={data.members||[]} prefill={prefill} onDone={function(m,isNew){setPrefill(null);registerAndConfirm(m,isNew);}} onBack={function(){setPrefill(null);setScreen("home");}}/></div>);
   if(screen==="confirm")return(<div className="container"><ConfirmScreen confirm={confirm} uploading={confirmBusy} onUpload={confirmUploadNow} onDone={function(){setConfirm(null);setScreen("home");}}/></div>);
   if(screen==="checkin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}}/></div>);
+  if(screen==="leadercheckin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}} initialMode="leader"/></div>);
   if(screen==="pin")return <PinScreen onSuccess={function(){setScreen("admin");}}/>;
   if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){localStorage.removeItem("jg_admin_role");localStorage.removeItem("jg_admin_leader_id");localStorage.removeItem("jg_admin_pin");setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
 
@@ -3810,7 +3811,15 @@ function App(){
           background:"linear-gradient(135deg,#22c55e,#10b981)",color:"#fff",
           boxShadow:"0 8px 28px rgba(34,197,94,0.45)",letterSpacing:"0.5px",
         }}>
-          ✅ Check In
+          ✅ Member Check-In
+        </button>
+
+        <button onClick={function(){setScreen("leadercheckin");}} style={{
+          width:"100%",marginBottom:12,padding:"18px",borderRadius:18,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:800,fontSize:17,
+          background:"linear-gradient(135deg,#fbbf24,#f59e0b)",color:"#fff",
+          boxShadow:"0 8px 28px rgba(245,158,11,0.45)",letterSpacing:"0.5px",
+        }}>
+          ⭐ Leader Check-In
         </button>
 
         <button onClick={function(){setScreen("pin");}} style={{
