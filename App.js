@@ -117,7 +117,15 @@ function getActiveEventDate(events){
   if(events&&events.length>0){
     var todayEvent=events.find(function(e){return e.date===today;});
     if(todayEvent)return today;
-    // Check if there's an event this week (since last Friday)
+  }
+  // If anyone has actually checked in today, use today — so a midweek gathering, an
+  // ad-hoc check-in, or just testing shows up straight away (no event needed).
+  try{
+    var cks=(loadData().checkins)||[];
+    if(cks.some(function(c){return c.date===today;}))return today;
+  }catch(e){}
+  // Otherwise show the most recent event this week (since last Friday) for review
+  if(events&&events.length>0){
     var lastFri=lastFriday();
     var recent=events.filter(function(e){
       var ed=new Date(e.date+"T00:00:00");
@@ -1697,7 +1705,7 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
   function updateMember(id,changes){var u=Object.assign({},data,{members:members.map(function(m){return m.id===id?Object.assign({},m,changes):m;})});setData(u);saveData(u);}
   function deleteMember(id){
     var role=localStorage.getItem("jg_admin_role")||"master";
-    if(role==="senior"){alert("⚠️ Senior leaders cannot delete members.\n\nOnly Emily (Master Admin) can delete from the registration list. Please ask her if a member needs to be removed.");return;}
+    if(role==="senior"){alert("⚠️ Senior leaders cannot delete members.\n\nOnly Joshua, Priscilla or Pastor Billy can delete from the registration list. Please ask one of them if a member needs to be removed.");return;}
     var m=members.find(function(mb){return mb.id===id;});
     if(!m)return;
     if(!confirm("Permanently remove "+m.name+" "+m.surname+" and all their check-ins?"))return;
@@ -1906,7 +1914,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
   function updateMember(id,changes){var u=Object.assign({},data,{members:members.map(function(m){return m.id===id?Object.assign({},m,changes):m;})});setData(u);saveData(u);}
   function deleteMember(id){
     var role=localStorage.getItem("jg_admin_role")||"master";
-    if(role==="senior"){alert("⚠️ Senior leaders cannot delete members.\n\nOnly Emily (Master Admin) can delete from the registration list. Please ask her if a member needs to be removed.");return;}
+    if(role==="senior"){alert("⚠️ Senior leaders cannot delete members.\n\nOnly Joshua, Priscilla or Pastor Billy can delete from the registration list. Please ask one of them if a member needs to be removed.");return;}
     var m=members.find(function(mb){return mb.id===id;});
     if(!m)return;
     if(!confirm("Permanently remove "+m.name+" "+m.surname+" and all their check-ins?"))return;
@@ -2604,9 +2612,15 @@ function LeadersTab(){
   }
 
   function nextPin(){
-    // Find next available PIN starting from 20261
-    var existing=leaders.map(function(L){return parseInt(L.pin.slice(4))||0;});
-    var maxN=existing.length>0?Math.max(...existing):0;
+    // Find next available PIN starting from 20261. Be defensive: a leader synced from
+    // Google may have a missing PIN, or a PIN that arrived as a number rather than text —
+    // calling .slice on those used to throw and blank the whole screen.
+    var existing=leaders.map(function(L){
+      var p=String((L&&L.pin)||"");
+      var n=parseInt(p.slice(4),10);
+      return isNaN(n)?0:n;
+    });
+    var maxN=existing.length>0?Math.max.apply(null,existing):0;
     return "2026"+(maxN+1);
   }
 
@@ -3578,6 +3592,19 @@ function ConfirmScreen({confirm,onUpload,onDone,uploading}){
     </div>);
   }
 
+  if(c.status==="saved"){
+    return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{...box,background:"#0d2818",border:"1px solid #22c55e"}}>
+        <div style={{fontSize:46,marginBottom:8}}>✅</div>
+        <p style={{color:"#86efac",fontSize:20,fontWeight:900,margin:"0 0 6px"}}>Registered!</p>
+        <p style={{color:"#bbf7d0",fontSize:15,margin:"0 0 4px"}}>{name.trim()} is saved and syncing to the cloud.</p>
+        <p style={{color:"#4ade80",fontSize:12,margin:"8px 0 0"}}>If anything doesn't sync, the home screen will show it with an Upload button.</p>
+      </div>
+      <button onClick={onDone} style={{marginTop:22,background:"#22c55e",color:"#04130a",border:"none",borderRadius:14,padding:"16px",fontSize:17,fontWeight:800,width:"100%",maxWidth:440,cursor:"pointer"}}>Done — register next</button>
+      <button onClick={onUpload} style={{marginTop:12,background:"transparent",color:"#94a3b8",border:"1px solid #475569",borderRadius:14,padding:"12px",fontSize:13,fontWeight:600,width:"100%",maxWidth:440,cursor:"pointer"}}>⬆️ Upload &amp; verify now (optional)</button>
+    </div>);
+  }
+
   if(c.status==="ok"){
     return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
       <div style={{...box,background:"#0d2818",border:"1px solid #22c55e"}}>
@@ -3799,22 +3826,14 @@ function App(){
     }
   }
 
-  // Register, then SHOW the leader whether it really reached the cloud.
-  async function registerAndConfirm(member,isNew){
-    handleRegistered(member,isNew);   // local save + first send attempt (queues on failure)
-    setConfirm({status:"saving",member:member});
-    setScreen("confirm");
-    var ok=false;
-    // Give the first POST a moment, flush the queue, then read back from Sheets.
-    // Try a few times — Apps Script can take a second to write the row.
-    for(var i=0;i<3;i++){
-      await new Promise(function(r){setTimeout(r,1500);});
-      await flushPendingQueue();
-      ok=await verifyMemberInCloud(member.id);
-      if(ok)break;
-    }
+  // Register, save locally, and return IMMEDIATELY. The cloud sync runs in the background;
+  // the home banner (which refreshes every 3s) shows anything that didn't sync, with Upload Now.
+  // No more long "checking the cloud" splash that trapped leaders between each child.
+  function registerAndConfirm(member,isNew){
+    handleRegistered(member,isNew);   // instant local save + background send (queues on failure)
     var photoPending=loadPhotoQueue().some(function(p){return p.memberId===member.id;});
-    setConfirm({status:ok?"ok":"pending",member:member,photoPending:photoPending});
+    setConfirm({status:"saved",member:member,photoPending:photoPending});
+    setScreen("confirm");
     setPendingCount(loadPendingQueue().length);setPhotoCount(loadPhotoQueue().length);
   }
 
@@ -3849,6 +3868,16 @@ function App(){
 
   // Count attendance for the active event day (today if Friday, or latest event, or last Friday)
   var eventDate=getActiveEventDate(data.events);
+  // Break the unsynced (pending) queue down by type so the home banner can show exactly
+  // what hasn't uploaded yet: registrations, check-ins, leader updates, plus photos.
+  var unsyncedReg=0,unsyncedChk=0,unsyncedLead=0,unsyncedOther=0;
+  loadPendingQueue().forEach(function(it){
+    var t=it&&it.payload&&it.payload.type;
+    if(t==="REGISTRATION")unsyncedReg++;
+    else if(t==="CHECKIN")unsyncedChk++;
+    else if(t==="SYNC_LEADERS")unsyncedLead++;
+    else unsyncedOther++;
+  });
   // Get unique member IDs who checked in on event date  
   var rawIds=[...new Set((data.checkins||[]).filter(function(c){return c.date===eventDate;}).map(function(c){return c.memberId;}))];
   // Filter to only IDs that match existing members (ignore orphan check-ins from deleted members)
@@ -3894,15 +3923,14 @@ function App(){
       {(pendingCount>0||photoCount>0)&&<div style={{background:"#3a1f00",border:"2px solid #f59e0b",borderRadius:14,padding:"14px 14px",margin:"0 0 16px",maxWidth:440,width:"100%",boxShadow:"0 0 22px rgba(245,158,11,0.35)"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8}}>
           <span style={{fontSize:20}}>⚠️</span>
-          <span style={{color:"#fcd34d",fontSize:15,fontWeight:800}}>Not fully saved to the cloud</span>
+          <span style={{color:"#fcd34d",fontSize:15,fontWeight:800}}>Not uploaded yet — still on this phone</span>
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-          <span style={{background:pendingCount>0?"#7c2d12":"#0d2818",color:pendingCount>0?"#fed7aa":"#86efac",border:"1px solid "+(pendingCount>0?"#f59e0b":"#22c55e"),borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>
-            {pendingCount>0?("📋 "+pendingCount+" registration"+(pendingCount===1?"":"s")+" → Sheets"):"📋 Registrations ✓"}
-          </span>
-          <span style={{background:photoCount>0?"#7c2d12":"#0d2818",color:photoCount>0?"#fed7aa":"#86efac",border:"1px solid "+(photoCount>0?"#f59e0b":"#22c55e"),borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>
-            {photoCount>0?("📷 "+photoCount+" photo"+(photoCount===1?"":"s")+" → Drive"):"📷 Photos ✓"}
-          </span>
+          {unsyncedReg>0&&<span style={{background:"#7c2d12",color:"#fed7aa",border:"1px solid #f59e0b",borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>📝 {unsyncedReg} registration{unsyncedReg===1?"":"s"}</span>}
+          {unsyncedChk>0&&<span style={{background:"#7c2d12",color:"#fed7aa",border:"1px solid #f59e0b",borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>✅ {unsyncedChk} check-in{unsyncedChk===1?"":"s"}</span>}
+          {unsyncedLead>0&&<span style={{background:"#7c2d12",color:"#fed7aa",border:"1px solid #f59e0b",borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>⭐ {unsyncedLead} leader update{unsyncedLead===1?"":"s"}</span>}
+          {unsyncedOther>0&&<span style={{background:"#7c2d12",color:"#fed7aa",border:"1px solid #f59e0b",borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>📄 {unsyncedOther} other</span>}
+          {photoCount>0&&<span style={{background:"#7c2d12",color:"#fed7aa",border:"1px solid #f59e0b",borderRadius:8,padding:"6px 10px",fontSize:12,fontWeight:700}}>📷 {photoCount} photo{photoCount===1?"":"s"}</span>}
         </div>
         <p style={{color:"#fde68a",fontSize:12,textAlign:"center",margin:"0 0 10px"}}>
           📶 Make sure this phone has Wi-Fi or signal, then press Upload Now.
