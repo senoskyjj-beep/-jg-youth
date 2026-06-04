@@ -86,6 +86,26 @@ function withPhotos(d) {
   })});
 }
 
+// ── ADMIN SESSION (auto-logout) ──────────────────────────────
+// The admin login is remembered on the device, but it should not stay open forever.
+// After this much inactivity (or being closed/in the background), the next return
+// requires the PIN again. The window slides forward on each interaction.
+var ADMIN_SESSION_MS = 10*60*1000; // 10 minutes
+function adminSessionValid(){
+  if(!localStorage.getItem("jg_admin_role"))return false;
+  var ts=parseInt(localStorage.getItem("jg_admin_ts")||"0",10);
+  return ts>0 && (Date.now()-ts)<=ADMIN_SESSION_MS;
+}
+function clearAdminSession(){
+  localStorage.removeItem("jg_admin_role");
+  localStorage.removeItem("jg_admin_leader_id");
+  localStorage.removeItem("jg_admin_pin");
+  localStorage.removeItem("jg_admin_ts");
+}
+function touchAdminSession(){
+  if(localStorage.getItem("jg_admin_role"))localStorage.setItem("jg_admin_ts",String(Date.now()));
+}
+
 // Local date string YYYY-MM-DD (avoids UTC timezone shift in South Africa)
 function dateToLocal(d){
   var y=d.getFullYear();
@@ -1056,6 +1076,7 @@ function PinScreen({onSuccess,onBack}){
       // Remember the PIN on this device so admin actions (delete, leader sync)
       // can prove they are authorised. Cleared on logout.
       localStorage.setItem("jg_admin_pin",entered);
+      localStorage.setItem("jg_admin_ts",String(Date.now())); // start the auto-logout timer
       if(res.role==="senior"){
         localStorage.setItem("jg_admin_role","senior");
         if(res.leaderId)localStorage.setItem("jg_admin_leader_id",res.leaderId);
@@ -2689,7 +2710,7 @@ function LeadersTab(){
           <label style={{display:"block",fontSize:13,fontWeight:600,color:"#6ee7b7",marginBottom:6}}>👥 Pick from existing members</label>
           <select className="input" style={{background:"#0f172a",color:"#fff"}} value=""
             onChange={function(e){
-              var m=sortedMembers.find(function(x){return x.id===e.target.value;});
+              var m=sortedMembers.find(function(x){return String(x.id)===String(e.target.value);});
               if(m){setForm(Object.assign({},form,{name:m.name,surname:m.surname,phone:m.phone||m.whatsapp||""}));}
             }}>
             <option value="">-- Select a member to auto-fill --</option>
@@ -3660,7 +3681,9 @@ function App(){
   var [data,setData]=useState(function(){return withPhotos(loadData());});
   // If admin role is already saved (e.g. page was refreshed), go straight back to admin
   var [screen,setScreen]=useState(function(){
-    return localStorage.getItem("jg_admin_role") ? "admin" : "home";
+    if(adminSessionValid())return "admin";
+    clearAdminSession();
+    return "home";
   });
   var [prefill,setPrefill]=useState(null);
   var [syncing,setSyncing]=useState(false);
@@ -3680,6 +3703,32 @@ function App(){
     window.addEventListener("jg_pending_changed",refresh);
     return function(){clearInterval(t);window.removeEventListener("jg_pending_changed",refresh);};
   },[]);
+
+  // Auto-logout watcher: slide the admin session on activity, and when the app is
+  // re-opened / brought to the foreground (or every 30s), drop back to the home screen
+  // if the admin session has timed out. Re-runs per screen so it knows where we are.
+  useEffect(function(){
+    function bump(){ touchAdminSession(); }
+    function enforce(){
+      if(screen==="admin" && !adminSessionValid()){ clearAdminSession(); setScreen("home"); }
+    }
+    function onVis(){ if(document.visibilityState==="visible")enforce(); }
+    window.addEventListener("click",bump);
+    window.addEventListener("touchstart",bump);
+    window.addEventListener("keydown",bump);
+    document.addEventListener("visibilitychange",onVis);
+    window.addEventListener("focus",enforce);
+    var iv=setInterval(enforce,30000);
+    enforce();
+    return function(){
+      window.removeEventListener("click",bump);
+      window.removeEventListener("touchstart",bump);
+      window.removeEventListener("keydown",bump);
+      document.removeEventListener("visibilitychange",onVis);
+      window.removeEventListener("focus",enforce);
+      clearInterval(iv);
+    };
+  },[screen]);
 
   useEffect(function(){
     // Check Friday 1AM reset on every load
@@ -3893,7 +3942,7 @@ function App(){
   if(screen==="checkin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}}/></div>);
   if(screen==="leadercheckin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}} initialMode="leader"/></div>);
   if(screen==="pin")return <PinScreen onSuccess={function(){setScreen("admin");}} onBack={function(){setScreen("home");}}/>;
-  if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){localStorage.removeItem("jg_admin_role");localStorage.removeItem("jg_admin_leader_id");localStorage.removeItem("jg_admin_pin");setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
+  if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){clearAdminSession();setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
 
   return(<div style={{minHeight:"100vh",background:"#000",display:"flex",flexDirection:"column"}}>
     {/* Banner Image Hero */}
