@@ -345,6 +345,8 @@ async function uploadPendingPhoto(item,members){
   var photo=localStorage.getItem("ph_"+memberId);
   if(!photo)return true; // no photo locally — nothing to send
   if(photo.indexOf("data:")!==0)return true; // cached value is a URL, not a captured photo — already on Drive
+  var _mem=(loadData().members||[]).find(function(x){return String(x.id)===String(memberId);});
+  if(_mem){var _pu=String(_mem.photoUrl||""); if(_pu.indexOf("drive.google")>=0||_pu.indexOf("googleusercontent")>=0)return true;} // already uploaded once
   if(photo.length>800000){
     // Too big for one request — COMPRESS it (don't silently drop it like before).
     var smaller=await shrinkPhoto(photo);
@@ -589,9 +591,15 @@ async function forceReuploadEverything(onProgress){
   // syncs normally when entered.
 
   // 3) PHOTOS — re-attempt every genuine captured photo (big ones get compressed so they
-  //    actually send). A cached value that is a URL (not a data: photo) is already on Drive,
-  //    so we skip it — re-uploading a URL string would create a junk file.
-  var withPhotos=members.filter(function(m){var c=localStorage.getItem("ph_"+m.id);return c&&c.indexOf("data:")===0;});
+  //    actually send). Skip a cached value that is a URL (already a link, not a photo), AND
+  //    skip anyone who already has a photo on Drive — a photo should upload only ONCE.
+  var withPhotos=members.filter(function(m){
+    var c=localStorage.getItem("ph_"+m.id);
+    if(!c||c.indexOf("data:")!==0)return false;
+    var pu=String(m.photoUrl||"");
+    if(pu.indexOf("drive.google")>=0||pu.indexOf("googleusercontent")>=0)return false; // already uploaded once
+    return true;
+  });
   for(var p=0;p<withPhotos.length;p++){
     var mp=withPhotos[p];
     var raw=localStorage.getItem("ph_"+mp.id);
@@ -1129,6 +1137,16 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
 
   function submit(){
     if(!validate())return;
+    if(!form.photo){
+      if(prefill){
+        // They're completing their profile in order to check in — a photo is required here.
+        setErrors(function(e){return Object.assign({},e,{photo:"Required"});});
+        try{document.getElementById("selfie-input").scrollIntoView({behavior:"smooth",block:"center"});}catch(e){}
+        return;
+      }
+      // First-time registration — allow skipping, but confirm first.
+      if(!window.confirm("You haven't taken a photo yet.\n\nA photo helps us recognise each youth. Skip the photo for now? You can add it next time they attend."))return;
+    }
     // If no photo taken, mark as skipped so leader knows to follow up
     var photoNote=!form.photo;
     if(photoNote){setPhotoSkipped(true);}
@@ -1309,7 +1327,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
           set("birthday",e.target.value+"-"+(parts[1]||"01")+"-"+(parts[2]||"01"));
         }}>
           <option value="">Year</option>
-          {Array.from({length:20},function(_,i){var y=String(new Date().getFullYear()-7-i);return <option key={y} value={y}>{y}</option>;})}
+          {Array.from({length:26},function(_,i){var y=String(new Date().getFullYear()-5-i);return <option key={y} value={y}>{y}</option>;})}
         </select>
       </div>
       {errors.birthday&&<p style={{color:"#f87171",fontSize:12,marginTop:4}}>{errors.birthday}</p>}
@@ -1339,9 +1357,9 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
         }}/>
       {!form.photo?(
         <div onClick={function(){document.getElementById("selfie-input").click();}}
-          style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"3px dashed #6c63ff",borderRadius:16,padding:"28px 20px",textAlign:"center",cursor:"pointer"}}>
+          style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"3px dashed "+(errors.photo?"#ef4444":"#6c63ff"),borderRadius:16,padding:"28px 20px",textAlign:"center",cursor:"pointer"}}>
           <div style={{fontSize:52,marginBottom:8}}>📸</div>
-          <p style={{color:"#6c63ff",fontWeight:700,fontSize:16,margin:"0 0 4px"}}>Tap to Take Your Selfie</p>
+          <p style={{color:errors.photo?"#f87171":"#6c63ff",fontWeight:700,fontSize:16,margin:"0 0 4px"}}>Tap to Take Your Selfie</p>
           <p style={{color:"#475569",fontSize:13,margin:0}}>Your photo will be saved to your profile</p>
         </div>
       ):(
@@ -1353,6 +1371,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
           </button>
         </div>
       )}
+      {errors.photo&&<p style={{color:"#f87171",fontSize:12,marginTop:8,textAlign:"center",fontWeight:600}}>📸 A photo is required to register</p>}
     </div>
 
     <div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:12,padding:"14px",marginBottom:14}}>
@@ -1394,6 +1413,19 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
   var [cat,setCat]=useState("");
   var [message,setMessage]=useState("");
 
+  // After a check-in (member or leader), show the welcome briefly then return Home automatically.
+  // If the user taps another button first (e.g. "Check In Another Leader"), the cleanup cancels it.
+  useEffect(function(){
+    if(!done)return;
+    var t=setTimeout(function(){setDone(null);setSearch("");onBack();},3000);
+    return function(){clearTimeout(t);};
+  },[done]);
+  useEffect(function(){
+    if(!leaderDone)return;
+    var t=setTimeout(function(){setLeaderDone(null);onBack();},3000);
+    return function(){clearTimeout(t);};
+  },[leaderDone]);
+
   var CATS=[
     {v:"Games",l:"Game suggestions",i:"🎲"},
     {v:"Sports",l:"Sport events and outings",i:"⚽"},
@@ -1412,8 +1444,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
   function doCheckin(fb){
     try{
       onCheckin(selected,fb);
-      setDone(selected);setSelected(null);setStep("search");
-      setTimeout(function(){setDone(null);setSearch("");},3000);
+      setDone(selected);setSelected(null);setStep("search"); // auto-returns Home via effect
     }catch(e){console.log("checkin err",e);}
   }
 
