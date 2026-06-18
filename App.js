@@ -177,10 +177,10 @@ function waLink(num,msg,label,style){
   if(!href)return null;
   return <a href={href} target="_blank" style={style}>{label}</a>;
 }
-function weeksAgo(dateStr){ 
-  if(!dateStr)return 0; 
+function weeksAgo(dateStr){
+  if(!dateStr)return 0;
   try{
-    var d=new Date(dateStr);
+    var d=new Date(dateStr.split("T")[0]+"T12:00:00");
     if(isNaN(d.getTime()))return 0;
     var w=Math.floor((new Date()-d)/(7*24*60*60*1000));
     return w<0?0:w>52?52:w; // cap at 52 weeks (1 year)
@@ -2904,10 +2904,11 @@ function EventsTab({data,setData}){
     setForm(e);setEditing(e.id);setShowForm(true);
   }
 
-  // Sort events - upcoming first, then past
-  var now=new Date();
-  var upcoming=events.filter(function(e){return new Date(e.date)>=now;}).sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-  var past=events.filter(function(e){return new Date(e.date)<now;}).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  // Sort events - upcoming first, then past. Compare YYYY-MM-DD strings directly
+  // to avoid UTC-parse timezone shift (same pattern as isThisWeek / calcAge).
+  var today=todayStr();
+  var upcoming=events.filter(function(e){return e.date>=today;}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+  var past=events.filter(function(e){return e.date<today;}).sort(function(a,b){return b.date<a.date?-1:b.date>a.date?1:0;});
 
   if(showForm){
     return(<div>
@@ -3846,7 +3847,8 @@ function App(){
         var merged={
           members:googleMembers.concat(localOnly),
           checkins:googleCheckins.concat(localCkOnly),
-          feedback:local.feedback||[]
+          feedback:local.feedback||[],
+          events:local.events||[]
         };
         merged.members=merged.members.map(function(m){
           var ph=resolvePhoto(m);
