@@ -63,7 +63,14 @@ var LS_KEY = "jg_v6";
 function loadData() {
   try {
     var r = localStorage.getItem(LS_KEY);
-    if (r) { var d=JSON.parse(r); d.members=d.members||[]; d.checkins=d.checkins||[]; d.feedback=d.feedback||[]; d.events=d.events||[]; return d; }
+    if (r) {
+      var d=JSON.parse(r);
+      d.members=(d.members||[]).filter(function(m){return m&&m.id!=null;});
+      d.checkins=(d.checkins||[]).filter(function(c){return c&&c.memberId!=null;});
+      d.feedback=d.feedback||[];
+      d.events=d.events||[];
+      return d;
+    }
   } catch(e) {}
   return {members:[],checkins:[],feedback:[],events:[]};
 }
@@ -71,16 +78,17 @@ function loadData() {
 function saveData(d) {
   try {
     var slim = {
-      members: (d.members||[]).map(function(m){ return Object.assign({},m,{photo:m.photo?"HAS_PHOTO":null}); }),
-      checkins: d.checkins||[], feedback: d.feedback||[], events: d.events||[]
+      members: (d.members||[]).filter(function(m){return m&&m.id!=null;}).map(function(m){ return Object.assign({},m,{photo:m.photo?"HAS_PHOTO":null}); }),
+      checkins: (d.checkins||[]).filter(function(c){return c&&c.memberId!=null;}),
+      feedback: d.feedback||[], events: d.events||[]
     };
     localStorage.setItem(LS_KEY, JSON.stringify(slim));
-    (d.members||[]).forEach(function(m){ if(m.photo&&m.photo!=="HAS_PHOTO"&&m.id){ try{localStorage.setItem("ph_"+m.id,m.photo);}catch(e){} } });
+    (d.members||[]).forEach(function(m){ if(m&&m.photo&&m.photo!=="HAS_PHOTO"&&m.id){ try{localStorage.setItem("ph_"+m.id,m.photo);}catch(e){} } });
   } catch(e) { console.log("Save err:",e); }
 }
 
 function withPhotos(d) {
-  return Object.assign({},d,{members:(d.members||[]).map(function(m){
+  return Object.assign({},d,{members:(d.members||[]).filter(function(m){return m&&m.id!=null;}).map(function(m){
     if(m.photo==="HAS_PHOTO"&&m.id){ var p=localStorage.getItem("ph_"+m.id); return Object.assign({},m,{photo:p||null}); }
     return m;
   })});
