@@ -635,7 +635,7 @@ async function postToGoogle(payload) {
     ctrl.abort();
   }, 15000) : null;
   try {
-    await fetch(GOOGLE_URL, {
+    var r = await fetch(GOOGLE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain;charset=utf-8"
@@ -644,7 +644,12 @@ async function postToGoogle(payload) {
       signal: ctrl ? ctrl.signal : undefined
     });
     if (timer) clearTimeout(timer);
-    return true;
+    try {
+      var json = await r.json();
+      return !!(json && json.status === "ok");
+    } catch (e2) {
+      return r.ok;
+    }
   } catch (e) {
     if (timer) clearTimeout(timer);
     console.log("Sync fail:", e && e.message || e);
@@ -9903,7 +9908,7 @@ function App() {
       var p = Object.assign({
         type: "REGISTRATION"
       }, member);
-      var savedPhoto = localStorage.getItem("ph_" + member.id);
+      var savedPhoto = member.photo || localStorage.getItem("ph_" + member.id);
       if (savedPhoto && savedPhoto.length < 500000) {
         // Photo fits in registration call — Apps Script will save it to Drive in one shot.
         // If the whole registration ends up queued (network down), the photoBase64 goes with it,
