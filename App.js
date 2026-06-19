@@ -3826,8 +3826,8 @@ function App(){
       var json=await res.json();
       if(json.status==="ok"){
         var local=loadData();
-        var googleMembers=json.members||[];
-        var googleCheckins=json.checkins||[];
+        var googleMembers=(json.members||[]).filter(function(m){return m&&m.id!=null;});
+        var googleCheckins=(json.checkins||[]).filter(function(c){return c&&c.memberId!=null;});
         var googleIds=new Set(googleMembers.map(function(m){return m.id;}));
         // Build lookup of who's already in Google, by normalised name and by phone,
         // so a LOCAL duplicate of the same person (different id) isn't re-added/re-uploaded.
@@ -3961,12 +3961,12 @@ function App(){
     else unsyncedOther++;
   });
   // Get unique member IDs who checked in on event date  
-  var rawIds=[...new Set((data.checkins||[]).filter(function(c){return c.date===eventDate;}).map(function(c){return c.memberId;}))];
+  var rawIds=[...new Set((data.checkins||[]).filter(function(c){return c&&c.date===eventDate;}).map(function(c){return c.memberId;}))];
   // Filter to only IDs that match existing members (ignore orphan check-ins from deleted members)
-  var todayCheckedIds=rawIds.filter(function(id){return (data.members||[]).find(function(m){return m.id===id;});});
+  var todayCheckedIds=rawIds.filter(function(id){return (data.members||[]).find(function(m){return m&&m.id===id;});});
   var todayCount=todayCheckedIds.length;
   var visitorsToday=todayCheckedIds.filter(function(id){
-    var m=(data.members||[]).find(function(mb){return mb.id===id;});
+    var m=(data.members||[]).find(function(mb){return mb&&mb.id===id;});
     return m&&m.originalStatus==="Visitor";
   }).length;
 
@@ -4177,5 +4177,54 @@ document.addEventListener("visibilitychange",function(){
   }
 });
 
+// ── Error boundary: any render crash shows a friendly screen instead of a blank page ──
+class ErrorBoundary extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = { hasError:false, error:null };
+  }
+  static getDerivedStateFromError(error){
+    return { hasError:true, error:error };
+  }
+  componentDidCatch(error, info){
+    try { console.error("JG app crashed:", error, info); } catch(e){}
+  }
+  render(){
+    if(this.state.hasError){
+      var msg = (this.state.error && (this.state.error.message || String(this.state.error))) || "Unknown error";
+      return React.createElement("div", {
+        style:{
+          minHeight:"100vh", display:"flex", flexDirection:"column",
+          alignItems:"center", justifyContent:"center", textAlign:"center",
+          padding:"24px", fontFamily:"system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
+          background:"#0b1220", color:"#fff", boxSizing:"border-box"
+        }
+      },
+        React.createElement("div", { style:{ fontSize:"48px", marginBottom:"12px" } }, "⚠️"),
+        React.createElement("h2", { style:{ margin:"0 0 8px", fontSize:"22px" } }, "Something went wrong"),
+        React.createElement("p", { style:{ margin:"0 0 20px", opacity:0.85, maxWidth:"320px" } },
+          "The app hit an unexpected error. Tap reload to start again — your saved data is safe."),
+        React.createElement("button", {
+          onClick:function(){ window.location.reload(); },
+          style:{
+            background:"#2563eb", color:"#fff", border:"none", borderRadius:"10px",
+            padding:"14px 28px", fontSize:"17px", fontWeight:"600", cursor:"pointer",
+            WebkitTapHighlightColor:"transparent"
+          }
+        }, "Reload"),
+        React.createElement("pre", {
+          style:{
+            marginTop:"24px", maxWidth:"90vw", maxHeight:"30vh", overflow:"auto",
+            fontSize:"11px", textAlign:"left", color:"#9fb3d1",
+            background:"rgba(255,255,255,0.05)", padding:"12px", borderRadius:"8px",
+            whiteSpace:"pre-wrap", wordBreak:"break-word"
+          }
+        }, msg)
+      );
+    }
+    return this.props.children;
+  }
+}
+
 var root=ReactDOM.createRoot(document.getElementById("root"));
-root.render(React.createElement(App));
+root.render(React.createElement(ErrorBoundary, null, React.createElement(App)));
