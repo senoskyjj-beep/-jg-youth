@@ -2051,7 +2051,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
       var lid=localStorage.getItem("jg_admin_leader_id");
       var lname="";
       if(lid){
-        var L=(function(){try{return JSON.parse(localStorage.getItem("jg_leaders")||"[]");}catch(e){return[];}}()).find(function(x){return x.id===lid;});
+        var _ldrs=[]; try{_ldrs=JSON.parse(localStorage.getItem("jg_leaders")||"[]");}catch(e){} var L=_ldrs.find(function(x){return x.id===lid;});
         if(L)lname=L.name+" "+L.surname;
       }
       if(role==="senior")return(<div style={{background:"linear-gradient(90deg,#fbbf24,#f59e0b)",color:"#000",textAlign:"center",padding:"8px 12px",fontSize:12,fontWeight:700,marginBottom:10,borderRadius:8}}>⭐ Senior Leader: {lname} · You can message & view reports. Cannot delete (ask Joshua, Priscilla or Pastor Billy).</div>);
