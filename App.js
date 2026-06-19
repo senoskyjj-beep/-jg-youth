@@ -235,7 +235,7 @@ function pctColor(p){ return p>=75?"#22c55e":p>=50?"#f59e0b":"#ef4444"; }
 // Track when a message has been sent to a person today
 function markMessageSent(memberId,channel,category){
   var key="msg_"+memberId+"_"+todayStr();
-  var existing=JSON.parse(localStorage.getItem(key)||"[]");
+  var existing=[]; try{existing=JSON.parse(localStorage.getItem(key)||"[]");}catch(e){}
   if(!existing.find(function(m){return m.channel===channel&&m.category===category;})){
     existing.push({channel:channel,category:category,time:new Date().toLocaleTimeString()});
     localStorage.setItem(key,JSON.stringify(existing));
@@ -3693,7 +3693,7 @@ function App(){
   var [homeTilePinUnlocked,setHomeTilePinUnlocked]=useState(false);
 
   async function checkHomeTilePin(p){
-    var leaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");
+    var leaders=[]; try{leaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");}catch(e){}
     // Any leader (Senior or Junior) can view names from home tiles. Their PINs
     // live in the synced Leaders list on this device, so we can match locally.
     var anyLeader=leaders.find(function(L){return String(L.pin)===String(p);});
