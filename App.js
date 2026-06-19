@@ -229,7 +229,7 @@ function isProfileIncomplete(m){
 
 function computeStatus(m,checkins){ if(m.originalStatus==="Member")return "Member"; var v=(checkins||[]).filter(function(c){return c.memberId===m.id;}).length; return v>=3?"Member":v>=2?"Returning Visitor":"Visitor"; }
 function visitCount(m,checkins){ return (checkins||[]).filter(function(c){return c.memberId===m.id;}).length; }
-function lastCheckin(m,checkins){ var mc=(checkins||[]).filter(function(c){return c.memberId===m.id;}).map(function(c){return c.date;}).sort(); return mc[mc.length-1]||null; }
+function lastCheckin(m,checkins){ var mc=(checkins||[]).filter(function(c){return c&&c.memberId===m.id;}).map(function(c){return c.date;}).sort(); return mc[mc.length-1]||null; }
 function pctColor(p){ return p>=75?"#22c55e":p>=50?"#f59e0b":"#ef4444"; }
 
 // Track when a message has been sent to a person today
@@ -246,7 +246,7 @@ function markMessageSent(memberId,channel,category){
 
 function getMessagesSent(memberId){
   var key="msg_"+memberId+"_"+todayStr();
-  return JSON.parse(localStorage.getItem(key)||"[]");
+  try{return JSON.parse(localStorage.getItem(key)||"[]");}catch(e){return [];}
 }
 
 function wasMessagedToday(memberId,channel){
@@ -1391,7 +1391,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
 // CHECK-IN
 function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initialMode}){
   var [mode,setMode]=useState(initialMode||"youth"); // youth or leader
-  var [leaders,setLeaders]=useState(function(){return JSON.parse(localStorage.getItem("jg_leaders")||"[]");});
+  var [leaders,setLeaders]=useState(function(){try{return JSON.parse(localStorage.getItem("jg_leaders")||"[]");}catch(e){return [];}});
   var [leaderQuery,setLeaderQuery]=useState("");
   var [leaderDone,setLeaderDone]=useState(null);
 
@@ -2051,7 +2051,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
       var lid=localStorage.getItem("jg_admin_leader_id");
       var lname="";
       if(lid){
-        var L=JSON.parse(localStorage.getItem("jg_leaders")||"[]").find(function(x){return x.id===lid;});
+        var L=(function(){try{return JSON.parse(localStorage.getItem("jg_leaders")||"[]");}catch(e){return[];}}()).find(function(x){return x.id===lid;});
         if(L)lname=L.name+" "+L.surname;
       }
       if(role==="senior")return(<div style={{background:"linear-gradient(90deg,#fbbf24,#f59e0b)",color:"#000",textAlign:"center",padding:"8px 12px",fontSize:12,fontWeight:700,marginBottom:10,borderRadius:8}}>⭐ Senior Leader: {lname} · You can message & view reports. Cannot delete (ask Joshua, Priscilla or Pastor Billy).</div>);
@@ -2587,8 +2587,8 @@ function QRTab(){
 
 // ── LEADER ATTENDANCE LOG TAB ───────────────────────────────
 function LeaderAttendanceTab(){
-  var leaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");
-  var attendance=JSON.parse(localStorage.getItem("leader_attendance")||"[]");
+  var leaders=(function(){try{return JSON.parse(localStorage.getItem("jg_leaders")||"[]");}catch(e){return[];}}());
+  var attendance=(function(){try{return JSON.parse(localStorage.getItem("leader_attendance")||"[]");}catch(e){return[];}}());
   // Group by date
   var byDate={};
   attendance.forEach(function(a){
@@ -2649,7 +2649,7 @@ function LeaderAttendanceTab(){
 
 // ── LEADERS TAB ─────────────────────────────────────────────
 function LeadersTab(){
-  var [leaders,setLeaders]=useState(function(){return JSON.parse(localStorage.getItem("jg_leaders")||"[]");});
+  var [leaders,setLeaders]=useState(function(){try{return JSON.parse(localStorage.getItem("jg_leaders")||"[]");}catch(e){return [];}});
   var [showForm,setShowForm]=useState(false);
   var [editing,setEditing]=useState(null);
   var blank={name:"",surname:"",phone:"",role:"Junior",notes:"",photo:null};
@@ -2728,7 +2728,7 @@ function LeadersTab(){
 
   if(showForm){
     // Get members list for the picker
-    var allMembers=JSON.parse(localStorage.getItem("jg_v6")||"{}").members||[];
+    var allMembers=(function(){try{return JSON.parse(localStorage.getItem("jg_v6")||"{}").members||[];}catch(e){return[];}}());
     var sortedMembers=sortAlpha(allMembers);
 
     return(<div>
