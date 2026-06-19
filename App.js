@@ -68,7 +68,7 @@ function loadData() {
       d.members=(d.members||[]).filter(function(m){return m&&m.id!=null;});
       d.checkins=(d.checkins||[]).filter(function(c){return c&&c.memberId!=null;});
       d.feedback=d.feedback||[];
-      d.events=d.events||[];
+      d.events=(d.events||[]).filter(function(e){return e&&e.date;});
       return d;
     }
   } catch(e) {}
@@ -143,19 +143,20 @@ function getActiveEventDate(events){
   if(todayDayOfWeek===5)return today;
   // If there's an event today, use today
   if(events&&events.length>0){
-    var todayEvent=events.find(function(e){return e.date===today;});
+    var todayEvent=events.find(function(e){return e&&e.date===today;});
     if(todayEvent)return today;
   }
   // If anyone has actually checked in today, use today — so a midweek gathering, an
   // ad-hoc check-in, or just testing shows up straight away (no event needed).
   try{
     var cks=(loadData().checkins)||[];
-    if(cks.some(function(c){return c.date===today;}))return today;
+    if(cks.some(function(c){return c&&c.date===today;}))return today;
   }catch(e){}
   // Otherwise show the most recent event this week (since last Friday) for review
   if(events&&events.length>0){
     var lastFri=lastFriday();
     var recent=events.filter(function(e){
+      if(!e||!e.date)return false;
       var ed=new Date(e.date+"T00:00:00");
       var now=new Date(); now.setHours(23,59,59,999);
       return ed>=lastFri&&ed<=now;
@@ -194,7 +195,7 @@ function weeksAgo(dateStr){
     return w<0?0:w>52?52:w; // cap at 52 weeks (1 year)
   }catch(e){return 0;}
 }
-function sortAlpha(arr){ return (arr||[]).slice().sort(function(a,b){ var na=(a.name+" "+a.surname).toLowerCase(),nb=(b.name+" "+b.surname).toLowerCase(); return na<nb?-1:na>nb?1:0; }); }
+function sortAlpha(arr){ return (arr||[]).filter(Boolean).slice().sort(function(a,b){ var na=(((a&&a.name)||"")+" "+((a&&a.surname)||"")).toLowerCase(),nb=(((b&&b.name)||"")+" "+((b&&b.surname)||"")).toLowerCase(); return na<nb?-1:na>nb?1:0; }); }
 // Normalised identity key for matching the same person across phones (trim, lowercase, collapse spaces)
 function memberKey(m){ var n=String((m&&m.name)||"").trim().toLowerCase().replace(/\s+/g," "); var s=String((m&&m.surname)||"").trim().toLowerCase().replace(/\s+/g," "); return n+"|"+s; }
 function phoneKey(p){ var d=String(p||"").replace(/\D/g,""); if(d.length>9)d=d.slice(-9); return d.length>=9?d:""; }
@@ -235,8 +236,8 @@ function isProfileIncomplete(m){
   return false;
 }
 
-function computeStatus(m,checkins){ if(m.originalStatus==="Member")return "Member"; var v=(checkins||[]).filter(function(c){return c.memberId===m.id;}).length; return v>=3?"Member":v>=2?"Returning Visitor":"Visitor"; }
-function visitCount(m,checkins){ return (checkins||[]).filter(function(c){return c.memberId===m.id;}).length; }
+function computeStatus(m,checkins){ if(m.originalStatus==="Member")return "Member"; var v=(checkins||[]).filter(function(c){return c&&c.memberId===m.id;}).length; return v>=3?"Member":v>=2?"Returning Visitor":"Visitor"; }
+function visitCount(m,checkins){ return (checkins||[]).filter(function(c){return c&&c.memberId===m.id;}).length; }
 function lastCheckin(m,checkins){ var mc=(checkins||[]).filter(function(c){return c&&c.memberId===m.id;}).map(function(c){return c.date;}).sort(); return mc[mc.length-1]||null; }
 function pctColor(p){ return p>=75?"#22c55e":p>=50?"#f59e0b":"#ef4444"; }
 
@@ -2915,8 +2916,8 @@ function EventsTab({data,setData}){
   // Sort events - upcoming first, then past. Compare YYYY-MM-DD strings directly
   // to avoid UTC-parse timezone shift (same pattern as isThisWeek / calcAge).
   var today=todayStr();
-  var upcoming=events.filter(function(e){return e.date>=today;}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
-  var past=events.filter(function(e){return e.date<today;}).sort(function(a,b){return b.date<a.date?-1:b.date>a.date?1:0;});
+  var upcoming=events.filter(function(e){return e&&e.date>=today;}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+  var past=events.filter(function(e){return e&&e.date<today;}).sort(function(a,b){return b.date<a.date?-1:b.date>a.date?1:0;});
 
   if(showForm){
     return(<div>
@@ -4093,7 +4094,7 @@ function App(){
     {homeTilePopup&&(function(){
       var ed=getActiveEventDate(data.events);
       // Get unique member IDs who checked in on event date
-      var todayCheckedIds=[...new Set((data.checkins||[]).filter(function(c){return c.date===ed;}).map(function(c){return c.memberId;}))];
+      var todayCheckedIds=[...new Set((data.checkins||[]).filter(function(c){return c&&c.date===ed;}).map(function(c){return c.memberId;}))];
       // ONLY count IDs that match an existing member (skip orphaned check-ins from deleted members)
       var validIds=todayCheckedIds.filter(function(id){return (data.members||[]).find(function(m){return m.id===id;});});
       var list=[],title="",color="";
