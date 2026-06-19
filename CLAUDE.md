@@ -29,13 +29,24 @@ Co-admins: Priscilla and Pastor Billy.
 ## Architecture (unusual — read carefully)
 
 **Frontend**
-- A **single React file: `App.js`** (~4,000–4,200 lines), plus `index.html` and
-  `styles.css`. Three files only, at repo root.
-- **Compiled in the browser by Babel at runtime. There is NO build step** — no webpack,
-  no bundler, no `npm run build`. `index.html` loads `App.js` and Babel transpiles it on
-  the fly.
+- A **single React source file: `App.js`** (~4,000–4,200 lines), plus `index.html`,
+  `styles.css`, `build.js`, and the generated `App.compiled.js`.
+- **There IS now a lightweight build step (added 2026-06-19).** `App.js` is the editable
+  source (JSX). `build.js` transpiles it to **`App.compiled.js`** (plain browser JS, classic
+  React runtime). `index.html` loads `App.compiled.js` as a normal script — it pins React
+  18.2.0 + ReactDOM and **no longer downloads Babel**. This was done because the old setup
+  downloaded a ~3MB in-browser Babel on every open, which stalled on slow ADSL and showed
+  a grey/blank screen. Now the app loads like a static page.
+- **Workflow when changing the app:** edit `App.js` → run `node build.js` → commit BOTH
+  `App.js` and `App.compiled.js`. The browser only ever runs `App.compiled.js`; editing
+  `App.js` without rebuilding deploys nothing. `App.compiled.js` is AUTO-GENERATED — never
+  hand-edit it.
+- `build.js` needs `@babel/standalone`: run `npm install @babel/standalone` first (it is
+  gitignored along with `node_modules`).
 - Hosted on **GitHub Pages**: `senoskyjj-beep.github.io/-jg-youth/` (repo `-jg-youth`).
-  Pushing to the repo's default branch deploys it.
+  Pushing to the repo's default branch deploys it. `index.html` uses `?v=` cache-busting
+  query strings — **bump the version** (e.g. `20260619c` → `20260620a`) on any deploy that
+  must reach all devices immediately, otherwise phones keep the cached old file.
 
 **Backend (NOT in this repo)**
 - **Google Apps Script** (`Code.gs`), deployed as a web app, currently **Version 16**.
@@ -55,10 +66,13 @@ Co-admins: Priscilla and Pastor Billy.
 
 ## Hard rules
 
-1. **No build step. Babel in-browser is unforgiving** — one syntax error or a duplicated
-   block produces a **blank screen with no visible error.** `App.js` must stay valid JSX.
-2. **Parse-check before every commit.** Never commit/push an `App.js` that doesn't parse
-   as JSX. Install whatever you need to verify it; do not skip this.
+1. **One syntax error = blank screen with no visible error.** `App.js` must stay valid JSX.
+   **Always run `node build.js` and commit the regenerated `App.compiled.js`** — if the
+   build fails, do not deploy. The browser runs `App.compiled.js`, not `App.js`.
+2. **Parse-check before every commit.** Verify `App.js` transpiles cleanly with
+   `@babel/standalone` (the real transform), not just `@babel/parser` — `build.js` does this
+   and will exit non-zero on failure. After building, sanity-check that `App.compiled.js`
+   renders (a headless jsdom render is ideal). Do not skip this.
 3. **Make surgical, exact-match edits.** Never rewrite the whole file. A full-file rewrite
    risks silently dropping working code.
 4. **Commit + push via git** (this is the safe way to deploy the frontend — git does not
