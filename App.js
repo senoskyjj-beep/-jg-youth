@@ -82,9 +82,26 @@ function saveData(d) {
 
 function withPhotos(d) {
   return Object.assign({},d,{members:(d.members||[]).filter(function(m){return m&&m.id!=null;}).map(function(m){
-    if(m.photo==="HAS_PHOTO"&&m.id){ var p=localStorage.getItem("ph_"+m.id); return Object.assign({},m,{photo:p||null}); }
+    if(m.id){
+      var p=localStorage.getItem("ph_"+m.id);
+      if(p && p.indexOf("data:")===0) return Object.assign({},m,{photo:p});      // still on this phone (not uploaded yet)
+      if(m.photoUrl) return Object.assign({},m,{photo:driveImg(m.photoUrl)});     // uploaded — load it FROM Google Drive
+    }
+    if(m.photo==="HAS_PHOTO") return Object.assign({},m,{photo:null});
     return m;
   })});
+}
+
+// Once a photo is confirmed on Google Drive, drop the heavy base64 copy from THIS phone.
+// Safe: only deletes when the SERVER has given the member a real Drive photoUrl.
+function pruneUploadedPhotos(members){
+  (members||[]).forEach(function(m){
+    if(!m||!m.id)return;
+    var pu=String(m.photoUrl||"");
+    if(pu.indexOf("drive.google")>=0 || pu.indexOf("googleusercontent")>=0){
+      try{ localStorage.removeItem("ph_"+m.id); }catch(e){}
+    }
+  });
 }
 
 // ── ADMIN SESSION (auto-logout) ──────────────────────────────
@@ -367,6 +384,8 @@ async function uploadPendingPhoto(item,members){
       delete fullPayload.photo;        // don't resend base64
       delete fullPayload.photoBase64;  // don't trigger another Drive save
       syncGoogle(fullPayload);
+      // Confirmed on Drive — this phone no longer needs the heavy base64 copy.
+      try{ localStorage.removeItem("ph_"+memberId); }catch(e){}
       return true;
     }
     return false;
@@ -650,6 +669,8 @@ async function uploadPhotoData(member,photoBase64){
       var full=Object.assign({type:"REGISTRATION"},member,{photoUrl:json.photoUrl});
       delete full.photo; delete full.photoBase64;
       await postToGoogle(full);
+      // Confirmed on Drive — drop the heavy copy from this phone.
+      try{ localStorage.removeItem("ph_"+member.id); }catch(e){}
       return true;
     }
   }catch(e){}
@@ -3368,13 +3389,13 @@ function ImportTab({data,setData}){
     toAdd.forEach(function(m){
       var p=Object.assign({type:"REGISTRATION"},m);
       var savedPhoto=localStorage.getItem("ph_"+m.id);
-      if(savedPhoto&&savedPhoto.length<500000){
-        p.photoBase64=savedPhoto;
-      } else if(savedPhoto){
-        // Photo too large to fit in registration call — queue separately
+      if(savedPhoto){
+        // Always upload via the UPLOAD_PHOTO path so we get the Drive link back and can
+        // remove the heavy copy from this phone once it is confirmed.
         addToPhotoQueue(m.id);
       }
       delete p.photo;
+      delete p.photoBase64;
       syncGoogle(p);
     });
     ck.forEach(function(c){syncGoogle({type:"CHECKIN",id:c.memberId,memberId:c.memberId,name:c.name||"",surname:c.surname||"",date:c.date,school:c.school||"",status:"Member"});});
@@ -3827,6 +3848,9 @@ function App(){
           feedback:local.feedback||[],
           events:local.events||[]
         };
+        // Photos confirmed on Drive no longer need to sit on this phone — clear them
+        // BEFORE resolving photos below, so those members resolve to their Drive image.
+        pruneUploadedPhotos(merged.members);
         merged.members=merged.members.map(function(m){
           var ph=resolvePhoto(m);
           return ph ? Object.assign({},m,{photo:ph}) : m;
@@ -3859,17 +3883,14 @@ function App(){
     if(isNew){
       var p=Object.assign({type:"REGISTRATION"},member);
       var savedPhoto=member.photo||localStorage.getItem("ph_"+member.id);
-      if(savedPhoto&&savedPhoto.length<500000){
-        // Photo fits in registration call — Apps Script will save it to Drive in one shot.
-        // If the whole registration ends up queued (network down), the photoBase64 goes with it,
-        // so the photo retries with the data — no separate photo queue needed.
-        p.photoBase64=savedPhoto;
-      } else if(savedPhoto){
-        // Photo too large to fit in registration call. Send the registration without it,
-        // then queue the photo for separate upload via UPLOAD_PHOTO endpoint.
+      if(savedPhoto){
+        // Always upload the photo via the UPLOAD_PHOTO path. That path reads back the
+        // Drive link, which lets us confirm the photo is safely stored and then remove
+        // the heavy copy from this phone. (The base64 is already saved at ph_+id below.)
         addToPhotoQueue(member.id);
       }
       delete p.photo;
+      delete p.photoBase64;
       syncGoogle(p);
     }
     setData(updated);saveData(updated);
