@@ -38,13 +38,6 @@ function msgParentAbsentByWeek(youthName, parentName, weeks) {
 }
 function msgParentAbsent(youthName, parentName) { return msgParentAbsentByWeek(youthName, parentName, 1); }
 
-// ── VISITOR RETURN MESSAGES (3 levels based on visit count) ──
-function msgVisitorReturn(name, visitCount) {
-  if(visitCount===2) return "Hi "+name+"! \ud83d\ude4f\n\nWow - it is so great to see you back at Jeremiah Generation for the second time! You truly are becoming part of our family. \ud83d\udc9b\n\nWe would love to officially welcome you as a *Member* of JG Youth! Simply reply YES to this message and we will get you registered. \ud83c\udf89\n\nGod bless!\nJG Youth - Living Waters Fellowship";
-  if(visitCount>=3) return "Hi "+name+"! \u271d\ufe0f\n\nThis is your *third visit* to Jeremiah Generation - God is clearly drawing you here! \ud83d\ude4f\n\nWe would love to officially register you as a *Member* of JG Youth. Just reply YES and we will take care of everything!\n\nYou belong here. God bless!\nJG Youth - Living Waters Fellowship";
-  return msgVisitor(name);
-}
-
 var SCHOOLS = [
   "-- High Schools --","Batlhalerwa High School","Diammona Secondary","Dimpe Secondary",
   "Dinoko Secondary","Hoerskool Ellisras","Kings College","Lephalale High School",
@@ -181,11 +174,6 @@ function toWA(num,msg){
   var i=d.startsWith("0")?"27"+d.slice(1):d.startsWith("27")?d:"27"+d;
   return "https://wa.me/"+i+(msg?"?text="+encodeURIComponent(msg):"");
 }
-function waLink(num,msg,label,style){
-  var href=toWA(num,msg);
-  if(!href)return null;
-  return <a href={href} target="_blank" style={style}>{label}</a>;
-}
 function weeksAgo(dateStr){
   if(!dateStr)return 0;
   try{
@@ -262,14 +250,6 @@ function wasMessagedToday(memberId,channel){
   var msgs=getMessagesSent(memberId);
   if(channel)return msgs.some(function(m){return m.channel===channel;});
   return msgs.length>0;
-}
-
-// Returns true if BOTH youth AND parent have been messaged today (absent flow)
-function fullyMessagedToday(memberId){
-  var msgs=getMessagesSent(memberId);
-  var youthSent=msgs.some(function(m){return m.channel==="WA"||m.channel==="SMS";});
-  var parentSent=msgs.some(function(m){return m.channel==="WA-Parent"||m.channel==="SMS-Parent";});
-  return youthSent&&parentSent;
 }
 
 // Friday 1AM reset — clears all message sent records for the week
@@ -2222,11 +2202,11 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
           <div style={{fontSize:12,color:"#94a3b8"}}>Phone: {m.phone||"?"}</div>
           <div style={{fontSize:12,color:"#94a3b8"}}>Parent: {m.parentName||""} {m.parentSurname||""} | {m.parentPhone||"?"}</div>
         </div>
-        <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-          <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Youth</a>
-          {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 SMS</a>}
-          <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">💬 Parent</a>
-          {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 P.SMS</a>}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,minWidth:200}}>
+          <a href={toWA(m.whatsapp||m.phone)} target="_blank" style={{display:"block",background:"#25D366",color:"#04130a",borderRadius:9,padding:"9px 10px",fontSize:12,fontWeight:800,textDecoration:"none",textAlign:"center"}}>💬 WhatsApp</a>
+          <a href={toSMS(m.phone)||"#"} style={{display:"block",background:"#0891b2",color:"#fff",borderRadius:9,padding:"9px 10px",fontSize:12,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(m.phone)?1:0.4,pointerEvents:toSMS(m.phone)?"auto":"none"}}>📱 SMS</a>
+          <a href={toWA(m.parentPhone)} target="_blank" style={{display:"block",background:"#be185d",color:"#fff",borderRadius:9,padding:"9px 10px",fontSize:12,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toWA(m.parentPhone)?1:0.4,pointerEvents:toWA(m.parentPhone)?"auto":"none"}}>💬 Parent WhatsApp</a>
+          <a href={toSMS(m.parentPhone)||"#"} style={{display:"block",background:"#7c2d12",color:"#fff",borderRadius:9,padding:"9px 10px",fontSize:12,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(m.parentPhone)?1:0.4,pointerEvents:toSMS(m.parentPhone)?"auto":"none"}}>📱 Parent SMS</a>
         </div>
       </div>);})}
     </div>}
@@ -2255,15 +2235,11 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
             <span>Phone: {m.phone||"?"}</span><span>Address: {m.address||"?"}</span>
             <span>Parent: {m.parentName||""} {m.parentSurname||""}</span><span>Parent Phone: {m.parentPhone||"?"}</span>
           </div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Youth</a>
-            {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 SMS</a>}
-            <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent">💬 Parent</a>
-            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 P.SMS</a>}
-            {wk>=3&&<a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>💜 Encourage WA</a>}
-            {wk>=3&&toSMS(m.phone)&&<a href={toSMS(m.phone,msgAbsent(m.name))} style={{background:"#4f46e5",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Encourage SMS</a>}
-            {wk>=3&&<a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>❤️ Parent WA</a>}
-            {wk>=3&&toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:9,padding:"7px 12px",fontSize:12,fontWeight:700,textDecoration:"none"}}>📱 Parent SMS</a>}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <a href={toWA(m.whatsapp||m.phone)} target="_blank" style={{display:"block",background:"#25D366",color:"#04130a",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center"}}>💬 WhatsApp</a>
+            <a href={toSMS(m.phone)||"#"} style={{display:"block",background:"#0891b2",color:"#fff",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(m.phone)?1:0.4,pointerEvents:toSMS(m.phone)?"auto":"none"}}>📱 SMS</a>
+            <a href={toWA(m.parentPhone)} target="_blank" style={{display:"block",background:"#be185d",color:"#fff",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toWA(m.parentPhone)?1:0.4,pointerEvents:toWA(m.parentPhone)?"auto":"none"}}>💬 Parent WhatsApp</a>
+            <a href={toSMS(m.parentPhone)||"#"} style={{display:"block",background:"#7c2d12",color:"#fff",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(m.parentPhone)?1:0.4,pointerEvents:toSMS(m.parentPhone)?"auto":"none"}}>📱 Parent SMS</a>
           </div>
         </div>);
       })}
@@ -3390,13 +3366,6 @@ function ImportTab({data,setData}){
     ck.forEach(function(c){syncGoogle({type:"CHECKIN",id:c.memberId,memberId:c.memberId,name:c.name||"",surname:c.surname||"",date:c.date,school:c.school||"",status:"Member"});});
   }
 
-  function histToMember(h){
-    return {id:"hist_"+(h.nm+h.sn).replace(/\s/g,"").toLowerCase()+"_"+Math.random().toString(36).slice(2),
-      name:h.nm,surname:h.sn,phone:h.ph,address:h.ad,school:h.sc,grade:h.gr,
-      whatsapp:h.ph,parentName:"",parentSurname:"",parentPhone:"",birthday:"",photo:null,
-      status:"Member",originalStatus:"Member",incomplete:true,registeredOn:"historical",wantsWhatsApp:false};
-  }
-
   function parseCSV(text){
     var lines=text.split("\n").filter(function(l){return l.trim();});
     if(lines.length<2)return [];
@@ -3443,22 +3412,6 @@ function ImportTab({data,setData}){
       };
       reader.readAsText(file);
     }
-  }
-
-  function xlDateToStr(v){
-    if(typeof v==="number"&&v>20000){
-      var d=new Date(Math.round((v-25569)*86400*1000));
-      return d.toISOString().slice(0,10);
-    }
-    if(v instanceof Date){return v.toISOString().slice(0,10);}
-    var s=String(v||"").trim();
-    if(s.match(/^\d{4}-\d{2}-\d{2}/))return s.slice(0,10);
-    if(s.match(/^\d{1,2}\/\d{1,2}\/\d{2,4}/)){
-      var pts=s.split("/");
-      var y=pts[2].length===2?"20"+pts[2]:pts[2];
-      return y+"-"+pts[1].padStart(2,"0")+"-"+pts[0].padStart(2,"0");
-    }
-    return null;
   }
 
   function parseDate(val){
@@ -3660,6 +3613,7 @@ function ConfirmScreen({confirm,onUpload,onDone,uploading}){
         <div style={{fontSize:46,marginBottom:8}}>✅</div>
         <p style={{color:"#86efac",fontSize:20,fontWeight:900,margin:"0 0 6px"}}>Registered!</p>
         <p style={{color:"#bbf7d0",fontSize:15,margin:"0 0 4px"}}>{name.trim()} is saved and syncing to the cloud.</p>
+        {c.photoPending&&<p style={{color:"#fbbf24",fontSize:13,fontWeight:800,margin:"10px 0 0",lineHeight:1.45,background:"#3a1f00",border:"1px solid #f59e0b",borderRadius:10,padding:"10px 12px"}}>📷 The photo is still uploading — please keep this app OPEN and on Wi-Fi/signal until it finishes. It will upload on its own.</p>}
         <p style={{color:"#4ade80",fontSize:12,margin:"8px 0 0"}}>If anything doesn't sync, the home screen will show it with an Upload button.</p>
       </div>
       <button onClick={onDone} style={{marginTop:22,background:"#22c55e",color:"#04130a",border:"none",borderRadius:14,padding:"16px",fontSize:17,fontWeight:800,width:"100%",maxWidth:440,cursor:"pointer"}}>Done — register next</button>

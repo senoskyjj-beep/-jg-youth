@@ -45,13 +45,6 @@ function msgParentAbsentByWeek(youthName, parentName, weeks) {
 function msgParentAbsent(youthName, parentName) {
   return msgParentAbsentByWeek(youthName, parentName, 1);
 }
-
-// ── VISITOR RETURN MESSAGES (3 levels based on visit count) ──
-function msgVisitorReturn(name, visitCount) {
-  if (visitCount === 2) return "Hi " + name + "! \ud83d\ude4f\n\nWow - it is so great to see you back at Jeremiah Generation for the second time! You truly are becoming part of our family. \ud83d\udc9b\n\nWe would love to officially welcome you as a *Member* of JG Youth! Simply reply YES to this message and we will get you registered. \ud83c\udf89\n\nGod bless!\nJG Youth - Living Waters Fellowship";
-  if (visitCount >= 3) return "Hi " + name + "! \u271d\ufe0f\n\nThis is your *third visit* to Jeremiah Generation - God is clearly drawing you here! \ud83d\ude4f\n\nWe would love to officially register you as a *Member* of JG Youth. Just reply YES and we will take care of everything!\n\nYou belong here. God bless!\nJG Youth - Living Waters Fellowship";
-  return msgVisitor(name);
-}
 var SCHOOLS = ["-- High Schools --", "Batlhalerwa High School", "Diammona Secondary", "Dimpe Secondary", "Dinoko Secondary", "Hoerskool Ellisras", "Kings College", "Lephalale High School", "Matshwara Secondary", "Mmay Secondary", "Mokonenkwenoko Secondary", "Morakolo Secondary", "Raboditse Secondary", "-- Primary Schools --", "Bakgalaka Primary", "Bangalong Primary", "Bilton Primary", "Bosveld Primary", "Botshelong Primary", "Hooikraal Primary", "Ikitseng Primary", "Jacob Langa Lower Primary", "Mmera Primary", "Moabi Primary", "Mocheko Primary", "Morukhurukhung Primary", "Mosima Primary", "Motoma Primary", "Mpepule Primary", "Nku Primary", "Olifantsdrift Primary", "Vaalpenskraal Primary", "-- Other --", "EHS", "MSTS", "UCTOHS", "Marlothii", "Laerskool", "Online", "Other (not listed)"];
 var LS_KEY = "jg_v6";
 function loadData() {
@@ -233,15 +226,6 @@ function toWA(num, msg) {
   var i = d.startsWith("0") ? "27" + d.slice(1) : d.startsWith("27") ? d : "27" + d;
   return "https://wa.me/" + i + (msg ? "?text=" + encodeURIComponent(msg) : "");
 }
-function waLink(num, msg, label, style) {
-  var href = toWA(num, msg);
-  if (!href) return null;
-  return /*#__PURE__*/React.createElement("a", {
-    href: href,
-    target: "_blank",
-    style: style
-  }, label);
-}
 function weeksAgo(dateStr) {
   if (!dateStr) return 0;
   try {
@@ -396,18 +380,6 @@ function wasMessagedToday(memberId, channel) {
     return m.channel === channel;
   });
   return msgs.length > 0;
-}
-
-// Returns true if BOTH youth AND parent have been messaged today (absent flow)
-function fullyMessagedToday(memberId) {
-  var msgs = getMessagesSent(memberId);
-  var youthSent = msgs.some(function (m) {
-    return m.channel === "WA" || m.channel === "SMS";
-  });
-  var parentSent = msgs.some(function (m) {
-    return m.channel === "WA-Parent" || m.channel === "SMS-Parent";
-  });
-  return youthSent && parentSent;
 }
 
 // Friday 1AM reset — clears all message sent records for the week
@@ -5414,41 +5386,72 @@ function AdminDashboard({
       }
     }, "Parent: ", m.parentName || "", " ", m.parentSurname || "", " | ", m.parentPhone || "?")), /*#__PURE__*/React.createElement("div", {
       style: {
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
         gap: 7,
-        flexWrap: "wrap"
+        minWidth: 200
       }
     }, /*#__PURE__*/React.createElement("a", {
       href: toWA(m.whatsapp || m.phone),
       target: "_blank",
-      className: "btn btn-wa"
-    }, "💬 Youth"), toSMS(m.phone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.phone),
       style: {
+        display: "block",
+        background: "#25D366",
+        color: "#04130a",
+        borderRadius: 9,
+        padding: "9px 10px",
+        fontSize: 12,
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center"
+      }
+    }, "💬 WhatsApp"), /*#__PURE__*/React.createElement("a", {
+      href: toSMS(m.phone) || "#",
+      style: {
+        display: "block",
         background: "#0891b2",
         color: "#fff",
         borderRadius: 9,
-        padding: "7px 12px",
+        padding: "9px 10px",
         fontSize: 12,
-        fontWeight: 700,
-        textDecoration: "none"
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toSMS(m.phone) ? 1 : 0.4,
+        pointerEvents: toSMS(m.phone) ? "auto" : "none"
       }
     }, "📱 SMS"), /*#__PURE__*/React.createElement("a", {
       href: toWA(m.parentPhone),
       target: "_blank",
-      className: "btn btn-wa-parent"
-    }, "💬 Parent"), toSMS(m.parentPhone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.parentPhone),
       style: {
+        display: "block",
+        background: "#be185d",
+        color: "#fff",
+        borderRadius: 9,
+        padding: "9px 10px",
+        fontSize: 12,
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toWA(m.parentPhone) ? 1 : 0.4,
+        pointerEvents: toWA(m.parentPhone) ? "auto" : "none"
+      }
+    }, "💬 Parent WhatsApp"), /*#__PURE__*/React.createElement("a", {
+      href: toSMS(m.parentPhone) || "#",
+      style: {
+        display: "block",
         background: "#7c2d12",
         color: "#fff",
         borderRadius: 9,
-        padding: "7px 12px",
+        padding: "9px 10px",
         fontSize: 12,
-        fontWeight: 700,
-        textDecoration: "none"
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toSMS(m.parentPhone) ? 1 : 0.4,
+        pointerEvents: toSMS(m.parentPhone) ? "auto" : "none"
       }
-    }, "📱 P.SMS")));
+    }, "📱 Parent SMS")));
   })), tab === "members" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
     className: "page-title"
   }, "All Members (", members.length, ")"), members.length === 0 && /*#__PURE__*/React.createElement("p", {
@@ -5553,85 +5556,69 @@ function AdminDashboard({
       }
     }, /*#__PURE__*/React.createElement("span", null, "Age: ", calcAge(m.birthday) || "?"), /*#__PURE__*/React.createElement("span", null, "School: ", m.school || "?"), /*#__PURE__*/React.createElement("span", null, "Phone: ", m.phone || "?"), /*#__PURE__*/React.createElement("span", null, "Address: ", m.address || "?"), /*#__PURE__*/React.createElement("span", null, "Parent: ", m.parentName || "", " ", m.parentSurname || ""), /*#__PURE__*/React.createElement("span", null, "Parent Phone: ", m.parentPhone || "?")), /*#__PURE__*/React.createElement("div", {
       style: {
-        display: "flex",
-        gap: 8,
-        flexWrap: "wrap"
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 8
       }
     }, /*#__PURE__*/React.createElement("a", {
       href: toWA(m.whatsapp || m.phone),
       target: "_blank",
-      className: "btn btn-wa"
-    }, "💬 Youth"), toSMS(m.phone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.phone),
       style: {
+        display: "block",
+        background: "#25D366",
+        color: "#04130a",
+        borderRadius: 9,
+        padding: "11px 12px",
+        fontSize: 13,
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center"
+      }
+    }, "💬 WhatsApp"), /*#__PURE__*/React.createElement("a", {
+      href: toSMS(m.phone) || "#",
+      style: {
+        display: "block",
         background: "#0891b2",
         color: "#fff",
         borderRadius: 9,
-        padding: "7px 12px",
-        fontSize: 12,
-        fontWeight: 700,
-        textDecoration: "none"
+        padding: "11px 12px",
+        fontSize: 13,
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toSMS(m.phone) ? 1 : 0.4,
+        pointerEvents: toSMS(m.phone) ? "auto" : "none"
       }
     }, "📱 SMS"), /*#__PURE__*/React.createElement("a", {
       href: toWA(m.parentPhone),
       target: "_blank",
-      className: "btn btn-wa-parent"
-    }, "💬 Parent"), toSMS(m.parentPhone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.parentPhone),
       style: {
-        background: "#7c2d12",
-        color: "#fff",
-        borderRadius: 9,
-        padding: "7px 12px",
-        fontSize: 12,
-        fontWeight: 700,
-        textDecoration: "none"
-      }
-    }, "📱 P.SMS"), wk >= 3 && /*#__PURE__*/React.createElement("a", {
-      href: toWA(m.whatsapp || m.phone, msgAbsent(m.name)),
-      target: "_blank",
-      style: {
-        background: "#6c63ff",
-        color: "#fff",
-        borderRadius: 9,
-        padding: "7px 12px",
-        fontSize: 12,
-        fontWeight: 700,
-        textDecoration: "none"
-      }
-    }, "💜 Encourage WA"), wk >= 3 && toSMS(m.phone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.phone, msgAbsent(m.name)),
-      style: {
-        background: "#4f46e5",
-        color: "#fff",
-        borderRadius: 9,
-        padding: "7px 12px",
-        fontSize: 12,
-        fontWeight: 700,
-        textDecoration: "none"
-      }
-    }, "📱 Encourage SMS"), wk >= 3 && /*#__PURE__*/React.createElement("a", {
-      href: toWA(m.parentPhone, msgParentAbsent(m.name, m.parentName)),
-      target: "_blank",
-      style: {
+        display: "block",
         background: "#be185d",
         color: "#fff",
         borderRadius: 9,
-        padding: "7px 12px",
-        fontSize: 12,
-        fontWeight: 700,
-        textDecoration: "none"
+        padding: "11px 12px",
+        fontSize: 13,
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toWA(m.parentPhone) ? 1 : 0.4,
+        pointerEvents: toWA(m.parentPhone) ? "auto" : "none"
       }
-    }, "❤️ Parent WA"), wk >= 3 && toSMS(m.parentPhone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.parentPhone, msgParentAbsent(m.name, m.parentName)),
+    }, "💬 Parent WhatsApp"), /*#__PURE__*/React.createElement("a", {
+      href: toSMS(m.parentPhone) || "#",
       style: {
-        background: "#9d174d",
+        display: "block",
+        background: "#7c2d12",
         color: "#fff",
         borderRadius: 9,
-        padding: "7px 12px",
-        fontSize: 12,
-        fontWeight: 700,
-        textDecoration: "none"
+        padding: "11px 12px",
+        fontSize: 13,
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toSMS(m.parentPhone) ? 1 : 0.4,
+        pointerEvents: toSMS(m.parentPhone) ? "auto" : "none"
       }
     }, "📱 Parent SMS")));
   })), tab === "wagroup" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
@@ -8881,28 +8868,6 @@ function ImportTab({
       });
     });
   }
-  function histToMember(h) {
-    return {
-      id: "hist_" + (h.nm + h.sn).replace(/\s/g, "").toLowerCase() + "_" + Math.random().toString(36).slice(2),
-      name: h.nm,
-      surname: h.sn,
-      phone: h.ph,
-      address: h.ad,
-      school: h.sc,
-      grade: h.gr,
-      whatsapp: h.ph,
-      parentName: "",
-      parentSurname: "",
-      parentPhone: "",
-      birthday: "",
-      photo: null,
-      status: "Member",
-      originalStatus: "Member",
-      incomplete: true,
-      registeredOn: "historical",
-      wantsWhatsApp: false
-    };
-  }
   function parseCSV(text) {
     var lines = text.split("\n").filter(function (l) {
       return l.trim();
@@ -8977,23 +8942,6 @@ function ImportTab({
       };
       reader.readAsText(file);
     }
-  }
-  function xlDateToStr(v) {
-    if (typeof v === "number" && v > 20000) {
-      var d = new Date(Math.round((v - 25569) * 86400 * 1000));
-      return d.toISOString().slice(0, 10);
-    }
-    if (v instanceof Date) {
-      return v.toISOString().slice(0, 10);
-    }
-    var s = String(v || "").trim();
-    if (s.match(/^\d{4}-\d{2}-\d{2}/)) return s.slice(0, 10);
-    if (s.match(/^\d{1,2}\/\d{1,2}\/\d{2,4}/)) {
-      var pts = s.split("/");
-      var y = pts[2].length === 2 ? "20" + pts[2] : pts[2];
-      return y + "-" + pts[1].padStart(2, "0") + "-" + pts[0].padStart(2, "0");
-    }
-    return null;
   }
   function parseDate(val) {
     // Convert Excel date values to yyyy-mm-dd string
@@ -9438,7 +9386,19 @@ function ConfirmScreen({
         fontSize: 15,
         margin: "0 0 4px"
       }
-    }, name.trim(), " is saved and syncing to the cloud."), /*#__PURE__*/React.createElement("p", {
+    }, name.trim(), " is saved and syncing to the cloud."), c.photoPending && /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: "#fbbf24",
+        fontSize: 13,
+        fontWeight: 800,
+        margin: "10px 0 0",
+        lineHeight: 1.45,
+        background: "#3a1f00",
+        border: "1px solid #f59e0b",
+        borderRadius: 10,
+        padding: "10px 12px"
+      }
+    }, "📷 The photo is still uploading — please keep this app OPEN and on Wi-Fi/signal until it finishes. It will upload on its own."), /*#__PURE__*/React.createElement("p", {
       style: {
         color: "#4ade80",
         fontSize: 12,
