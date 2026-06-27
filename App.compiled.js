@@ -1598,6 +1598,19 @@ function PinScreen({
   var [pin, setPin] = useState("");
   var [shake, setShake] = useState(false);
   var [checking, setChecking] = useState(false);
+  var [errType, setErrType] = useState(null); // "pin" = wrong PIN, "network" = couldn't reach server
+  useEffect(function () {
+    // Wake the Apps Script backend early so PIN verification isn't slowed by a cold start.
+    // Fire-and-forget — we don't care about the reply, just that the server is warming up
+    // by the time the leader finishes typing their PIN.
+    try {
+      if (GOOGLE_URL && !GOOGLE_URL.includes("PASTE")) {
+        fetch(GOOGLE_URL + (GOOGLE_URL.indexOf("?") >= 0 ? "&" : "?") + "warmup=1&_cb=" + Date.now(), {
+          method: "GET"
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }, []);
   function press(k) {
     if (checking) return;
     if (k === "del") {
@@ -1607,6 +1620,7 @@ function PinScreen({
       return;
     }
     if (pin.length >= 5) return;
+    if (errType) setErrType(null);
     var next = pin + k;
     setPin(next);
     if (next.length === 5) {
@@ -1616,6 +1630,7 @@ function PinScreen({
   async function verifyEntered(entered) {
     // PINs are verified by the SERVER now — they are not in this file.
     setChecking(true);
+    setErrType(null);
     var res = await verifyAdminPin(entered);
     setChecking(false);
     if (res && res.status === "ok") {
@@ -1638,7 +1653,15 @@ function PinScreen({
       setTimeout(function () {
         onSuccess();
       }, 150);
+    } else if (res === null) {
+      // Couldn't reach the server (offline, weak signal, or 15s timeout) — NOT a wrong PIN.
+      setErrType("network");
+      setTimeout(function () {
+        setPin("");
+      }, 1200);
     } else {
+      // Server answered but rejected the PIN.
+      setErrType("pin");
       setShake(true);
       setTimeout(function () {
         setPin("");
@@ -1700,13 +1723,27 @@ function PinScreen({
       fontSize: 11,
       marginBottom: 8
     }
-  }, "5-digit PIN required"), shake && /*#__PURE__*/React.createElement("p", {
+  }, "5-digit PIN required"), checking && /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#fbbf24",
+      fontSize: 13,
+      marginBottom: 8,
+      fontWeight: 700
+    }
+  }, "🔄 Checking your PIN… please wait"), !checking && errType === "pin" && /*#__PURE__*/React.createElement("p", {
     style: {
       color: "#f87171",
       fontSize: 13,
       marginBottom: 8
     }
-  }, "Incorrect PIN."), /*#__PURE__*/React.createElement("div", {
+  }, "Incorrect PIN."), !checking && errType === "network" && /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#f87171",
+      fontSize: 13,
+      marginBottom: 8,
+      lineHeight: 1.4
+    }
+  }, "📶 Couldn't reach the server. Check your signal and try again — your PIN was not wrong."), /*#__PURE__*/React.createElement("div", {
     className: "numpad"
   }, ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"].map(function (k, i) {
     return k === "" ? /*#__PURE__*/React.createElement("div", {
@@ -5268,72 +5305,73 @@ function AdminDashboard({
       }
     }), /*#__PURE__*/React.createElement("div", {
       style: {
-        display: "flex",
-        gap: 8,
-        flexWrap: "wrap"
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 8
       }
     }, /*#__PURE__*/React.createElement("a", {
-      href: toWA(m.whatsapp || m.phone, msgVisitor(m.name)),
+      href: toWA(m.whatsapp || m.phone, msgVisitor(m.name)) || "#",
       target: "_blank",
       style: {
-        background: "#a855f7",
-        color: "#fff",
+        display: "block",
+        background: "#25D366",
+        color: "#04130a",
         borderRadius: 9,
-        padding: "8px 14px",
+        padding: "11px 12px",
         fontSize: 13,
-        fontWeight: 700,
-        textDecoration: "none"
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toWA(m.whatsapp || m.phone) ? 1 : 0.4,
+        pointerEvents: toWA(m.whatsapp || m.phone) ? "auto" : "none"
       }
-    }, "💜 Thank You WA"), toSMS(m.phone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.phone, msgVisitor(m.name)),
+    }, "💬 WhatsApp"), /*#__PURE__*/React.createElement("a", {
+      href: toSMS(m.phone) ? toSMS(m.phone, msgVisitor(m.name)) : "#",
       style: {
-        background: "#7e22ce",
-        color: "#fff",
-        borderRadius: 9,
-        padding: "8px 14px",
-        fontSize: 13,
-        fontWeight: 700,
-        textDecoration: "none"
-      }
-    }, "📱 Thank You SMS"), /*#__PURE__*/React.createElement("a", {
-      href: toWA(m.whatsapp || m.phone),
-      target: "_blank",
-      className: "btn btn-wa"
-    }, "💬 Chat WA"), toSMS(m.phone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.phone),
-      style: {
+        display: "block",
         background: "#0891b2",
         color: "#fff",
         borderRadius: 9,
-        padding: "8px 14px",
+        padding: "11px 12px",
         fontSize: 13,
-        fontWeight: 700,
-        textDecoration: "none"
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toSMS(m.phone) ? 1 : 0.4,
+        pointerEvents: toSMS(m.phone) ? "auto" : "none"
       }
-    }, "📱 Chat SMS"), toWA(m.parentPhone) && /*#__PURE__*/React.createElement("a", {
-      href: toWA(m.parentPhone, msgParentVisitor(m.name, m.parentName)),
+    }, "📱 SMS"), /*#__PURE__*/React.createElement("a", {
+      href: toWA(m.parentPhone) ? toWA(m.parentPhone, msgParentVisitor(m.name, m.parentName)) : "#",
       target: "_blank",
       style: {
+        display: "block",
         background: "#be185d",
         color: "#fff",
         borderRadius: 9,
-        padding: "8px 14px",
+        padding: "11px 12px",
         fontSize: 13,
-        fontWeight: 700,
-        textDecoration: "none"
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toWA(m.parentPhone) ? 1 : 0.4,
+        pointerEvents: toWA(m.parentPhone) ? "auto" : "none"
       }
-    }, "❤️ Thank Parent WA"), toSMS(m.parentPhone) && /*#__PURE__*/React.createElement("a", {
-      href: toSMS(m.parentPhone, msgParentVisitor(m.name, m.parentName)),
+    }, "💬 Parent WhatsApp"), /*#__PURE__*/React.createElement("a", {
+      href: toSMS(m.parentPhone) ? toSMS(m.parentPhone, msgParentVisitor(m.name, m.parentName)) : "#",
       style: {
-        background: "#9d174d",
+        display: "block",
+        background: "#7c2d12",
         color: "#fff",
         borderRadius: 9,
-        padding: "8px 14px",
+        padding: "11px 12px",
         fontSize: 13,
-        fontWeight: 700,
-        textDecoration: "none"
+        fontWeight: 800,
+        textDecoration: "none",
+        textAlign: "center",
+        opacity: toSMS(m.parentPhone) ? 1 : 0.4,
+        pointerEvents: toSMS(m.parentPhone) ? "auto" : "none"
       }
-    }, "📱 Thank Parent SMS")));
+    }, "📱 Parent SMS")));
   })), tab === "contacts" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
     className: "page-title"
   }, "Contact List (A-Z)"), members.length === 0 && /*#__PURE__*/React.createElement("p", {
@@ -5904,95 +5942,74 @@ function AdminDashboard({
         }
       }, vc_, " total visits")), /*#__PURE__*/React.createElement("div", {
         style: {
-          display: "flex",
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
           gap: 6,
-          flexWrap: "wrap"
+          minWidth: 184
         }
       }, /*#__PURE__*/React.createElement("a", {
-        href: toWA(m.whatsapp || m.phone),
+        href: (wk >= 3 ? toWA(m.whatsapp || m.phone, msgAbsent(m.name)) : toWA(m.whatsapp || m.phone)) || "#",
         target: "_blank",
-        className: "btn btn-wa",
         style: {
+          display: "block",
+          background: "#25D366",
+          color: "#04130a",
+          borderRadius: 7,
+          padding: "6px 8px",
           fontSize: 11,
-          padding: "4px 8px"
+          fontWeight: 800,
+          textDecoration: "none",
+          textAlign: "center",
+          opacity: toWA(m.whatsapp || m.phone) ? 1 : 0.4,
+          pointerEvents: toWA(m.whatsapp || m.phone) ? "auto" : "none"
         }
-      }, "💬"), toSMS(m.phone) && /*#__PURE__*/React.createElement("a", {
-        href: toSMS(m.phone),
+      }, "💬 WhatsApp"), /*#__PURE__*/React.createElement("a", {
+        href: toSMS(m.phone) ? wk >= 3 ? toSMS(m.phone, msgAbsent(m.name)) : toSMS(m.phone) : "#",
         style: {
+          display: "block",
           background: "#0891b2",
           color: "#fff",
           borderRadius: 7,
-          padding: "4px 8px",
+          padding: "6px 8px",
           fontSize: 11,
-          fontWeight: 700,
-          textDecoration: "none"
+          fontWeight: 800,
+          textDecoration: "none",
+          textAlign: "center",
+          opacity: toSMS(m.phone) ? 1 : 0.4,
+          pointerEvents: toSMS(m.phone) ? "auto" : "none"
         }
-      }, "📱"), /*#__PURE__*/React.createElement("a", {
-        href: toWA(m.parentPhone),
-        target: "_blank",
-        className: "btn btn-wa-parent",
-        style: {
-          fontSize: 11,
-          padding: "4px 8px"
-        }
-      }, "P💬"), toSMS(m.parentPhone) && /*#__PURE__*/React.createElement("a", {
-        href: toSMS(m.parentPhone),
-        style: {
-          background: "#7c2d12",
-          color: "#fff",
-          borderRadius: 7,
-          padding: "4px 8px",
-          fontSize: 11,
-          fontWeight: 700,
-          textDecoration: "none"
-        }
-      }, "P📱"), wk >= 3 && /*#__PURE__*/React.createElement("a", {
-        href: toWA(m.whatsapp || m.phone, msgAbsent(m.name)),
+      }, "📱 SMS"), /*#__PURE__*/React.createElement("a", {
+        href: toWA(m.parentPhone) ? wk >= 3 ? toWA(m.parentPhone, msgParentAbsent(m.name, m.parentName)) : toWA(m.parentPhone) : "#",
         target: "_blank",
         style: {
-          background: "#6c63ff",
-          color: "#fff",
-          borderRadius: 7,
-          padding: "4px 8px",
-          fontSize: 11,
-          fontWeight: 700,
-          textDecoration: "none"
-        }
-      }, "💜WA"), wk >= 3 && toSMS(m.phone) && /*#__PURE__*/React.createElement("a", {
-        href: toSMS(m.phone, msgAbsent(m.name)),
-        style: {
-          background: "#4f46e5",
-          color: "#fff",
-          borderRadius: 7,
-          padding: "4px 8px",
-          fontSize: 11,
-          fontWeight: 700,
-          textDecoration: "none"
-        }
-      }, "📱Enc"), wk >= 3 && /*#__PURE__*/React.createElement("a", {
-        href: toWA(m.parentPhone, msgParentAbsent(m.name, m.parentName)),
-        target: "_blank",
-        style: {
+          display: "block",
           background: "#be185d",
           color: "#fff",
           borderRadius: 7,
-          padding: "4px 8px",
+          padding: "6px 8px",
           fontSize: 11,
-          fontWeight: 700,
-          textDecoration: "none"
+          fontWeight: 800,
+          textDecoration: "none",
+          textAlign: "center",
+          opacity: toWA(m.parentPhone) ? 1 : 0.4,
+          pointerEvents: toWA(m.parentPhone) ? "auto" : "none"
         }
-      }, "❤️WA"), wk >= 3 && toSMS(m.parentPhone) && /*#__PURE__*/React.createElement("a", {
-        href: toSMS(m.parentPhone, msgParentAbsent(m.name, m.parentName)),
+      }, "💬 Parent WA"), /*#__PURE__*/React.createElement("a", {
+        href: toSMS(m.parentPhone) ? wk >= 3 ? toSMS(m.parentPhone, msgParentAbsent(m.name, m.parentName)) : toSMS(m.parentPhone) : "#",
         style: {
-          background: "#9d174d",
+          display: "block",
+          background: "#7c2d12",
           color: "#fff",
           borderRadius: 7,
-          padding: "4px 8px",
+          padding: "6px 8px",
           fontSize: 11,
-          fontWeight: 700,
-          textDecoration: "none"
+          fontWeight: 800,
+          textDecoration: "none",
+          textAlign: "center",
+          opacity: toSMS(m.parentPhone) ? 1 : 0.4,
+          pointerEvents: toSMS(m.parentPhone) ? "auto" : "none"
         }
-      }, "❤️📱")));
+      }, "📱 Parent SMS")));
     }));
   }), allDates.length === 0 && /*#__PURE__*/React.createElement("p", {
     className: "empty-msg"

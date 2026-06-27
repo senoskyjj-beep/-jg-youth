@@ -1057,16 +1057,28 @@ function exportPDF(members,checkins,feedback){
 function PinScreen({onSuccess,onBack}){
   var [pin,setPin]=useState(""); var [shake,setShake]=useState(false);
   var [checking,setChecking]=useState(false);
+  var [errType,setErrType]=useState(null); // "pin" = wrong PIN, "network" = couldn't reach server
+  useEffect(function(){
+    // Wake the Apps Script backend early so PIN verification isn't slowed by a cold start.
+    // Fire-and-forget — we don't care about the reply, just that the server is warming up
+    // by the time the leader finishes typing their PIN.
+    try{
+      if(GOOGLE_URL&&!GOOGLE_URL.includes("PASTE")){
+        fetch(GOOGLE_URL+(GOOGLE_URL.indexOf("?")>=0?"&":"?")+"warmup=1&_cb="+Date.now(),{method:"GET"}).catch(function(){});
+      }
+    }catch(e){}
+  },[]);
   function press(k){
     if(checking)return;
     if(k==="del"){setPin(function(p){return p.slice(0,-1);});return;}
     if(pin.length>=5)return;
+    if(errType)setErrType(null);
     var next=pin+k; setPin(next);
     if(next.length===5){ verifyEntered(next); }
   }
   async function verifyEntered(entered){
     // PINs are verified by the SERVER now — they are not in this file.
-    setChecking(true);
+    setChecking(true);setErrType(null);
     var res=await verifyAdminPin(entered);
     setChecking(false);
     if(res && res.status==="ok"){
@@ -1082,7 +1094,13 @@ function PinScreen({onSuccess,onBack}){
         localStorage.setItem("jg_admin_role","master");
       }
       setTimeout(function(){onSuccess();},150);
+    } else if(res===null){
+      // Couldn't reach the server (offline, weak signal, or 15s timeout) — NOT a wrong PIN.
+      setErrType("network");
+      setTimeout(function(){setPin("");},1200);
     } else {
+      // Server answered but rejected the PIN.
+      setErrType("pin");
       setShake(true);setTimeout(function(){setPin("");setShake(false);},700);
     }
   }
@@ -1095,7 +1113,9 @@ function PinScreen({onSuccess,onBack}){
       {[0,1,2,3,4].map(function(i){return <div key={i} className={"pin-dot"+(pin.length>i?" filled":"")}/>;  })}
     </div>
     <p style={{color:"#475569",fontSize:11,marginBottom:8}}>5-digit PIN required</p>
-    {shake&&<p style={{color:"#f87171",fontSize:13,marginBottom:8}}>Incorrect PIN.</p>}
+    {checking&&<p style={{color:"#fbbf24",fontSize:13,marginBottom:8,fontWeight:700}}>🔄 Checking your PIN… please wait</p>}
+    {!checking&&errType==="pin"&&<p style={{color:"#f87171",fontSize:13,marginBottom:8}}>Incorrect PIN.</p>}
+    {!checking&&errType==="network"&&<p style={{color:"#f87171",fontSize:13,marginBottom:8,lineHeight:1.4}}>📶 Couldn't reach the server. Check your signal and try again — your PIN was not wrong.</p>}
     <div className="numpad">
       {["1","2","3","4","5","6","7","8","9","","0","del"].map(function(k,i){
         return k===""?<div key={i}/>:<button key={i} className={"num-btn"+(k==="del"?" num-del":"")} onClick={function(){press(k);}}>{k==="del"?"⌫":k}</button>;
@@ -2180,13 +2200,11 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
           <div style={{fontSize:12,color:"#94a3b8",marginBottom:6}}>Phone: {m.phone||"?"} | School: {m.school||"?"}</div>
           {m.visitReason&&<div style={{fontSize:12,color:"#e879f9",marginBottom:10,background:"#1a0a1e",padding:"4px 10px",borderRadius:8,display:"inline-block"}}>💫 {m.visitReason}</div>}
           <div style={{marginBottom:8}}></div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <a href={toWA(m.whatsapp||m.phone,msgVisitor(m.name))} target="_blank" style={{background:"#a855f7",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>💜 Thank You WA</a>
-            {toSMS(m.phone)&&<a href={toSMS(m.phone,msgVisitor(m.name))} style={{background:"#7e22ce",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Thank You SMS</a>}
-            <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Chat WA</a>
-            {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Chat SMS</a>}
-            {toWA(m.parentPhone)&&<a href={toWA(m.parentPhone,msgParentVisitor(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>❤️ Thank Parent WA</a>}
-            {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentVisitor(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>📱 Thank Parent SMS</a>}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <a href={toWA(m.whatsapp||m.phone,msgVisitor(m.name))||"#"} target="_blank" style={{display:"block",background:"#25D366",color:"#04130a",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toWA(m.whatsapp||m.phone)?1:0.4,pointerEvents:toWA(m.whatsapp||m.phone)?"auto":"none"}}>💬 WhatsApp</a>
+            <a href={toSMS(m.phone)?toSMS(m.phone,msgVisitor(m.name)):"#"} style={{display:"block",background:"#0891b2",color:"#fff",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(m.phone)?1:0.4,pointerEvents:toSMS(m.phone)?"auto":"none"}}>📱 SMS</a>
+            <a href={toWA(m.parentPhone)?toWA(m.parentPhone,msgParentVisitor(m.name,m.parentName)):"#"} target="_blank" style={{display:"block",background:"#be185d",color:"#fff",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toWA(m.parentPhone)?1:0.4,pointerEvents:toWA(m.parentPhone)?"auto":"none"}}>💬 Parent WhatsApp</a>
+            <a href={toSMS(m.parentPhone)?toSMS(m.parentPhone,msgParentVisitor(m.name,m.parentName)):"#"} style={{display:"block",background:"#7c2d12",color:"#fff",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(m.parentPhone)?1:0.4,pointerEvents:toSMS(m.parentPhone)?"auto":"none"}}>📱 Parent SMS</a>
           </div>
         </div>);
       })}
@@ -2326,15 +2344,11 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
                   {wk>=3&&<span style={{fontSize:11,color:"#f87171",marginLeft:6}}>{wk}wks absent</span>}
                   <span style={{fontSize:12,color:"#475569",marginLeft:6}}>{vc_} total visits</span>
                 </div>
-                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                  <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa" style={{fontSize:11,padding:"4px 8px"}}>💬</a>
-                  {toSMS(m.phone)&&<a href={toSMS(m.phone)} style={{background:"#0891b2",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>📱</a>}
-                  <a href={toWA(m.parentPhone)} target="_blank" className="btn btn-wa-parent" style={{fontSize:11,padding:"4px 8px"}}>P💬</a>
-                  {toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone)} style={{background:"#7c2d12",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>P📱</a>}
-                  {wk>=3&&<a href={toWA(m.whatsapp||m.phone,msgAbsent(m.name))} target="_blank" style={{background:"#6c63ff",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>💜WA</a>}
-                  {wk>=3&&toSMS(m.phone)&&<a href={toSMS(m.phone,msgAbsent(m.name))} style={{background:"#4f46e5",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>📱Enc</a>}
-                  {wk>=3&&<a href={toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName))} target="_blank" style={{background:"#be185d",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>❤️WA</a>}
-                  {wk>=3&&toSMS(m.parentPhone)&&<a href={toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName))} style={{background:"#9d174d",color:"#fff",borderRadius:7,padding:"4px 8px",fontSize:11,fontWeight:700,textDecoration:"none"}}>❤️📱</a>}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,minWidth:184}}>
+                  <a href={(wk>=3?toWA(m.whatsapp||m.phone,msgAbsent(m.name)):toWA(m.whatsapp||m.phone))||"#"} target="_blank" style={{display:"block",background:"#25D366",color:"#04130a",borderRadius:7,padding:"6px 8px",fontSize:11,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toWA(m.whatsapp||m.phone)?1:0.4,pointerEvents:toWA(m.whatsapp||m.phone)?"auto":"none"}}>💬 WhatsApp</a>
+                  <a href={toSMS(m.phone)?(wk>=3?toSMS(m.phone,msgAbsent(m.name)):toSMS(m.phone)):"#"} style={{display:"block",background:"#0891b2",color:"#fff",borderRadius:7,padding:"6px 8px",fontSize:11,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(m.phone)?1:0.4,pointerEvents:toSMS(m.phone)?"auto":"none"}}>📱 SMS</a>
+                  <a href={toWA(m.parentPhone)?(wk>=3?toWA(m.parentPhone,msgParentAbsent(m.name,m.parentName)):toWA(m.parentPhone)):"#"} target="_blank" style={{display:"block",background:"#be185d",color:"#fff",borderRadius:7,padding:"6px 8px",fontSize:11,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toWA(m.parentPhone)?1:0.4,pointerEvents:toWA(m.parentPhone)?"auto":"none"}}>💬 Parent WA</a>
+                  <a href={toSMS(m.parentPhone)?(wk>=3?toSMS(m.parentPhone,msgParentAbsent(m.name,m.parentName)):toSMS(m.parentPhone)):"#"} style={{display:"block",background:"#7c2d12",color:"#fff",borderRadius:7,padding:"6px 8px",fontSize:11,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(m.parentPhone)?1:0.4,pointerEvents:toSMS(m.parentPhone)?"auto":"none"}}>📱 Parent SMS</a>
                 </div>
               </div>);
             })
