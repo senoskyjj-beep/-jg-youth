@@ -140,7 +140,7 @@ function pruneUploadedPhotos(members) {
 // The admin login is remembered on the device, but it should not stay open forever.
 // After this much inactivity (or being closed/in the background), the next return
 // requires the PIN again. The window slides forward on each interaction.
-var ADMIN_SESSION_MS = 10 * 60 * 1000; // 10 minutes
+var ADMIN_SESSION_MS = 5 * 60 * 1000; // 5 minutes — short on purpose; security over convenience
 function adminSessionValid() {
   if (!localStorage.getItem("jg_admin_role")) return false;
   var ts = parseInt(localStorage.getItem("jg_admin_ts") || "0", 10);
@@ -9674,6 +9674,7 @@ function App() {
   var [syncError, setSyncError] = useState(false);
   var [pendingCount, setPendingCount] = useState(loadPendingQueue().length);
   var [photoCount, setPhotoCount] = useState(loadPhotoQueue().length);
+  var [photoStuckMins, setPhotoStuckMins] = useState(0); // how long the OLDEST queued photo has been waiting
   var [confirm, setConfirm] = useState(null); // post-registration confirmation
   var [confirmBusy, setConfirmBusy] = useState(false);
   var [homeUploading, setHomeUploading] = useState(false);
@@ -9683,7 +9684,16 @@ function App() {
   useEffect(function () {
     function refresh() {
       setPendingCount(loadPendingQueue().length);
-      setPhotoCount(loadPhotoQueue().length);
+      var pq = loadPhotoQueue();
+      setPhotoCount(pq.length);
+      if (pq.length > 0) {
+        var oldest = Math.min.apply(null, pq.map(function (p) {
+          return new Date(p.queuedAt || 0).getTime() || Date.now();
+        }));
+        setPhotoStuckMins(Math.max(0, Math.floor((Date.now() - oldest) / 60000)));
+      } else {
+        setPhotoStuckMins(0);
+      }
     }
     var t = setInterval(refresh, 3000);
     window.addEventListener("jg_pending_changed", refresh);
@@ -9772,6 +9782,19 @@ function App() {
       }
     }
     var photoInterval = setInterval(flushOnePhoto, 60000);
+    // Keep the Apps Script backend warm while the app is open, so the admin PIN
+    // session being short (5 min) doesn't mean repeated slow cold-start round trips.
+    // Fire-and-forget — the reply doesn't matter, only that the server stays awake.
+    function pingWarm() {
+      try {
+        if (GOOGLE_URL && !GOOGLE_URL.includes("PASTE")) {
+          fetch(GOOGLE_URL + (GOOGLE_URL.indexOf("?") >= 0 ? "&" : "?") + "warmup=1&_cb=" + Date.now(), {
+            method: "GET"
+          }).catch(function () {});
+        }
+      } catch (e) {}
+    }
+    var warmInterval = setInterval(pingWarm, 120000); // every 2 minutes
     // Also flush both queues when device comes back online
     var onOnline = function () {
       flushPendingQueue();
@@ -9782,6 +9805,7 @@ function App() {
       clearInterval(interval);
       clearInterval(retryInterval);
       clearInterval(photoInterval);
+      clearInterval(warmInterval);
       window.removeEventListener("online", onOnline);
     };
   }, []);
@@ -10203,14 +10227,14 @@ function App() {
     }
   }, "✓ Synced ", lastSync), (pendingCount > 0 || photoCount > 0) && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#3a1f00",
-      border: "2px solid #f59e0b",
+      background: photoStuckMins >= 2 ? "#3a0a0a" : "#3a1f00",
+      border: photoStuckMins >= 2 ? "2px solid #ef4444" : "2px solid #f59e0b",
       borderRadius: 14,
       padding: "14px 14px",
       margin: "0 0 16px",
       maxWidth: 440,
       width: "100%",
-      boxShadow: "0 0 22px rgba(245,158,11,0.35)"
+      boxShadow: photoStuckMins >= 2 ? "0 0 26px rgba(239,68,68,0.5)" : "0 0 22px rgba(245,158,11,0.35)"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10224,13 +10248,22 @@ function App() {
     style: {
       fontSize: 20
     }
-  }, "⚠️"), /*#__PURE__*/React.createElement("span", {
+  }, photoStuckMins >= 2 ? "🚨" : "⚠️"), /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "#fcd34d",
+      color: photoStuckMins >= 2 ? "#fca5a5" : "#fcd34d",
       fontSize: 15,
       fontWeight: 800
     }
-  }, "Not uploaded yet — still on this phone")), /*#__PURE__*/React.createElement("div", {
+  }, photoStuckMins >= 2 ? "Photo upload stuck — keep this app OPEN" : "Not uploaded yet — still on this phone")), photoStuckMins >= 2 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#fecaca",
+      fontSize: 13,
+      fontWeight: 700,
+      textAlign: "center",
+      margin: "0 0 10px",
+      lineHeight: 1.4
+    }
+  }, "📷 A photo has been waiting ", photoStuckMins, " minute", photoStuckMins === 1 ? "" : "s", " — please stay on Wi-Fi/signal and don't close the app until it's done."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       justifyContent: "center",
