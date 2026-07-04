@@ -4790,6 +4790,279 @@ function AdminDashboardEmbedded({
   return /*#__PURE__*/React.createElement("p", null, "Unknown view");
 }
 
+// MEMBER DETAIL — reached from a person row in People or Absent lists.
+function MemberDetailOverlay({
+  member,
+  checkins,
+  onClose
+}) {
+  if (!member) return null;
+  var initials = ((member.name || "?").charAt(0) + (member.surname || "?").charAt(0)).toUpperCase();
+  var avatarColors = ["#6c63ff", "#22c55e", "#3b82f6", "#f59e0b", "#a855f7", "#ef4444"];
+  var avatarBg = avatarColors[Math.abs(String(member.id).split("").reduce(function (a, c) {
+    return a + c.charCodeAt(0);
+  }, 0)) % avatarColors.length];
+  var since = member.registeredOn ? new Date(member.registeredOn).toLocaleDateString("en-ZA", {
+    month: "short",
+    year: "numeric"
+  }) : "—";
+
+  // Last 8 distinct session dates on record - real attendance, not fabricated.
+  var allDates = [...new Set((checkins || []).map(function (c) {
+    return c.date;
+  }))].sort();
+  var last8 = allDates.slice(-8);
+  var attendance = last8.map(function (d) {
+    return (checkins || []).some(function (c) {
+      return c.date === d && c.memberId === member.id;
+    });
+  });
+  var attendedCount = attendance.filter(Boolean).length;
+  var missedCount = attendance.length - attendedCount;
+  var todaysMsgs = getMessagesSent(member.id);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 320,
+      background: "var(--jg-bg)",
+      overflowY: "auto",
+      padding: "20px 18px 30px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 16,
+      paddingRight: 56
+    }
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "page-title",
+    style: {
+      margin: 0
+    }
+  }, "Member Detail"), /*#__PURE__*/React.createElement("button", {
+    onClick: onClose,
+    style: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      background: "var(--jg-card)",
+      border: "none",
+      color: "var(--jg-text)",
+      fontSize: 16,
+      fontWeight: 800,
+      cursor: "pointer"
+    }
+  }, "✕")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 20
+    }
+  }, member.photo ? /*#__PURE__*/React.createElement("img", {
+    src: member.photo,
+    width: "80",
+    height: "80",
+    style: {
+      borderRadius: "50%",
+      objectFit: "cover"
+    }
+  }) : /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 80,
+      height: 80,
+      borderRadius: "50%",
+      background: avatarBg,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 800,
+      color: "#fff",
+      fontSize: 28,
+      margin: "0 auto"
+    }
+  }, initials), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 20,
+      fontWeight: 800,
+      marginTop: 10
+    }
+  }, member.name, " ", member.surname), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "var(--jg-muted)",
+      marginTop: 4
+    }
+  }, "In Youth since ", since)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "var(--jg-card)",
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: "var(--jg-muted)",
+      textTransform: "uppercase",
+      letterSpacing: "1px",
+      marginBottom: 10
+    }
+  }, "Parent / Guardian"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      fontWeight: 700
+    }
+  }, member.parentName || "?", " ", member.parentSurname || ""), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "var(--jg-muted)"
+    }
+  }, member.parentPhone || "No phone on file")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("a", {
+    href: toWA(member.parentPhone),
+    target: "_blank",
+    style: {
+      display: "block",
+      background: "#25D366",
+      color: "#04130a",
+      borderRadius: 9,
+      padding: "11px 12px",
+      fontSize: 13,
+      fontWeight: 800,
+      textDecoration: "none",
+      textAlign: "center",
+      opacity: toWA(member.parentPhone) ? 1 : 0.4,
+      pointerEvents: toWA(member.parentPhone) ? "auto" : "none"
+    }
+  }, "💬 WhatsApp"), /*#__PURE__*/React.createElement("a", {
+    href: toSMS(member.parentPhone) || "#",
+    style: {
+      display: "block",
+      background: "#0891b2",
+      color: "#fff",
+      borderRadius: 9,
+      padding: "11px 12px",
+      fontSize: 13,
+      fontWeight: 800,
+      textDecoration: "none",
+      textAlign: "center",
+      opacity: toSMS(member.parentPhone) ? 1 : 0.4,
+      pointerEvents: toSMS(member.parentPhone) ? "auto" : "none"
+    }
+  }, "📱 SMS"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "var(--jg-card)",
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: "var(--jg-muted)",
+      textTransform: "uppercase",
+      letterSpacing: "1px",
+      marginBottom: 10
+    }
+  }, "Attendance ", attendance.length > 0 ? "— last " + attendance.length + " session" + (attendance.length === 1 ? "" : "s") : ""), attendance.length === 0 ? /*#__PURE__*/React.createElement("p", {
+    className: "empty-msg"
+  }, "No sessions recorded yet.") : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      alignItems: "flex-end",
+      height: 44
+    }
+  }, attendance.map(function (present, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        flex: 1,
+        height: present ? "100%" : "22%",
+        background: present ? "#22c55e" : "#ef4444",
+        borderRadius: 4
+      }
+    });
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      marginTop: 10,
+      fontSize: 12,
+      color: "var(--jg-muted)"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, attendedCount, " attended"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#ef4444",
+      fontWeight: 700
+    }
+  }, missedCount, " missed")))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "var(--jg-card)",
+      borderRadius: 14,
+      padding: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      fontWeight: 700,
+      color: "var(--jg-muted)",
+      textTransform: "uppercase",
+      letterSpacing: "1px",
+      marginBottom: 10
+    }
+  }, "Communication today"), todaysMsgs.length === 0 ? /*#__PURE__*/React.createElement("p", {
+    className: "empty-msg"
+  }, "No messages sent to this person today.") : todaysMsgs.map(function (m, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        display: "flex",
+        gap: 10,
+        marginBottom: 8
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 16
+      }
+    }, m.channel.indexOf("WA") >= 0 ? "💬" : "📱"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        fontWeight: 700
+      }
+    }, m.category, " · ", m.channel), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 11,
+        color: "var(--jg-muted)"
+      }
+    }, m.time)));
+  }), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 11,
+      color: "var(--jg-muteddark)",
+      marginTop: 8,
+      fontStyle: "italic"
+    }
+  }, "Only today's activity is available on this device — a full multi-week history would need the Message Log read back from Google Sheets.")));
+}
+
 // ADMIN DASHBOARD
 function AdminDashboard({
   data,
@@ -4821,6 +5094,7 @@ function AdminDashboard({
   function closeGroup() {
     setAdminGroup(null);
   }
+  var [detailMember, setDetailMember] = useState(null);
   var [period, setPeriod] = useState("weekly");
   var members = data.members || [];
   var checkins = data.checkins || [];
@@ -5530,18 +5804,30 @@ function AdminDashboard({
         marginRight: 10
       }
     }), /*#__PURE__*/React.createElement("div", {
-      className: "absent-name"
+      className: "absent-name",
+      onClick: function () {
+        setDetailMember(m);
+      },
+      style: {
+        cursor: "pointer"
+      }
     }, m.name, " ", m.surname, /*#__PURE__*/React.createElement("span", {
       style: {
-        background: wk >= 5 ? "#ef444422" : wk >= 3 ? "#f59e0b22" : "#1e293b",
-        color: wk >= 5 ? "#f87171" : wk >= 3 ? "#fcd34d" : "#94a3b8",
+        background: wk >= 5 ? "#ef444422" : wk >= 3 ? "#f59e0b22" : "var(--jg-card)",
+        color: wk >= 5 ? "#f87171" : wk >= 3 ? "#fcd34d" : "var(--jg-muted)",
         borderRadius: 7,
         padding: "2px 7px",
         fontSize: 11,
         fontWeight: 700,
         marginLeft: 8
       }
-    }, wk === 1 ? "Week 1" : wk + " weeks absent")), /*#__PURE__*/React.createElement("div", {
+    }, wk === 1 ? "Week 1" : wk + " weeks absent"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 13,
+        color: "var(--jg-muted)",
+        marginLeft: 6
+      }
+    }, "›")), /*#__PURE__*/React.createElement("div", {
       className: "absent-meta"
     }, "📞 ", m.phone || "?", " | School: ", m.school || "?"), /*#__PURE__*/React.createElement("div", {
       className: "absent-meta"
@@ -6113,7 +6399,14 @@ function AdminDashboard({
         justifyContent: "center",
         fontSize: 20
       }
-    }, "👤"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+    }, "👤"), /*#__PURE__*/React.createElement("div", {
+      onClick: function () {
+        setDetailMember(m);
+      },
+      style: {
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("strong", {
       style: {
         fontSize: 15
       }
@@ -6129,7 +6422,13 @@ function AdminDashboard({
         color: "#f87171",
         marginLeft: 6
       }
-    }, wk, "wks absent"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
+    }, wk, "wks absent"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 14,
+        color: "var(--jg-muted)",
+        marginLeft: 6
+      }
+    }, "›"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
       style: {
         background: bs.bg,
         color: bs.col,
@@ -6675,7 +6974,13 @@ function AdminDashboard({
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn btn-admin",
     onClick: onExit
-  }, "Exit Admin")), popup && /*#__PURE__*/React.createElement("div", {
+  }, "Exit Admin")), detailMember && /*#__PURE__*/React.createElement(MemberDetailOverlay, {
+    member: detailMember,
+    checkins: checkins,
+    onClose: function () {
+      setDetailMember(null);
+    }
+  }), popup && /*#__PURE__*/React.createElement("div", {
     onClick: closePopup,
     style: {
       position: "fixed",

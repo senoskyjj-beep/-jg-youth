@@ -2047,6 +2047,75 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
   return <p>Unknown view</p>;
 }
 
+// MEMBER DETAIL — reached from a person row in People or Absent lists.
+function MemberDetailOverlay({member,checkins,onClose}){
+  if(!member)return null;
+  var initials=((member.name||"?").charAt(0)+(member.surname||"?").charAt(0)).toUpperCase();
+  var avatarColors=["#6c63ff","#22c55e","#3b82f6","#f59e0b","#a855f7","#ef4444"];
+  var avatarBg=avatarColors[Math.abs(String(member.id).split("").reduce(function(a,c){return a+c.charCodeAt(0);},0))%avatarColors.length];
+  var since=member.registeredOn?new Date(member.registeredOn).toLocaleDateString("en-ZA",{month:"short",year:"numeric"}):"—";
+
+  // Last 8 distinct session dates on record - real attendance, not fabricated.
+  var allDates=[...new Set((checkins||[]).map(function(c){return c.date;}))].sort();
+  var last8=allDates.slice(-8);
+  var attendance=last8.map(function(d){return (checkins||[]).some(function(c){return c.date===d&&c.memberId===member.id;});});
+  var attendedCount=attendance.filter(Boolean).length;
+  var missedCount=attendance.length-attendedCount;
+  var todaysMsgs=getMessagesSent(member.id);
+
+  return(<div style={{position:"fixed",inset:0,zIndex:320,background:"var(--jg-bg)",overflowY:"auto",padding:"20px 18px 30px"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,paddingRight:56}}>
+      <h3 className="page-title" style={{margin:0}}>Member Detail</h3>
+      <button onClick={onClose} style={{width:36,height:36,borderRadius:12,background:"var(--jg-card)",border:"none",color:"var(--jg-text)",fontSize:16,fontWeight:800,cursor:"pointer"}}>✕</button>
+    </div>
+
+    <div style={{textAlign:"center",marginBottom:20}}>
+      {member.photo?<img src={member.photo} width="80" height="80" style={{borderRadius:"50%",objectFit:"cover"}}/>
+        :<div style={{width:80,height:80,borderRadius:"50%",background:avatarBg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,color:"#fff",fontSize:28,margin:"0 auto"}}>{initials}</div>}
+      <div style={{fontSize:20,fontWeight:800,marginTop:10}}>{member.name} {member.surname}</div>
+      <div style={{fontSize:13,color:"var(--jg-muted)",marginTop:4}}>In Youth since {since}</div>
+    </div>
+
+    <div style={{background:"var(--jg-card)",borderRadius:14,padding:14,marginBottom:14}}>
+      <div style={{fontSize:12,fontWeight:700,color:"var(--jg-muted)",textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>Parent / Guardian</div>
+      <div style={{marginBottom:10}}>
+        <div style={{fontSize:14,fontWeight:700}}>{member.parentName||"?"} {member.parentSurname||""}</div>
+        <div style={{fontSize:12,color:"var(--jg-muted)"}}>{member.parentPhone||"No phone on file"}</div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <a href={toWA(member.parentPhone)} target="_blank" style={{display:"block",background:"#25D366",color:"#04130a",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toWA(member.parentPhone)?1:0.4,pointerEvents:toWA(member.parentPhone)?"auto":"none"}}>💬 WhatsApp</a>
+        <a href={toSMS(member.parentPhone)||"#"} style={{display:"block",background:"#0891b2",color:"#fff",borderRadius:9,padding:"11px 12px",fontSize:13,fontWeight:800,textDecoration:"none",textAlign:"center",opacity:toSMS(member.parentPhone)?1:0.4,pointerEvents:toSMS(member.parentPhone)?"auto":"none"}}>📱 SMS</a>
+      </div>
+    </div>
+
+    <div style={{background:"var(--jg-card)",borderRadius:14,padding:14,marginBottom:14}}>
+      <div style={{fontSize:12,fontWeight:700,color:"var(--jg-muted)",textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>Attendance {attendance.length>0?"— last "+attendance.length+" session"+(attendance.length===1?"":"s"):""}</div>
+      {attendance.length===0?<p className="empty-msg">No sessions recorded yet.</p>:(<div>
+        <div style={{display:"flex",gap:6,alignItems:"flex-end",height:44}}>
+          {attendance.map(function(present,i){return <div key={i} style={{flex:1,height:present?"100%":"22%",background:present?"#22c55e":"#ef4444",borderRadius:4}}/>;})}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:10,fontSize:12,color:"var(--jg-muted)"}}>
+          <span>{attendedCount} attended</span><span style={{color:"#ef4444",fontWeight:700}}>{missedCount} missed</span>
+        </div>
+      </div>)}
+    </div>
+
+    <div style={{background:"var(--jg-card)",borderRadius:14,padding:14}}>
+      <div style={{fontSize:12,fontWeight:700,color:"var(--jg-muted)",textTransform:"uppercase",letterSpacing:"1px",marginBottom:10}}>Communication today</div>
+      {todaysMsgs.length===0?<p className="empty-msg">No messages sent to this person today.</p>:todaysMsgs.map(function(m,i){
+        return(<div key={i} style={{display:"flex",gap:10,marginBottom:8}}>
+          <div style={{fontSize:16}}>{m.channel.indexOf("WA")>=0?"💬":"📱"}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700}}>{m.category} · {m.channel}</div>
+            <div style={{fontSize:11,color:"var(--jg-muted)"}}>{m.time}</div>
+          </div>
+        </div>);
+      })}
+      <p style={{fontSize:11,color:"var(--jg-muteddark)",marginTop:8,fontStyle:"italic"}}>Only today's activity is available on this device — a full multi-week history would need the Message Log read back from Google Sheets.</p>
+    </div>
+  </div>);
+}
+
 // ADMIN DASHBOARD
 function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
   var [refreshTick,setRefreshTick]=useState(0);
@@ -2063,6 +2132,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
   var [adminGroup,setAdminGroup]=useState(null); // null = Admin Home; else one of ADMIN_GROUPS' ids
   function openGroup(gid,defaultTab){setAdminGroup(gid);setTab(defaultTab);}
   function closeGroup(){setAdminGroup(null);}
+  var [detailMember,setDetailMember]=useState(null);
   var [period,setPeriod]=useState("weekly");
   var members=data.members||[];
   var checkins=data.checkins||[];
@@ -2277,8 +2347,9 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         return(<div key={m.id} className="absent-card" style={{borderColor:wk>=5?"#ef4444":wk>=3?"#f59e0b":"#334155"}}>
           <div className="absent-info">
             {m.photo&&<img src={m.photo} width="42" height="42" style={{borderRadius:"50%",objectFit:"cover",float:"left",marginRight:10}}/>}
-            <div className="absent-name">{m.name} {m.surname}
-              <span style={{background:wk>=5?"#ef444422":wk>=3?"#f59e0b22":"#1e293b",color:wk>=5?"#f87171":wk>=3?"#fcd34d":"#94a3b8",borderRadius:7,padding:"2px 7px",fontSize:11,fontWeight:700,marginLeft:8}}>{wk===1?"Week 1":wk+" weeks absent"}</span>
+            <div className="absent-name" onClick={function(){setDetailMember(m);}} style={{cursor:"pointer"}}>{m.name} {m.surname}
+              <span style={{background:wk>=5?"#ef444422":wk>=3?"#f59e0b22":"var(--jg-card)",color:wk>=5?"#f87171":wk>=3?"#fcd34d":"var(--jg-muted)",borderRadius:7,padding:"2px 7px",fontSize:11,fontWeight:700,marginLeft:8}}>{wk===1?"Week 1":wk+" weeks absent"}</span>
+              <span style={{fontSize:13,color:"var(--jg-muted)",marginLeft:6}}>›</span>
             </div>
             <div className="absent-meta">📞 {m.phone||"?"} | School: {m.school||"?"}</div>
             <div className="absent-meta">👨‍👩‍👦 {m.parentName||""} {m.parentSurname||""} | {m.parentPhone||"?"}</div>
@@ -2393,10 +2464,11 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
           <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8,marginBottom:8}}>
             <div style={{display:"flex",gap:10,alignItems:"center"}}>
               {m.photo?<img src={m.photo} width="44" height="44" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:44,height:44,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>👤</div>}
-              <div>
+              <div onClick={function(){setDetailMember(m);}} style={{cursor:"pointer"}}>
                 <strong style={{fontSize:15}}>{m.name} {m.surname}</strong>
                 {m.incomplete&&<span style={{fontSize:11,color:"#f59e0b",marginLeft:6}}>incomplete</span>}
                 {wk>=3&&<span style={{fontSize:11,color:"#f87171",marginLeft:6}}>{wk}wks absent</span>}
+                <span style={{fontSize:14,color:"var(--jg-muted)",marginLeft:6}}>›</span>
                 <br/><span style={{background:bs.bg,color:bs.col,border:"1.5px solid "+bs.bd,borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700}}>{status}</span>
                 <span style={{fontSize:12,color:"var(--jg-muted)",marginLeft:8}}>{visits} visit{visits!==1?"s":""}</span>
               </div>
@@ -2561,6 +2633,8 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
     </div>}
 
     {!adminGroup&&<div style={{marginTop:28}}><button className="btn btn-admin" onClick={onExit}>Exit Admin</button></div>}
+
+    {detailMember&&<MemberDetailOverlay member={detailMember} checkins={checkins} onClose={function(){setDetailMember(null);}}/>}
 
     {/* Tappable dashboard popup */}
     {popup&&(
