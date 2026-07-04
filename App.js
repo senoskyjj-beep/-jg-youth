@@ -3683,8 +3683,17 @@ function ConfirmScreen({confirm,onUpload,onDone,uploading}){
   </div>);
 }
 
+// Theme tokens for the Home screen redesign (dark is the long-standing look; light is new).
+function themeTokens(theme){
+  if(theme==="light")return {bg:"#f5f6fb",card:"#ffffff",card2:"#eef0fa",text:"#0f172a",textDim:"#1e293b",muted:"#64748b",mutedDark:"#94a3b8",border:"#e2e8f0",mint:"#059669"};
+  return {bg:"#0f172a",card:"#1e293b",card2:"#243244",text:"#e2e8f0",textDim:"#cbd5e1",muted:"#94a3b8",mutedDark:"#64748b",border:"#334155",mint:"#6ee7b7"};
+}
+
 // ROOT APP
 function App(){
+  var [theme,setTheme]=useState(function(){try{return localStorage.getItem("jg_theme")||"dark";}catch(e){return "dark";}});
+  function toggleTheme(){setTheme(function(t){var next=t==="dark"?"light":"dark";try{localStorage.setItem("jg_theme",next);}catch(e){}return next;});}
+  var c=themeTokens(theme);
   var [homeTilePopup,setHomeTilePopup]=useState(null);
   var [homeTilePin,setHomeTilePin]=useState("");
   var [homeTilePinError,setHomeTilePinError]=useState(false);
@@ -3998,7 +4007,7 @@ function App(){
   if(screen==="pin")return <PinScreen onSuccess={function(){setScreen("admin");}} onBack={function(){setScreen("home");}}/>;
   if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){clearAdminSession();setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
 
-  return(<div style={{minHeight:"100vh",background:"#000",display:"flex",flexDirection:"column"}}>
+  return(<div style={{minHeight:"100vh",background:c.bg,display:"flex",flexDirection:"column",transition:"background 0.3s"}}>
     {/* Banner Image Hero */}
     <div style={{position:"relative",width:"100%",overflow:"hidden"}}>
       <img src="banner.jpg" alt="Jeremiah Generation"
@@ -4013,10 +4022,14 @@ function App(){
           LIVING WATERS FELLOWSHIP
         </p>
       </div>
+      {/* Theme toggle */}
+      <button onClick={toggleTheme} aria-label="Toggle light/dark theme" className="btn-press" style={{position:"absolute",top:14,right:14,width:40,height:40,borderRadius:20,background:"rgba(15,23,42,0.55)",border:"1px solid rgba(255,255,255,0.35)",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+        {theme==="dark"?"☀️":"🌙"}
+      </button>
     </div>
 
     {/* Content below banner */}
-    <div style={{flex:1,padding:"20px 16px 32px",display:"flex",flexDirection:"column",alignItems:"center"}}>
+    <div style={{flex:1,padding:"20px 16px 32px",display:"flex",flexDirection:"column",alignItems:"center",background:c.bg,transition:"background 0.3s"}}>
       {/* Sync status */}
       {syncing&&<p style={{color:"#6ee7b7",fontSize:12,margin:"0 0 12px",textAlign:"center"}}>⏳ Syncing data...</p>}
       {syncError&&<p style={{color:"#f87171",fontSize:12,margin:"0 0 12px",textAlign:"center"}}>
@@ -4048,24 +4061,24 @@ function App(){
 
       {/* Stats strip - tappable with PIN */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:24,width:"100%",maxWidth:440}}>
-        <div onClick={function(){setHomeTilePopup("registered");}} style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",borderRadius:14,padding:"12px 8px",textAlign:"center",border:"1px solid #334155",cursor:"pointer"}}>
+        <div onClick={function(){setHomeTilePopup("registered");}} style={{background:c.card,borderRadius:14,padding:"12px 8px",textAlign:"center",borderTop:"3px solid #6c63ff",cursor:"pointer",transition:"background 0.3s"}}>
           <div style={{fontSize:22,fontWeight:900,color:"#6c63ff"}}>{(data.members||[]).length}</div>
-          <div style={{fontSize:10,color:"#64748b",marginTop:2}}>Registered</div>
+          <div style={{fontSize:10,color:c.muted,marginTop:2}}>Registered</div>
         </div>
-        <div onClick={function(){setHomeTilePopup("here");}} style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",borderRadius:14,padding:"12px 8px",textAlign:"center",border:"1px solid #334155",cursor:"pointer"}}>
+        <div onClick={function(){setHomeTilePopup("here");}} style={{background:c.card,borderRadius:14,padding:"12px 8px",textAlign:"center",borderTop:"3px solid #22c55e",cursor:"pointer",transition:"background 0.3s"}}>
           <div style={{fontSize:22,fontWeight:900,color:"#22c55e"}}>{todayCount}</div>
-          <div style={{fontSize:10,color:"#64748b",marginTop:2}}>Here Today</div>
+          <div style={{fontSize:10,color:c.muted,marginTop:2}}>Here Today</div>
         </div>
-        <div onClick={function(){setHomeTilePopup("visitors");}} style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",borderRadius:14,padding:"12px 8px",textAlign:"center",border:"1px solid #334155",cursor:"pointer"}}>
+        <div onClick={function(){setHomeTilePopup("visitors");}} style={{background:c.card,borderRadius:14,padding:"12px 8px",textAlign:"center",borderTop:"3px solid #a855f7",cursor:"pointer",transition:"background 0.3s"}}>
           <div style={{fontSize:22,fontWeight:900,color:"#a855f7"}}>{visitorsToday}</div>
-          <div style={{fontSize:10,color:"#64748b",marginTop:2}}>Visitors Today</div>
+          <div style={{fontSize:10,color:c.muted,marginTop:2}}>Visitors Today</div>
         </div>
       </div>
-      <p style={{textAlign:"center",fontSize:11,color:"#475569",marginTop:-16,marginBottom:16}}>👆 Tap any tile to view names (PIN required)</p>
+      <p style={{textAlign:"center",fontSize:11,color:c.mutedDark,marginTop:-16,marginBottom:16}}>👆 Tap any tile to view names (PIN required)</p>
 
       {/* Main action buttons */}
       <div style={{width:"100%",maxWidth:400}}>
-        <button onClick={function(){setScreen("register");}} style={{
+        <button onClick={function(){setScreen("register");}} className="btn-press" style={{
           width:"100%",marginBottom:12,padding:"18px",borderRadius:18,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:800,fontSize:17,
           background:"linear-gradient(135deg,#6c63ff,#3b82f6)",color:"#fff",
           boxShadow:"0 8px 28px rgba(108,99,255,0.45)",letterSpacing:"0.5px",
@@ -4073,7 +4086,7 @@ function App(){
           📝 Registration
         </button>
 
-        <button onClick={function(){setScreen("checkin");}} style={{
+        <button onClick={function(){setScreen("checkin");}} className="btn-press" style={{
           width:"100%",marginBottom:12,padding:"18px",borderRadius:18,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:800,fontSize:17,
           background:"linear-gradient(135deg,#22c55e,#10b981)",color:"#fff",
           boxShadow:"0 8px 28px rgba(34,197,94,0.45)",letterSpacing:"0.5px",
@@ -4081,7 +4094,7 @@ function App(){
           ✅ Member Check-In
         </button>
 
-        <button onClick={function(){setScreen("leadercheckin");}} style={{
+        <button onClick={function(){setScreen("leadercheckin");}} className="btn-press" style={{
           width:"100%",marginBottom:12,padding:"18px",borderRadius:18,border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:800,fontSize:17,
           background:"linear-gradient(135deg,#fbbf24,#f59e0b)",color:"#fff",
           boxShadow:"0 8px 28px rgba(245,158,11,0.45)",letterSpacing:"0.5px",
@@ -4089,16 +4102,16 @@ function App(){
           ⭐ Leader Check-In
         </button>
 
-        <button onClick={function(){setScreen("pin");}} style={{
+        <button onClick={function(){setScreen("pin");}} className="btn-press" style={{
           width:"100%",marginBottom:0,padding:"14px",borderRadius:18,cursor:"pointer",fontFamily:"inherit",fontWeight:700,fontSize:15,
-          background:"transparent",color:"#475569",border:"2px solid #1e293b",
+          background:"transparent",color:c.muted,border:"2px solid "+c.border,
         }}>
           🔐 Leadership Admin
         </button>
       </div>
 
       {/* Footer */}
-      <p style={{color:"#334155",fontSize:11,marginTop:20,textAlign:"center"}}>
+      <p style={{color:c.mutedDark,fontSize:11,marginTop:20,textAlign:"center"}}>
         Joshua, Priscilla & Pastor Billy · Living Waters Fellowship
       </p>
     </div>

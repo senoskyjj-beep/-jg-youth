@@ -316,3 +316,7 @@ tr:nth-child(even) td { background: #182032; }
     40%, 80%  { transform: translateX(8px); }
 }
 .shake { animation: shake 0.4s; }
+
+/* ── Button press (Home screen redesign) ── */
+.btn-press { transition: transform 0.15s, filter 0.15s; }
+.btn-press:active { transform: perspective(600px) rotateX(12deg) scale(0.96); filter: brightness(0.92); }

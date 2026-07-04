@@ -9619,8 +9619,51 @@ function ConfirmScreen({
   }, "Continue (it will keep retrying)"));
 }
 
+// Theme tokens for the Home screen redesign (dark is the long-standing look; light is new).
+function themeTokens(theme) {
+  if (theme === "light") return {
+    bg: "#f5f6fb",
+    card: "#ffffff",
+    card2: "#eef0fa",
+    text: "#0f172a",
+    textDim: "#1e293b",
+    muted: "#64748b",
+    mutedDark: "#94a3b8",
+    border: "#e2e8f0",
+    mint: "#059669"
+  };
+  return {
+    bg: "#0f172a",
+    card: "#1e293b",
+    card2: "#243244",
+    text: "#e2e8f0",
+    textDim: "#cbd5e1",
+    muted: "#94a3b8",
+    mutedDark: "#64748b",
+    border: "#334155",
+    mint: "#6ee7b7"
+  };
+}
+
 // ROOT APP
 function App() {
+  var [theme, setTheme] = useState(function () {
+    try {
+      return localStorage.getItem("jg_theme") || "dark";
+    } catch (e) {
+      return "dark";
+    }
+  });
+  function toggleTheme() {
+    setTheme(function (t) {
+      var next = t === "dark" ? "light" : "dark";
+      try {
+        localStorage.setItem("jg_theme", next);
+      } catch (e) {}
+      return next;
+    });
+  }
+  var c = themeTokens(theme);
   var [homeTilePopup, setHomeTilePopup] = useState(null);
   var [homeTilePin, setHomeTilePin] = useState("");
   var [homeTilePinError, setHomeTilePinError] = useState(false);
@@ -10143,9 +10186,10 @@ function App() {
   return /*#__PURE__*/React.createElement("div", {
     style: {
       minHeight: "100vh",
-      background: "#000",
+      background: c.bg,
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      transition: "background 0.3s"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10190,13 +10234,34 @@ function App() {
       margin: 0,
       textShadow: "0 2px 8px rgba(0,0,0,0.8)"
     }
-  }, "LIVING WATERS FELLOWSHIP"))), /*#__PURE__*/React.createElement("div", {
+  }, "LIVING WATERS FELLOWSHIP")), /*#__PURE__*/React.createElement("button", {
+    onClick: toggleTheme,
+    "aria-label": "Toggle light/dark theme",
+    className: "btn-press",
+    style: {
+      position: "absolute",
+      top: 14,
+      right: 14,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      background: "rgba(15,23,42,0.55)",
+      border: "1px solid rgba(255,255,255,0.35)",
+      fontSize: 18,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer"
+    }
+  }, theme === "dark" ? "☀️" : "🌙")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       padding: "20px 16px 32px",
       display: "flex",
       flexDirection: "column",
-      alignItems: "center"
+      alignItems: "center",
+      background: c.bg,
+      transition: "background 0.3s"
     }
   }, syncing && /*#__PURE__*/React.createElement("p", {
     style: {
@@ -10363,12 +10428,13 @@ function App() {
       setHomeTilePopup("registered");
     },
     style: {
-      background: "linear-gradient(135deg,#1e293b,#0f172a)",
+      background: c.card,
       borderRadius: 14,
       padding: "12px 8px",
       textAlign: "center",
-      border: "1px solid #334155",
-      cursor: "pointer"
+      borderTop: "3px solid #6c63ff",
+      cursor: "pointer",
+      transition: "background 0.3s"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10379,7 +10445,7 @@ function App() {
   }, (data.members || []).length), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
-      color: "#64748b",
+      color: c.muted,
       marginTop: 2
     }
   }, "Registered")), /*#__PURE__*/React.createElement("div", {
@@ -10387,12 +10453,13 @@ function App() {
       setHomeTilePopup("here");
     },
     style: {
-      background: "linear-gradient(135deg,#1e293b,#0f172a)",
+      background: c.card,
       borderRadius: 14,
       padding: "12px 8px",
       textAlign: "center",
-      border: "1px solid #334155",
-      cursor: "pointer"
+      borderTop: "3px solid #22c55e",
+      cursor: "pointer",
+      transition: "background 0.3s"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10403,7 +10470,7 @@ function App() {
   }, todayCount), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
-      color: "#64748b",
+      color: c.muted,
       marginTop: 2
     }
   }, "Here Today")), /*#__PURE__*/React.createElement("div", {
@@ -10411,12 +10478,13 @@ function App() {
       setHomeTilePopup("visitors");
     },
     style: {
-      background: "linear-gradient(135deg,#1e293b,#0f172a)",
+      background: c.card,
       borderRadius: 14,
       padding: "12px 8px",
       textAlign: "center",
-      border: "1px solid #334155",
-      cursor: "pointer"
+      borderTop: "3px solid #a855f7",
+      cursor: "pointer",
+      transition: "background 0.3s"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10427,14 +10495,14 @@ function App() {
   }, visitorsToday), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
-      color: "#64748b",
+      color: c.muted,
       marginTop: 2
     }
   }, "Visitors Today"))), /*#__PURE__*/React.createElement("p", {
     style: {
       textAlign: "center",
       fontSize: 11,
-      color: "#475569",
+      color: c.mutedDark,
       marginTop: -16,
       marginBottom: 16
     }
@@ -10447,6 +10515,7 @@ function App() {
     onClick: function () {
       setScreen("register");
     },
+    className: "btn-press",
     style: {
       width: "100%",
       marginBottom: 12,
@@ -10466,6 +10535,7 @@ function App() {
     onClick: function () {
       setScreen("checkin");
     },
+    className: "btn-press",
     style: {
       width: "100%",
       marginBottom: 12,
@@ -10485,6 +10555,7 @@ function App() {
     onClick: function () {
       setScreen("leadercheckin");
     },
+    className: "btn-press",
     style: {
       width: "100%",
       marginBottom: 12,
@@ -10504,6 +10575,7 @@ function App() {
     onClick: function () {
       setScreen("pin");
     },
+    className: "btn-press",
     style: {
       width: "100%",
       marginBottom: 0,
@@ -10514,12 +10586,12 @@ function App() {
       fontWeight: 700,
       fontSize: 15,
       background: "transparent",
-      color: "#475569",
-      border: "2px solid #1e293b"
+      color: c.muted,
+      border: "2px solid " + c.border
     }
   }, "🔐 Leadership Admin")), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#334155",
+      color: c.mutedDark,
       fontSize: 11,
       marginTop: 20,
       textAlign: "center"
