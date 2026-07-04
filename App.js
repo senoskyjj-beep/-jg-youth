@@ -1126,10 +1126,10 @@ function PinScreen({onSuccess,onBack}){
     }
   }
   return(<div className="pin-page"><div className="pin-box">
-    {onBack&&<div style={{textAlign:"left",marginBottom:6}}><button onClick={onBack} style={{background:"transparent",border:"none",color:"#64748b",fontSize:14,cursor:"pointer",fontFamily:"inherit",padding:0}}>← Home</button></div>}
+    {onBack&&<div style={{textAlign:"left",marginBottom:6}}><button onClick={onBack} style={{background:"transparent",border:"none",color:"var(--jg-muteddark)",fontSize:14,cursor:"pointer",fontFamily:"inherit",padding:0}}>← Home</button></div>}
     <div style={{fontSize:36,marginBottom:8}}>✝</div>
     <h2 style={{margin:"0 0 4px"}}>Admin Access</h2>
-    <p style={{color:"#94a3b8",fontSize:14,margin:"0 0 6px"}}>Enter your 5-digit PIN</p>
+    <p style={{color:"var(--jg-muted)",fontSize:14,margin:"0 0 6px"}}>Enter your 5-digit PIN</p>
     <div className={"pin-dots"+(shake?" shake":"")} style={{display:"flex",justifyContent:"center",gap:12,margin:"18px 0"}}>
       {[0,1,2,3,4].map(function(i){return <div key={i} className={"pin-dot"+(pin.length>i?" filled":"")}/>;  })}
     </div>
@@ -1194,17 +1194,17 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
   if(done)return(<div className="card" style={{textAlign:"center",padding:"28px 16px"}}>
     <div className="success-circle">✓</div>
     <h2 style={{margin:"0 0 8px"}}>{form.status==="Visitor"?"Welcome, Visitor!":"Registered! ✝"}</h2>
-    <p style={{color:"#94a3b8",marginBottom:16}}>Welcome to Jeremiah Generation 🙏</p>
+    <p style={{color:"var(--jg-muted)",marginBottom:16}}>Welcome to Jeremiah Generation 🙏</p>
     {photoSkipped&&<div style={{background:"#1c1504",border:"2px solid #f59e0b",borderRadius:12,padding:"12px 16px",marginBottom:16,textAlign:"left"}}>
       <p style={{color:"#fcd34d",fontWeight:700,fontSize:14,margin:"0 0 6px"}}>📸 No photo taken</p>
-      <p style={{color:"#94a3b8",fontSize:13,margin:0}}>Registration saved successfully! Please remember to take a photo next time you attend. Your leader has been notified.</p>
+      <p style={{color:"var(--jg-muted)",fontSize:13,margin:0}}>Registration saved successfully! Please remember to take a photo next time you attend. Your leader has been notified.</p>
     </div>}
     <button className="btn btn-reg" onClick={function(){setForm(blank);setDone(false);setPhotoSkipped(false);}}>Register another</button>
     <button className="btn btn-admin" onClick={onBack}>Back to Home</button>
   </div>);
 
   function field(label,key,type,ph){return(<div style={{marginBottom:2}}>
-    <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>{label}</label>
+    <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>{label}</label>
     <input type={type||"text"} placeholder={ph||""} value={form[key]} className="input"
       style={{marginBottom:errors[key]?4:12,borderColor:errors[key]?"#ef4444":undefined}}
       onChange={function(e){set(key,e.target.value);}}/>
@@ -1222,8 +1222,8 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
           <p style={{color:"#6ee7b7",fontSize:13,fontWeight:600,margin:0}}>Living Waters Fellowship</p>
         </div>
 
-        <p style={{textAlign:"center",color:"#e2e8f0",fontSize:18,fontWeight:700,margin:"0 0 6px"}}>Welcome! 👋</p>
-        <p style={{textAlign:"center",color:"#94a3b8",fontSize:14,margin:"0 0 28px"}}>Which one are you?</p>
+        <p style={{textAlign:"center",color:"var(--jg-text)",fontSize:18,fontWeight:700,margin:"0 0 6px"}}>Welcome! 👋</p>
+        <p style={{textAlign:"center",color:"var(--jg-muted)",fontSize:14,margin:"0 0 28px"}}>Which one are you?</p>
 
         <button onClick={function(){set("status","Visitor");}} style={{
           width:"100%",background:"linear-gradient(135deg,#a855f7,#6c63ff)",border:"none",borderRadius:22,
@@ -1269,13 +1269,13 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
       <h2 style={{margin:"4px 0 2px",fontSize:18}}>{form.status==="Visitor"?"Tell us about yourself!":"Welcome to the family!"}</h2>
       <p style={{color:"#6ee7b7",fontSize:13,fontWeight:600,margin:0}}>Living Waters Fellowship</p>
       {prefill&&<p style={{color:"#f59e0b",fontSize:13,margin:"6px 0 0",fontWeight:600}}>Please complete your profile below</p>}
-      {!prefill&&<button onClick={function(){set("status","");}} style={{background:"none",border:"none",color:"#64748b",fontSize:12,cursor:"pointer",marginTop:6,textDecoration:"underline",fontFamily:"inherit"}}>← Change</button>}
+      {!prefill&&<button onClick={function(){set("status","");}} style={{background:"none",border:"none",color:"var(--jg-muteddark)",fontSize:12,cursor:"pointer",marginTop:6,textDecoration:"underline",fontFamily:"inherit"}}>← Change</button>}
     </div>
 
     {form.status==="Visitor"&&(
       <div style={{marginBottom:14,background:"#1a0a1e",border:"2px solid #a855f744",borderRadius:13,padding:"14px"}}>
         <label style={{display:"block",fontSize:13,fontWeight:700,color:"#e879f9",marginBottom:8}}>What brought you to JG today? *</label>
-        <select className="input" value={form.visitReason} style={{background:"#0f172a",color:"#fff",borderColor:errors.visitReason?"#ef4444":"#a855f744"}}
+        <select className="input" value={form.visitReason} style={{background:"var(--jg-bg)",color:"#fff",borderColor:errors.visitReason?"#ef4444":"#a855f744"}}
           onChange={function(e){set("visitReason",e.target.value);if(e.target.value!=="Friend invited me"&&e.target.value!=="Family member")set("invitedBy","");}}>
           <option value="">-- Choose one --</option>
           <option value="Friend invited me">👥 A friend invited me</option>
@@ -1297,11 +1297,11 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
                 return (em.name+" "+em.surname).toLowerCase().includes(form.invitedBy.toLowerCase());
               }).slice(0,5);
               if(matches.length===0||matches.find(function(em){return (em.name+" "+em.surname).toLowerCase()===form.invitedBy.toLowerCase();}))return null;
-              return(<div style={{background:"#0f172a",borderRadius:10,marginTop:6,padding:6,border:"1px solid #a855f744"}}>
+              return(<div style={{background:"var(--jg-bg)",borderRadius:10,marginTop:6,padding:6,border:"1px solid #a855f744"}}>
                 {matches.map(function(em){
                   return(<div key={em.id} onClick={function(){set("invitedBy",em.name+" "+em.surname);}} style={{padding:"8px 10px",cursor:"pointer",borderRadius:7,display:"flex",alignItems:"center",gap:8}}>
                     {em.photo?<img src={em.photo} width="28" height="28" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:28,height:28,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>👤</div>}
-                    <span style={{fontSize:13,color:"#e2e8f0"}}>{em.name} {em.surname}</span>
+                    <span style={{fontSize:13,color:"var(--jg-text)"}}>{em.name} {em.surname}</span>
                   </div>);
                 })}
               </div>);
@@ -1324,11 +1324,11 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
     </div>
 
     <div style={{marginBottom:12}}>
-      <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>School *</label>
-      <select className="input" value={form.school} style={{borderColor:errors.school?"#ef4444":undefined,background:"#1e293b",color:"#fff"}}
+      <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>School *</label>
+      <select className="input" value={form.school} style={{borderColor:errors.school?"#ef4444":undefined,background:"var(--jg-card)",color:"#fff"}}
         onChange={function(e){var v=e.target.value;if(!v.startsWith("--"))set("school",v);}}>
         <option value="">-- Select school --</option>
-        {SCHOOLS.map(function(s){return <option key={s} value={s} disabled={s.startsWith("--")} style={{background:"#1e293b"}}>{s}</option>;})}
+        {SCHOOLS.map(function(s){return <option key={s} value={s} disabled={s.startsWith("--")} style={{background:"var(--jg-card)"}}>{s}</option>;})}
       </select>
       {errors.school&&<p style={{color:"#f87171",fontSize:12,marginBottom:8}}>{errors.school}</p>}
     </div>
@@ -1336,23 +1336,23 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
     {field("Home Address *","address","text","e.g. 12 Main St, Lephalale")}
 
     <div style={{marginBottom:12}}>
-      <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:6}}>Date of Birth * {form.birthday&&calcAge(form.birthday)!==null&&<span style={{color:"#6ee7b7",marginLeft:8}}>Age: {calcAge(form.birthday)}</span>}</label>
+      <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:6}}>Date of Birth * {form.birthday&&calcAge(form.birthday)!==null&&<span style={{color:"#6ee7b7",marginLeft:8}}>Age: {calcAge(form.birthday)}</span>}</label>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1.4fr",gap:8}}>
-        <select className="input" style={{background:"#1e293b",color:"#fff"}} value={form.birthday?form.birthday.split("-")[2]||"":""} onChange={function(e){
+        <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[2]||"":""} onChange={function(e){
           var parts=(form.birthday||"----").split("-");
           set("birthday",(parts[0]||"2000")+"-"+(parts[1]||"01")+"-"+e.target.value);
         }}>
           <option value="">Day</option>
           {Array.from({length:31},function(_,i){var d=String(i+1).padStart(2,"0");return <option key={d} value={d}>{i+1}</option>;})}
         </select>
-        <select className="input" style={{background:"#1e293b",color:"#fff"}} value={form.birthday?form.birthday.split("-")[1]||"":""} onChange={function(e){
+        <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[1]||"":""} onChange={function(e){
           var parts=(form.birthday||"----").split("-");
           set("birthday",(parts[0]||"2000")+"-"+e.target.value+"-"+(parts[2]||"01"));
         }}>
           <option value="">Month</option>
           {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map(function(m,i){var v=String(i+1).padStart(2,"0");return <option key={v} value={v}>{m}</option>;})}
         </select>
-        <select className="input" style={{background:"#1e293b",color:"#fff"}} value={form.birthday?form.birthday.split("-")[0]||"":""} onChange={function(e){
+        <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[0]||"":""} onChange={function(e){
           var parts=(form.birthday||"----").split("-");
           set("birthday",e.target.value+"-"+(parts[1]||"01")+"-"+(parts[2]||"01"));
         }}>
@@ -1364,7 +1364,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
     </div>
 
     <div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:8}}>Profile Photo *</label>
+      <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:8}}>Profile Photo *</label>
       <input type="file" accept="image/*" capture="user" id="selfie-input" style={{display:"none"}}
         onChange={function(e){
           if(e.target.files[0]){
@@ -1396,7 +1396,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
         <div style={{textAlign:"center"}}>
           <img src={form.photo} width="100" height="100" style={{borderRadius:"50%",objectFit:"cover",border:"3px solid #6c63ff",display:"block",margin:"0 auto 10px"}}/>
           <button type="button" onClick={function(){document.getElementById("selfie-input").click();}}
-            style={{background:"#1e293b",border:"2px solid #334155",color:"#94a3b8",borderRadius:10,padding:"8px 16px",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+            style={{background:"var(--jg-card)",border:"2px solid var(--jg-border)",color:"var(--jg-muted)",borderRadius:10,padding:"8px 16px",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
             Retake Photo
           </button>
         </div>
@@ -1406,7 +1406,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
 
     <div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:12,padding:"14px",marginBottom:14}}>
       <p style={{margin:"0 0 8px",fontWeight:700,fontSize:14,color:"#86efac"}}>Join our WhatsApp Group?</p>
-      <p style={{margin:"0 0 10px",fontSize:12,color:"#64748b"}}>We will add you within one week of registering.</p>
+      <p style={{margin:"0 0 10px",fontSize:12,color:"var(--jg-muteddark)"}}>We will add you within one week of registering.</p>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
         <button type="button" onClick={function(){set("wantsWhatsApp",true);}} style={{padding:"11px",borderRadius:10,border:form.wantsWhatsApp===true?"2px solid #22c55e":"2px solid #334155",background:form.wantsWhatsApp===true?"#0d2818":"#1e293b",color:form.wantsWhatsApp===true?"#86efac":"#64748b",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Yes please!</button>
         <button type="button" onClick={function(){set("wantsWhatsApp",false);}} style={{padding:"11px",borderRadius:10,border:form.wantsWhatsApp===false?"2px solid #ef4444":"2px solid #334155",background:form.wantsWhatsApp===false?"#1a0505":"#1e293b",color:form.wantsWhatsApp===false?"#f87171":"#64748b",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>No thanks</button>
@@ -1442,6 +1442,12 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
   var [isAnon,setIsAnon]=useState(false);
   var [cat,setCat]=useState("");
   var [message,setMessage]=useState("");
+  var [flippedId,setFlippedId]=useState(null);
+  var [checkinMoods,setCheckinMoods]=useState({});
+  var MOODS=[
+    {e:"😄",bg:"rgba(34,197,94,0.15)"},{e:"😊",bg:"rgba(59,130,246,0.15)"},{e:"😐",bg:"rgba(148,163,184,0.15)"},
+    {e:"😔",bg:"rgba(245,158,11,0.15)"},{e:"😢",bg:"rgba(239,68,68,0.15)"},{e:"🤩",bg:"rgba(168,85,247,0.15)"},
+  ];
 
   // After a check-in (member or leader), show the welcome briefly then return Home automatically.
   // If the user taps another button first (e.g. "Check In Another Leader"), the cleanup cancels it.
@@ -1483,7 +1489,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
   if(done)return(<div style={{textAlign:"center",padding:"50px 0"}}>
     <div className="success-circle">✓</div>
     <h2 style={{margin:"0 0 8px"}}>Welcome, {done.name}!</h2>
-    <p style={{color:"#94a3b8"}}>Checked in for today. God bless you!</p>
+    <p style={{color:"var(--jg-muted)"}}>Checked in for today. God bless you!</p>
   </div>);
 
   if(step==="incomplete"&&selected)return(<div>
@@ -1494,7 +1500,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
     </div>
     <div style={{background:"#1c1504",border:"2px solid #f59e0b44",borderRadius:14,padding:"16px",marginBottom:16}}>
       <p style={{margin:"0 0 8px",fontSize:14,color:"#fcd34d"}}>We have your name from our old register but need a few more details.</p>
-      <p style={{margin:0,fontSize:13,color:"#94a3b8"}}>It only takes 2 minutes to complete!</p>
+      <p style={{margin:0,fontSize:13,color:"var(--jg-muted)"}}>It only takes 2 minutes to complete!</p>
     </div>
     <button className="btn btn-reg" style={{marginBottom:8}} onClick={function(){onCompleteProfile(selected);}}>✅ Complete My Registration</button>
     <p style={{fontSize:12,color:"#f59e0b",textAlign:"center",marginTop:8,fontWeight:600}}>⚠️ You must complete your registration before checking in.</p>
@@ -1509,12 +1515,12 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
       <h2 style={{margin:"0 0 2px"}}>Welcome back, {selected.name}!</h2>
       <p style={{color:"#6ee7b7",fontWeight:600,fontSize:13,margin:0}}>Great to see you today!</p>
     </div>
-    <div style={{background:"#1e293b",borderRadius:16,padding:"20px",textAlign:"center"}}>
-      <p style={{fontSize:16,fontWeight:700,color:"#e2e8f0",margin:"0 0 6px"}}>Any suggestions, requests or feedback today?</p>
-      <p style={{fontSize:13,color:"#64748b",margin:"0 0 18px"}}>Games, sports, prayer, advice - anything at all.</p>
+    <div style={{background:"var(--jg-card)",borderRadius:16,padding:"20px",textAlign:"center"}}>
+      <p style={{fontSize:16,fontWeight:700,color:"var(--jg-text)",margin:"0 0 6px"}}>Any suggestions, requests or feedback today?</p>
+      <p style={{fontSize:13,color:"var(--jg-muteddark)",margin:"0 0 18px"}}>Games, sports, prayer, advice - anything at all.</p>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
         <button onClick={function(){setStep("form");}} style={{padding:"16px",borderRadius:12,border:"2px solid #22c55e",background:"#0d2818",color:"#86efac",fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>Yes, I do!</button>
-        <button onClick={function(){doCheckin(null);}} style={{padding:"16px",borderRadius:12,border:"2px solid #334155",background:"#1e293b",color:"#94a3b8",fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>No thanks</button>
+        <button onClick={function(){doCheckin(null);}} style={{padding:"16px",borderRadius:12,border:"2px solid var(--jg-border)",background:"var(--jg-card)",color:"var(--jg-muted)",fontWeight:700,fontSize:15,cursor:"pointer",fontFamily:"inherit"}}>No thanks</button>
       </div>
     </div>
     <button className="btn btn-admin" style={{marginTop:10}} onClick={function(){setSelected(null);setStep("search");}}>Back</button>
@@ -1528,11 +1534,11 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
       </button>);})}
     </div>
     {cat&&<div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:13,fontWeight:700,color:"#94a3b8",marginBottom:6}}>Your message (optional):</label>
+      <label style={{display:"block",fontSize:13,fontWeight:700,color:"var(--jg-muted)",marginBottom:6}}>Your message (optional):</label>
       <textarea className="input" style={{height:100,resize:"none"}} placeholder="Type your message here..." value={message} onChange={function(e){setMessage(e.target.value);}}/>
     </div>}
-    <div style={{background:"#1e293b",borderRadius:12,padding:"14px",marginBottom:14}}>
-      <p style={{margin:"0 0 8px",fontWeight:700,fontSize:13,color:"#e2e8f0"}}>Privacy:</p>
+    <div style={{background:"var(--jg-card)",borderRadius:12,padding:"14px",marginBottom:14}}>
+      <p style={{margin:"0 0 8px",fontWeight:700,fontSize:13,color:"var(--jg-text)"}}>Privacy:</p>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
         <button onClick={function(){setIsAnon(false);}} style={{padding:"11px",borderRadius:11,border:!isAnon?"2px solid #22c55e":"2px solid #334155",background:!isAnon?"#0d2818":"#0f172a",color:!isAnon?"#86efac":"#64748b",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Show My Name<br/><span style={{fontSize:10}}>{selected.name}</span></button>
         <button onClick={function(){setIsAnon(true);}} style={{padding:"11px",borderRadius:11,border:isAnon?"2px solid #a855f7":"2px solid #334155",background:isAnon?"#1a0a1e":"#0f172a",color:isAnon?"#e879f9":"#64748b",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Anonymous<br/><span style={{fontSize:10}}>Hide my name</span></button>
@@ -1549,7 +1555,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
       return(<div style={{textAlign:"center",padding:"40px 20px"}}>
         <div style={{fontSize:60,marginBottom:14}}>✅</div>
         <h2 style={{margin:"0 0 8px",color:"#86efac"}}>Welcome, {leaderDone.name}!</h2>
-        <p style={{color:"#94a3b8",fontSize:14,margin:"0 0 20px"}}>You are checked in as {leaderDone.role} Leader.</p>
+        <p style={{color:"var(--jg-muted)",fontSize:14,margin:"0 0 20px"}}>You are checked in as {leaderDone.role} Leader.</p>
         <button className="btn btn-reg" onClick={function(){setLeaderDone(null);setLeaderQuery("");}}>Check In Another Leader</button>
         <button className="btn btn-admin" onClick={function(){setLeaderDone(null);onBack();}}>← Done</button>
       </div>);
@@ -1561,7 +1567,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
     return(<div>
       <button onClick={onBack} className="btn btn-admin" style={{marginBottom:14}}>← Home</button>
       <p className="page-title">⭐ Leader Check-In</p>
-      <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Tap your name to mark yourself as present today.</p>
+      <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:14}}>Tap your name to mark yourself as present today.</p>
       <input className="input" placeholder="Search your name..." value={leaderQuery} onChange={function(e){setLeaderQuery(e.target.value);}}/>
       {leaders.length===0&&<p className="empty-msg">No leaders registered yet. Ask the main leader to add you in Admin → Leaders.</p>}
       {matchedLeaders.map(function(L){
@@ -1571,7 +1577,7 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
           {L.photo?<img src={L.photo} width="44" height="44" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:44,height:44,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{L.role==="Senior"?"⭐":"🌱"}</div>}
           <div style={{flex:1}}>
             <strong style={{fontSize:15,color:alreadyToday?"#86efac":"#e2e8f0"}}>{L.name} {L.surname}</strong>
-            <div style={{fontSize:12,color:"#94a3b8"}}>{L.role} Leader{alreadyToday?" · ✓ Already checked in today":""}</div>
+            <div style={{fontSize:12,color:"var(--jg-muted)"}}>{L.role} Leader{alreadyToday?" · ✓ Already checked in today":""}</div>
           </div>
         </div>);
       })}
@@ -1581,20 +1587,44 @@ function CheckInPage({members,checkins,onCheckin,onBack,onCompleteProfile,initia
   return(<div>
     <button className="btn btn-admin" onClick={onBack} style={{marginBottom:12}}>← Home</button>
     <h3 className="page-title">✅ Member Check-In</h3>
-    <p style={{color:"#94a3b8",fontSize:13,marginBottom:10}}>Search your name to check in.</p>
+    <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:10}}>Search your name to check in.</p>
     <input className="input" placeholder="Search your name..." value={search} onChange={function(e){setSearch(e.target.value);}} autoFocus/>
     {results.map(function(m){
       var status=computeStatus(m,checkins);
       var bs=statusBadge(status);
-      return(<div key={m.id} className={"card"+(m.incomplete?" card-absent":"")} onClick={function(){tap(m);}}>
-        {m.photo?<img src={m.photo} width="46" height="46" style={{borderRadius:"50%",objectFit:"cover",flexShrink:0}}/>
-          :<div style={{width:46,height:46,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>👤</div>}
-        <div style={{flex:1}}>
-          <strong>{m.name} {m.surname}</strong>
-          {m.incomplete&&<span style={{fontSize:11,color:"#f59e0b",marginLeft:6}}>incomplete</span>}
-          <br/><small style={{color:"#94a3b8"}}>{m.school||""}{calcAge(m.birthday)?" Age "+calcAge(m.birthday):""}</small>
+      var flipped=flippedId===m.id;
+      var mood=checkinMoods[m.id];
+      function flipToMood(){ if(m.incomplete){setSelected(m);setStep("incomplete");return;} setFlippedId(flipped?null:m.id); }
+      function confirmCheckin(){ if(!mood)return; setFlippedId(null); tap(m); }
+      return(<div key={m.id} style={{perspective:1000,marginBottom:10,position:"relative",zIndex:flipped?5:1,height:flipped?148:74,transition:"height 0.35s"}}>
+        <div style={{position:"absolute",inset:0,width:"100%",transformStyle:"preserve-3d",transition:"transform 0.6s",transform:flipped?"rotateY(180deg)":"rotateY(0deg)"}}>
+          {/* Front */}
+          <div className={"card"+(m.incomplete?" card-absent":"")} onClick={flipToMood} style={{position:"absolute",inset:0,margin:0,backfaceVisibility:"hidden",pointerEvents:flipped?"none":"auto"}}>
+            {m.photo?<img src={m.photo} width="46" height="46" style={{borderRadius:"50%",objectFit:"cover",flexShrink:0}}/>
+              :<div style={{width:46,height:46,borderRadius:"50%",background:"var(--jg-border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>👤</div>}
+            <div style={{flex:1}}>
+              <strong>{m.name} {m.surname}</strong>
+              {m.incomplete&&<span style={{fontSize:11,color:"#f59e0b",marginLeft:6}}>incomplete</span>}
+              <br/><small style={{color:"var(--jg-muted)"}}>{m.school||""}{calcAge(m.birthday)?" Age "+calcAge(m.birthday):""}</small>
+            </div>
+            <span style={{background:bs.bg,color:bs.col,border:"1.5px solid "+bs.bd,borderRadius:8,padding:"3px 8px",fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{status}</span>
+            {!m.incomplete&&<span style={{fontSize:16,marginLeft:8,color:"var(--jg-muted)"}}>›</span>}
+          </div>
+          {/* Back — mood picker (always mounted so the 3D flip has something to rotate to) */}
+          <div style={{position:"absolute",inset:0,backfaceVisibility:"hidden",transform:"rotateY(180deg)",background:"var(--jg-card2)",borderRadius:13,border:"2px solid #22c55e",padding:"12px 14px",display:"flex",flexDirection:"column",justifyContent:"center",gap:8,pointerEvents:flipped?"auto":"none",overflow:"hidden"}}>
+            <div style={{fontSize:13,fontWeight:700,color:"var(--jg-text)"}}>How do you feel today, {m.name}?</div>
+            <div style={{display:"flex",gap:6,justifyContent:"space-between"}}>
+              {MOODS.map(function(mo){
+                var isSel=mood===mo.e;
+                return(<button key={mo.e} onClick={function(){setCheckinMoods(Object.assign({},checkinMoods,{[m.id]:mo.e}));}} style={{
+                  fontSize:20,width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:10,cursor:"pointer",
+                  background:isSel?mo.bg:"transparent",border:isSel?"2px solid #22c55e":"2px solid transparent",transform:isSel?"scale(1.12)":"scale(1)",transition:"transform 0.15s,background 0.15s",
+                }}>{mo.e}</button>);
+              })}
+            </div>
+            <button onClick={confirmCheckin} disabled={!mood} style={{marginTop:2,padding:9,borderRadius:10,border:"none",fontWeight:700,fontSize:13,cursor:mood?"pointer":"default",background:mood?"#22c55e":"var(--jg-border)",color:mood?"#fff":"var(--jg-muted)"}}>✓ Confirm Check-In</button>
+          </div>
         </div>
-        <span style={{background:bs.bg,color:bs.col,border:"1.5px solid "+bs.bd,borderRadius:8,padding:"3px 8px",fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{status}</span>
       </div>);
     })}
     {results.length===0&&search.length>=1&&<p className="empty-msg">Not found - please use Registration</p>}
@@ -1649,7 +1679,7 @@ function VibeDashboard({data,setData,onExit,onRefresh,syncing,switchStyle}){
     return (
       <div>
         <div style={{textAlign:"center",marginBottom:14}}>
-          <button onClick={function(){setView("home");}} style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"2px solid #334155",color:"#fff",borderRadius:12,padding:"8px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>← Back to Vibe Home</button>
+          <button onClick={function(){setView("home");}} style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"2px solid var(--jg-border)",color:"#fff",borderRadius:12,padding:"8px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>← Back to Vibe Home</button>
         </div>
         <VibeSubView view={view} data={data} setData={setData}/>
       </div>
@@ -1662,10 +1692,10 @@ function VibeDashboard({data,setData,onExit,onRefresh,syncing,switchStyle}){
       <div style={{textAlign:"center",marginBottom:20,marginTop:8}}>
         <div style={{fontSize:34,marginBottom:4}}>✨</div>
         <h1 style={{margin:"0 0 2px",fontSize:24,background:"linear-gradient(135deg,#6c63ff,#ec4899,#22c55e)",WebkitBackgroundClip:"text",backgroundClip:"text",color:"transparent",fontWeight:900,letterSpacing:"-0.5px"}}>JG Dashboard</h1>
-        <p style={{color:"#64748b",fontSize:12,margin:0}}>Living Waters Fellowship</p>
+        <p style={{color:"var(--jg-muteddark)",fontSize:12,margin:0}}>Living Waters Fellowship</p>
         <div style={{display:"flex",justifyContent:"center",gap:6,marginTop:10,flexWrap:"wrap"}}>
-          <button onClick={onRefresh} disabled={syncing} style={{background:"#1e293b",border:"1px solid #334155",color:syncing?"#475569":"#6ee7b7",borderRadius:8,padding:"5px 12px",fontSize:12,cursor:syncing?"not-allowed":"pointer",fontFamily:"inherit"}}>{syncing?"Syncing":"🔄 Refresh"}</button>
-          <button onClick={switchStyle} style={{background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:8,padding:"5px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Classic View</button>
+          <button onClick={onRefresh} disabled={syncing} style={{background:"var(--jg-card)",border:"1px solid var(--jg-border)",color:syncing?"#475569":"#6ee7b7",borderRadius:8,padding:"5px 12px",fontSize:12,cursor:syncing?"not-allowed":"pointer",fontFamily:"inherit"}}>{syncing?"Syncing":"🔄 Refresh"}</button>
+          <button onClick={switchStyle} style={{background:"var(--jg-card)",border:"1px solid var(--jg-border)",color:"var(--jg-muted)",borderRadius:8,padding:"5px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>📋 Classic View</button>
         </div>
       </div>
 
@@ -1693,7 +1723,7 @@ function VibeDashboard({data,setData,onExit,onRefresh,syncing,switchStyle}){
       </div>
 
       {/* Quick action tiles */}
-      <p style={{color:"#64748b",fontSize:12,fontWeight:700,letterSpacing:"1.5px",margin:"20px 0 10px"}}>QUICK ACTIONS</p>
+      <p style={{color:"var(--jg-muteddark)",fontSize:12,fontWeight:700,letterSpacing:"1.5px",margin:"20px 0 10px"}}>QUICK ACTIONS</p>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
         {[
           {label:"Absent",emoji:"⚠️",count:absentToday.length,view:"absent",grad:gradients.absent},
@@ -1714,7 +1744,7 @@ function VibeDashboard({data,setData,onExit,onRefresh,syncing,switchStyle}){
         );})}
       </div>
 
-      <p style={{color:"#64748b",fontSize:12,fontWeight:700,letterSpacing:"1.5px",margin:"20px 0 10px"}}>TOOLS</p>
+      <p style={{color:"var(--jg-muteddark)",fontSize:12,fontWeight:700,letterSpacing:"1.5px",margin:"20px 0 10px"}}>TOOLS</p>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
         {[
           {label:"Reports",emoji:"📊",view:"reports",grad:gradients.reports},
@@ -1736,20 +1766,20 @@ function VibeDashboard({data,setData,onExit,onRefresh,syncing,switchStyle}){
 
       {/* Today vibe strip */}
       {todayIds.length>0&&(
-        <div style={{background:"#0f172a",border:"2px solid #22c55e44",borderRadius:18,padding:"14px",marginBottom:14}}>
+        <div style={{background:"var(--jg-bg)",border:"2px solid #22c55e44",borderRadius:18,padding:"14px",marginBottom:14}}>
           <p style={{margin:"0 0 8px",fontSize:12,fontWeight:700,color:"#86efac",letterSpacing:"1.5px"}}>⚡ CHECKED IN TODAY</p>
           <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
             {todayIds.slice(0,12).map(function(id){
               var m=members.find(function(mb){return mb.id===id;});
               if(!m)return null;
-              return <span key={id} style={{background:"#1e293b",color:"#86efac",borderRadius:20,padding:"6px 12px",fontSize:12,fontWeight:600}}>{m.name} ✓</span>;
+              return <span key={id} style={{background:"var(--jg-card)",color:"#86efac",borderRadius:20,padding:"6px 12px",fontSize:12,fontWeight:600}}>{m.name} ✓</span>;
             })}
-            {todayIds.length>12&&<span style={{color:"#64748b",fontSize:12,padding:"6px 0"}}>+{todayIds.length-12} more</span>}
+            {todayIds.length>12&&<span style={{color:"var(--jg-muteddark)",fontSize:12,padding:"6px 0"}}>+{todayIds.length-12} more</span>}
           </div>
         </div>
       )}
 
-      <button onClick={onExit} style={{width:"100%",background:"#1e293b",border:"2px solid #334155",color:"#94a3b8",borderRadius:14,padding:"14px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginTop:12}}>Exit Admin</button>
+      <button onClick={onExit} style={{width:"100%",background:"var(--jg-card)",border:"2px solid var(--jg-border)",color:"var(--jg-muted)",borderRadius:14,padding:"14px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginTop:12}}>Exit Admin</button>
     </div>
   );
 }
@@ -1831,7 +1861,7 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
         var cols={Games:"#3b82f6",Sports:"#22c55e",Welcome:"#ec4899",Prayer:"#8b5cf6",Advice:"#6366f1",Complaint:"#ef4444",General:"#f59e0b"};
         var icos={Games:"🎲",Sports:"⚽",Welcome:"❤️",Prayer:"🙏",Advice:"💬",Complaint:"⚠️",General:"💡"};
         var col=cols[fb.category]||"#64748b";
-        return(<div key={i} style={{background:"#1e293b",borderRadius:13,padding:"14px 16px",marginBottom:10,borderLeft:"4px solid "+col}}>
+        return(<div key={i} style={{background:"var(--jg-card)",borderRadius:13,padding:"14px 16px",marginBottom:10,borderLeft:"4px solid "+col}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,flexWrap:"wrap",gap:6}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>{icos[fb.category]}</span><span style={{fontWeight:700,color:col,fontSize:14}}>{fb.category}</span></div>
             <div style={{fontSize:12,color:"#475569"}}>{fb.date} · {fb.name}</div>
@@ -1848,9 +1878,9 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
       {allVisitors.length===0&&<p className="empty-msg">No visitors yet.</p>}
       {allVisitors.map(function(m){
         var visits=vc(m),status=computeStatus(m,checkins),bs=statusBadge(status);
-        return(<div key={m.id} style={{background:"#1e293b",border:"2px solid #a855f722",borderRadius:13,padding:"14px 16px",marginBottom:10}}>
+        return(<div key={m.id} style={{background:"var(--jg-card)",border:"2px solid #a855f722",borderRadius:13,padding:"14px 16px",marginBottom:10}}>
           <strong>{m.name} {m.surname}</strong> <span style={{background:bs.bg,color:bs.col,border:"1.5px solid "+bs.bd,borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,marginLeft:6}}>{status}</span>
-          <div style={{fontSize:12,color:"#94a3b8",marginTop:6}}>📞 {m.phone||"?"} · 🏫 {m.school||"?"} · Visits: {visits}</div>
+          <div style={{fontSize:12,color:"var(--jg-muted)",marginTop:6}}>📞 {m.phone||"?"} · 🏫 {m.school||"?"} · Visits: {visits}</div>
           {m.visitReason&&<div style={{fontSize:12,color:"#e879f9",marginTop:6,background:"#1a0a1e",padding:"4px 10px",borderRadius:8,display:"inline-block"}}>💫 {m.visitReason}</div>}
           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:10}}>
             <a href={toWA(m.whatsapp||m.phone,msgVisitor(m.name))} target="_blank" style={{background:"#a855f7",color:"#fff",borderRadius:9,padding:"8px 14px",fontSize:13,fontWeight:700,textDecoration:"none"}}>💜 Thank You WA</a>
@@ -1870,13 +1900,13 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
       <p className="page-title">👥 All Members ({members.length})</p>
       {sortAlpha(members).map(function(m){
         var status=computeStatus(m,checkins),bs=statusBadge(status),wk=wa(m);
-        return(<div key={m.id} style={{background:"#1e293b",borderRadius:14,padding:"12px 14px",marginBottom:10,border:wk>=3?"2px solid #ef444444":"2px solid transparent"}}>
+        return(<div key={m.id} style={{background:"var(--jg-card)",borderRadius:14,padding:"12px 14px",marginBottom:10,border:wk>=3?"2px solid #ef444444":"2px solid transparent"}}>
           <div style={{display:"flex",gap:10,alignItems:"center"}}>
             {m.photo?<img src={m.photo} width="40" height="40" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:40,height:40,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center"}}>👤</div>}
             <div style={{flex:1}}>
               <strong>{m.name} {m.surname}</strong>
               <span style={{background:bs.bg,color:bs.col,border:"1.5px solid "+bs.bd,borderRadius:6,padding:"2px 7px",fontSize:10,fontWeight:700,marginLeft:6}}>{status}</span>
-              <div style={{fontSize:12,color:"#94a3b8"}}>📞 {m.phone||"?"} · {vc(m)} visits{wk>=3?" · ⚠️ "+wk+"wks":""}</div>
+              <div style={{fontSize:12,color:"var(--jg-muted)"}}>📞 {m.phone||"?"} · {vc(m)} visits{wk>=3?" · ⚠️ "+wk+"wks":""}</div>
             </div>
           </div>
         </div>);
@@ -1890,7 +1920,7 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
       {sortAlpha(members).map(function(m,i){return(<div key={m.id||i} style={{background:i%2===0?"#1e293b":"#182032",borderRadius:12,padding:"12px 14px",marginBottom:6,display:"flex",flexWrap:"wrap",alignItems:"center",gap:10}}>
         <div style={{flex:1,minWidth:140}}>
           <strong>{m.name} {m.surname}</strong>
-          <div style={{fontSize:12,color:"#94a3b8"}}>📞 {m.phone||"?"} · 👨‍👩‍👦 {m.parentPhone||"?"}</div>
+          <div style={{fontSize:12,color:"var(--jg-muted)"}}>📞 {m.phone||"?"} · 👨‍👩‍👦 {m.parentPhone||"?"}</div>
         </div>
         <div style={{display:"flex",gap:6}}>
           <a href={toWA(m.whatsapp||m.phone)} target="_blank" className="btn btn-wa">💬 Youth</a>
@@ -1909,10 +1939,10 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
         <a href={WA_GROUP} target="_blank" style={{color:"#6ee7b7",fontSize:12,wordBreak:"break-all"}}>{WA_GROUP}</a>
       </div>
       {waRequests.length===0&&<p className="empty-msg">No requests.</p>}
-      {waRequests.map(function(m){return(<div key={m.id} style={{background:"#1e293b",borderRadius:12,padding:"13px",marginBottom:8,display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
-        <div style={{flex:1}}><strong>{m.name} {m.surname}</strong><div style={{fontSize:12,color:"#94a3b8"}}>{m.phone}</div></div>
+      {waRequests.map(function(m){return(<div key={m.id} style={{background:"var(--jg-card)",borderRadius:12,padding:"13px",marginBottom:8,display:"flex",flexWrap:"wrap",gap:8,alignItems:"center"}}>
+        <div style={{flex:1}}><strong>{m.name} {m.surname}</strong><div style={{fontSize:12,color:"var(--jg-muted)"}}>{m.phone}</div></div>
         <a href={toWA(m.phone)} target="_blank" className="btn btn-wa">Add</a>
-        <button onClick={function(){updateMember(m.id,{wantsWhatsApp:false,addedToWA:true});}} style={{background:"#334155",color:"#94a3b8",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✓ Added</button>
+        <button onClick={function(){updateMember(m.id,{wantsWhatsApp:false,addedToWA:true});}} style={{background:"#334155",color:"var(--jg-muted)",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✓ Added</button>
       </div>);})}
     </div>
   );
@@ -1920,8 +1950,8 @@ function AdminDashboardEmbedded({data,setData,initialTab}){
   if(t==="reports")return(
     <div>
       <p className="page-title">📊 Reports</p>
-      <p style={{color:"#94a3b8",fontSize:13}}>Reports view - for the full health dashboard use Classic View.</p>
-      <div style={{background:"#1e293b",borderRadius:14,padding:"14px",marginBottom:12}}>
+      <p style={{color:"var(--jg-muted)",fontSize:13}}>Reports view - for the full health dashboard use Classic View.</p>
+      <div style={{background:"var(--jg-card)",borderRadius:14,padding:"14px",marginBottom:12}}>
         <div style={{fontSize:13,color:"#6ee7b7",fontWeight:700,marginBottom:8}}>Overall Stats</div>
         <div>📅 Total sessions: {allDates.length}</div>
         <div>✅ Total check-ins: {checkins.length}</div>
@@ -2092,7 +2122,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
       <h2 style={{margin:"2px 0 0",fontSize:17}}>Jeremiah Generation</h2>
       <p style={{color:"#6ee7b7",fontSize:12,fontWeight:600,margin:0}}>Living Waters Fellowship - Admin</p>
       <div style={{display:"flex",justifyContent:"center",gap:6,marginTop:8,flexWrap:"wrap"}}>
-        <button onClick={onRefresh} disabled={syncing} style={{background:"#1e293b",border:"1px solid #334155",color:syncing?"#475569":"#6ee7b7",borderRadius:8,padding:"5px 12px",fontSize:12,cursor:syncing?"not-allowed":"pointer",fontFamily:"inherit"}}>
+        <button onClick={onRefresh} disabled={syncing} style={{background:"var(--jg-card)",border:"1px solid var(--jg-border)",color:syncing?"#475569":"#6ee7b7",borderRadius:8,padding:"5px 12px",fontSize:12,cursor:syncing?"not-allowed":"pointer",fontFamily:"inherit"}}>
           {syncing?"Loading...":"🔄 Refresh"}
         </button>
         <button onClick={function(){changeStyle("vibe");}} style={{background:"linear-gradient(135deg,#a855f7,#ec4899)",border:"none",color:"#fff",borderRadius:8,padding:"5px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>
@@ -2108,7 +2138,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
     </div>
 
     {tab==="overview"&&<div>
-      <p style={{color:"#64748b",fontSize:11,fontWeight:700,letterSpacing:"1px",margin:"0 0 8px"}}>TAP ANY TILE TO SEE NAMES</p>
+      <p style={{color:"var(--jg-muteddark)",fontSize:11,fontWeight:700,letterSpacing:"1px",margin:"0 0 8px"}}>TAP ANY TILE TO SEE NAMES</p>
       <div className="stats-row">
         {[
           {l:"Registered",v:members.length,c:"#6c63ff",t:"registered"},
@@ -2123,7 +2153,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
           </div>
         );})}
       </div>
-      {absentToday.length>0&&<div style={{background:"#1e293b",border:"2px solid #f59e0b44",borderRadius:13,padding:"14px 16px",marginBottom:14}}>
+      {absentToday.length>0&&<div style={{background:"var(--jg-card)",border:"2px solid #f59e0b44",borderRadius:13,padding:"14px 16px",marginBottom:14}}>
         <p className="amber" style={{margin:"0 0 10px"}}>{absentToday.length} youth absent today</p>
         <button className="btn btn-check" style={{width:"auto",padding:"9px 18px",fontSize:14}} onClick={function(){setTab("absent");}}>See Absent List and WhatsApp</button>
       </div>}
@@ -2132,7 +2162,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
 
     {tab==="absent"&&<div>
       <p className="page-title">Absent Today</p>
-      <p style={{color:"#94a3b8",fontSize:12,marginBottom:12}}>Message auto-selected by weeks absent. ✅ = sent. After ANY message sent → person moves to Sent tab.</p>
+      <p style={{color:"var(--jg-muted)",fontSize:12,marginBottom:12}}>Message auto-selected by weeks absent. ✅ = sent. After ANY message sent → person moves to Sent tab.</p>
       {absentToday.length===0&&<div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:13,padding:16}}><p className="green" style={{margin:0}}>🎉 No absentees today!</p></div>}
       {absentToday.filter(function(m){return !wasMessagedToday(m.id);}).map(function(m){
         var wk=wa(m);
@@ -2167,7 +2197,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
 
     {tab==="sent"&&<div>
       <p className="page-title">✅ Sent Today</p>
-      <p style={{color:"#94a3b8",fontSize:12,marginBottom:12}}>Absent members where at least one message was sent today (WA or SMS to youth or parent). Resets Friday 1AM.</p>
+      <p style={{color:"var(--jg-muted)",fontSize:12,marginBottom:12}}>Absent members where at least one message was sent today (WA or SMS to youth or parent). Resets Friday 1AM.</p>
       {absentToday.filter(function(m){return wasMessagedToday(m.id);}).length===0&&
         <p className="empty-msg">No one fully messaged yet today.</p>}
       {absentToday.filter(function(m){return wasMessagedToday(m.id);}).map(function(m){
@@ -2179,7 +2209,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
             {m.photo&&<img src={m.photo} width="36" height="36" style={{borderRadius:"50%",objectFit:"cover"}}/>}
             <div style={{flex:1}}>
               <strong style={{color:"#86efac"}}>{m.name} {m.surname}</strong>
-              <div style={{fontSize:11,color:"#64748b"}}>Week {wk} message · {wk} week{wk!==1?"s":""} absent</div>
+              <div style={{fontSize:11,color:"var(--jg-muteddark)"}}>Week {wk} message · {wk} week{wk!==1?"s":""} absent</div>
             </div>
             <span style={{fontSize:20}}>✅</span>
           </div>
@@ -2195,7 +2225,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         var cols={Games:"#3b82f6",Sports:"#22c55e",Welcome:"#ec4899",Prayer:"#8b5cf6",Advice:"#6366f1",Complaint:"#ef4444",General:"#f59e0b"};
         var icos={Games:"🎲",Sports:"⚽",Welcome:"❤️",Prayer:"🙏",Advice:"💬",Complaint:"⚠️",General:"💡"};
         var col=cols[fb.category]||"#64748b";
-        return(<div key={i} style={{background:"#1e293b",borderRadius:13,padding:"14px 16px",marginBottom:10,borderLeft:"4px solid "+col}}>
+        return(<div key={i} style={{background:"var(--jg-card)",borderRadius:13,padding:"14px 16px",marginBottom:10,borderLeft:"4px solid "+col}}>
           <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:6,marginBottom:6}}>
             <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:18}}>{icos[fb.category]||"💡"}</span><span style={{fontWeight:700,color:col,fontSize:14}}>{fb.category}</span></div>
             <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -2213,12 +2243,12 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
       {allVisitors.length===0&&<p className="empty-msg">No visitors yet.</p>}
       {allVisitors.map(function(m,i){
         var visits=vc(m),status=computeStatus(m,checkins),bs=statusBadge(status),last=lc(m);
-        return(<div key={m.id||i} style={{background:"#1e293b",border:"2px solid #a855f722",borderRadius:13,padding:"14px 16px",marginBottom:10}}>
+        return(<div key={m.id||i} style={{background:"var(--jg-card)",border:"2px solid #a855f722",borderRadius:13,padding:"14px 16px",marginBottom:10}}>
           <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8,marginBottom:8}}>
             <div><strong style={{fontSize:15}}>{m.name} {m.surname}</strong><span style={{background:bs.bg,color:bs.col,border:"1.5px solid "+bs.bd,borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700,marginLeft:8}}>{status}</span></div>
-            <div style={{fontSize:12,color:"#94a3b8",textAlign:"right"}}>{visits} visit{visits!==1?"s":""}<br/>Last: {last||"never"}</div>
+            <div style={{fontSize:12,color:"var(--jg-muted)",textAlign:"right"}}>{visits} visit{visits!==1?"s":""}<br/>Last: {last||"never"}</div>
           </div>
-          <div style={{fontSize:12,color:"#94a3b8",marginBottom:6}}>Phone: {m.phone||"?"} | School: {m.school||"?"}</div>
+          <div style={{fontSize:12,color:"var(--jg-muted)",marginBottom:6}}>Phone: {m.phone||"?"} | School: {m.school||"?"}</div>
           {m.visitReason&&<div style={{fontSize:12,color:"#e879f9",marginBottom:10,background:"#1a0a1e",padding:"4px 10px",borderRadius:8,display:"inline-block"}}>💫 {m.visitReason}</div>}
           <div style={{marginBottom:8}}></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
@@ -2238,8 +2268,8 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         {m.photo?<img src={m.photo} width="40" height="40" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:40,height:40,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center"}}>👤</div>}
         <div style={{flex:1,minWidth:140}}>
           <strong>{m.name} {m.surname}</strong>
-          <div style={{fontSize:12,color:"#94a3b8"}}>Phone: {m.phone||"?"}</div>
-          <div style={{fontSize:12,color:"#94a3b8"}}>Parent: {m.parentName||""} {m.parentSurname||""} | {m.parentPhone||"?"}</div>
+          <div style={{fontSize:12,color:"var(--jg-muted)"}}>Phone: {m.phone||"?"}</div>
+          <div style={{fontSize:12,color:"var(--jg-muted)"}}>Parent: {m.parentName||""} {m.parentSurname||""} | {m.parentPhone||"?"}</div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,minWidth:200}}>
           <a href={toWA(m.whatsapp||m.phone)} target="_blank" style={{display:"block",background:"#25D366",color:"#04130a",borderRadius:9,padding:"9px 10px",fontSize:12,fontWeight:800,textDecoration:"none",textAlign:"center"}}>💬 WhatsApp</a>
@@ -2255,7 +2285,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
       {members.length===0&&<p className="empty-msg">No members yet.</p>}
       {sortAlpha(members).map(function(m){
         var status=computeStatus(m,checkins),visits=vc(m),wk=wa(m),bs=statusBadge(status);
-        return(<div key={m.id} style={{background:"#1e293b",borderRadius:14,padding:"14px 16px",marginBottom:12,border:wk>=3?"2px solid #ef444444":"2px solid transparent"}}>
+        return(<div key={m.id} style={{background:"var(--jg-card)",borderRadius:14,padding:"14px 16px",marginBottom:12,border:wk>=3?"2px solid #ef444444":"2px solid transparent"}}>
           <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8,marginBottom:8}}>
             <div style={{display:"flex",gap:10,alignItems:"center"}}>
               {m.photo?<img src={m.photo} width="44" height="44" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:44,height:44,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>👤</div>}
@@ -2264,12 +2294,12 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
                 {m.incomplete&&<span style={{fontSize:11,color:"#f59e0b",marginLeft:6}}>incomplete</span>}
                 {wk>=3&&<span style={{fontSize:11,color:"#f87171",marginLeft:6}}>{wk}wks absent</span>}
                 <br/><span style={{background:bs.bg,color:bs.col,border:"1.5px solid "+bs.bd,borderRadius:7,padding:"2px 8px",fontSize:11,fontWeight:700}}>{status}</span>
-                <span style={{fontSize:12,color:"#94a3b8",marginLeft:8}}>{visits} visit{visits!==1?"s":""}</span>
+                <span style={{fontSize:12,color:"var(--jg-muted)",marginLeft:8}}>{visits} visit{visits!==1?"s":""}</span>
               </div>
             </div>
             <button className="btn btn-danger" style={{width:"auto",padding:"6px 12px",fontSize:12}} onClick={function(){deleteMember(m.id);}}>Remove</button>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 16px",fontSize:12,color:"#94a3b8",marginBottom:10}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 16px",fontSize:12,color:"var(--jg-muted)",marginBottom:10}}>
             <span>Age: {calcAge(m.birthday)||"?"}</span><span>School: {m.school||"?"}</span>
             <span>Phone: {m.phone||"?"}</span><span>Address: {m.address||"?"}</span>
             <span>Parent: {m.parentName||""} {m.parentSurname||""}</span><span>Parent Phone: {m.parentPhone||"?"}</span>
@@ -2291,11 +2321,11 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         <a href={WA_GROUP} target="_blank" style={{color:"#6ee7b7",fontSize:12,wordBreak:"break-all"}}>{WA_GROUP}</a>
       </div>
       {waRequests.length===0&&<p className="empty-msg">No requests yet.</p>}
-      {waRequests.map(function(m,i){return(<div key={m.id||i} style={{background:"#1e293b",borderRadius:12,padding:"13px 15px",marginBottom:9,display:"flex",flexWrap:"wrap",alignItems:"center",gap:10}}>
-        <div style={{flex:1}}><strong>{m.name} {m.surname}</strong><div style={{fontSize:13,color:"#94a3b8"}}>Phone: {m.phone||"?"}</div></div>
+      {waRequests.map(function(m,i){return(<div key={m.id||i} style={{background:"var(--jg-card)",borderRadius:12,padding:"13px 15px",marginBottom:9,display:"flex",flexWrap:"wrap",alignItems:"center",gap:10}}>
+        <div style={{flex:1}}><strong>{m.name} {m.surname}</strong><div style={{fontSize:13,color:"var(--jg-muted)"}}>Phone: {m.phone||"?"}</div></div>
         <div style={{display:"flex",gap:7}}>
           <a href={toWA(m.phone)} target="_blank" className="btn btn-wa">Add to Group</a>
-          <button onClick={function(){updateMember(m.id,{wantsWhatsApp:false,addedToWA:true});}} style={{background:"#334155",color:"#94a3b8",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mark Added</button>
+          <button onClick={function(){updateMember(m.id,{wantsWhatsApp:false,addedToWA:true});}} style={{background:"#334155",color:"var(--jg-muted)",border:"none",borderRadius:9,padding:"8px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Mark Added</button>
         </div>
       </div>);})}
     </div>}
@@ -2314,15 +2344,15 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         var health=overallRate>=70&&critical===0?"THRIVING":overallRate>=50&&critical<=2?"GROWING":"NEEDS ATTENTION";
         var healthColor=health==="THRIVING"?"#22c55e":health==="GROWING"?"#f59e0b":"#ef4444";
         return(
-          <div style={{background:"#1e293b",border:"2px solid "+healthColor+"44",borderRadius:14,padding:"16px",marginBottom:18}}>
+          <div style={{background:"var(--jg-card)",border:"2px solid "+healthColor+"44",borderRadius:14,padding:"16px",marginBottom:18}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
               <div>
-                <p style={{margin:0,fontSize:13,color:"#94a3b8"}}>Unit Health Status</p>
+                <p style={{margin:0,fontSize:13,color:"var(--jg-muted)"}}>Unit Health Status</p>
                 <p style={{margin:0,fontSize:22,fontWeight:900,color:healthColor}}>{health}</p>
               </div>
               <div style={{textAlign:"right"}}>
                 <p style={{margin:0,fontSize:28,fontWeight:900,color:healthColor}}>{overallRate}%</p>
-                <p style={{margin:0,fontSize:12,color:"#94a3b8"}}>Overall Attendance</p>
+                <p style={{margin:0,fontSize:12,color:"var(--jg-muted)"}}>Overall Attendance</p>
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
@@ -2331,9 +2361,9 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
                 {l:"Warning (3+wks)",v:warn,c:warn>0?"#f59e0b":"#22c55e"},
                 {l:"Visitors Converted",v:converted+"/"+visitors.length,c:"#a855f7"},
               ].map(function(s){return(
-                <div key={s.l} style={{background:"#0f172a",borderRadius:10,padding:"10px",textAlign:"center"}}>
+                <div key={s.l} style={{background:"var(--jg-bg)",borderRadius:10,padding:"10px",textAlign:"center"}}>
                   <div style={{fontSize:18,fontWeight:900,color:s.c}}>{s.v}</div>
-                  <div style={{fontSize:10,color:"#64748b",marginTop:2}}>{s.l}</div>
+                  <div style={{fontSize:10,color:"var(--jg-muteddark)",marginTop:2}}>{s.l}</div>
                 </div>
               );})}
             </div>
@@ -2352,7 +2382,7 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
         var pct=members.length?Math.round(presentIds.length/members.length*100):0;
         return(<div key={label} className="report-card">
           <div className="report-header"><span className="report-label">{label}</span><span className="report-pct" style={{color:pctColor(pct)}}>{pct}%</span></div>
-          <div style={{display:"flex",gap:14,flexWrap:"wrap",fontSize:12,color:"#94a3b8",margin:"0 0 10px"}}>
+          <div style={{display:"flex",gap:14,flexWrap:"wrap",fontSize:12,color:"var(--jg-muted)",margin:"0 0 10px"}}>
             <span>{dates.length} session(s) | {presentIds.length}/{members.length} attended</span>
             <span style={{color:"#e879f9"}}>{visitorsPresent.length} visitors</span>
           </div>
@@ -2429,15 +2459,15 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
     {/* Tappable dashboard popup */}
     {popup&&(
       <div onClick={closePopup} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:9999,display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
-        <div onClick={function(e){e.stopPropagation();}} style={{background:"#0f172a",borderTopLeftRadius:24,borderTopRightRadius:24,maxHeight:"85vh",width:"100%",maxWidth:600,overflowY:"auto",borderTop:"4px solid "+popup.color}}>
-          <div style={{padding:"20px 20px 12px",position:"sticky",top:0,background:"#0f172a",borderBottom:"1px solid #1e293b",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div onClick={function(e){e.stopPropagation();}} style={{background:"var(--jg-bg)",borderTopLeftRadius:24,borderTopRightRadius:24,maxHeight:"85vh",width:"100%",maxWidth:600,overflowY:"auto",borderTop:"4px solid "+popup.color}}>
+          <div style={{padding:"20px 20px 12px",position:"sticky",top:0,background:"var(--jg-bg)",borderBottom:"1px solid #1e293b",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <h3 style={{margin:0,color:popup.color,fontSize:17}}>{popup.title}</h3>
-            <button onClick={closePopup} style={{background:"#1e293b",border:"none",color:"#94a3b8",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✕ Close</button>
+            <button onClick={closePopup} style={{background:"var(--jg-card)",border:"none",color:"var(--jg-muted)",borderRadius:8,padding:"6px 14px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✕ Close</button>
           </div>
           <div style={{padding:"12px 16px 30px"}}>
-            {popup.list.length===0&&<p style={{color:"#64748b",textAlign:"center",padding:20}}>No one here.</p>}
+            {popup.list.length===0&&<p style={{color:"var(--jg-muteddark)",textAlign:"center",padding:20}}>No one here.</p>}
             {popup.type==="sessions"&&popup.list.map(function(s,i){return(
-              <div key={i} style={{background:"#1e293b",borderRadius:10,padding:"12px 14px",marginBottom:6,display:"flex",justifyContent:"space-between"}}>
+              <div key={i} style={{background:"var(--jg-card)",borderRadius:10,padding:"12px 14px",marginBottom:6,display:"flex",justifyContent:"space-between"}}>
                 <span style={{color:"#cbd5e1",fontWeight:600}}>{s.sessionDate}</span>
                 <span style={{color:"#86efac"}}>{s.count} attended</span>
               </div>
@@ -2448,14 +2478,14 @@ function AdminDashboard({data,setData,onExit,onRefresh,syncing}){
               var bs=statusBadge(status);
               var visits=visitCount(m,checkins);
               return(
-                <div key={m.id} style={{background:"#1e293b",borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
+                <div key={m.id} style={{background:"var(--jg-card)",borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
                   {m.photo
                     ?<img src={m.photo} width="44" height="44" style={{borderRadius:"50%",objectFit:"cover",flexShrink:0}}/>
                     :<div style={{width:44,height:44,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>👤</div>
                   }
                   <div style={{flex:1,minWidth:0}}>
-                    <strong style={{fontSize:14,color:"#e2e8f0"}}>{m.name} {m.surname}</strong>
-                    <div style={{fontSize:12,color:"#94a3b8"}}>
+                    <strong style={{fontSize:14,color:"var(--jg-text)"}}>{m.name} {m.surname}</strong>
+                    <div style={{fontSize:12,color:"var(--jg-muted)"}}>
                       <span style={{background:bs.bg,color:bs.col,border:"1px solid "+bs.bd,borderRadius:6,padding:"1px 6px",fontSize:10,fontWeight:700,marginRight:6}}>{status}</span>
                       {visits} visit{visits!==1?"s":""} · {m.school||"—"}
                     </div>
@@ -2495,21 +2525,21 @@ function ExportTab({members,checkins,feedback}){
     <p className="page-title">Export Data</p>
 
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
-      <div style={{background:"#1e293b",borderRadius:14,padding:"16px",textAlign:"center"}}>
+      <div style={{background:"var(--jg-card)",borderRadius:14,padding:"16px",textAlign:"center"}}>
         <div style={{fontSize:28,fontWeight:900,color:"#22c55e"}}>{members.length}</div>
-        <div style={{fontSize:12,color:"#94a3b8",marginTop:3}}>Total Members</div>
+        <div style={{fontSize:12,color:"var(--jg-muted)",marginTop:3}}>Total Members</div>
       </div>
-      <div style={{background:"#1e293b",borderRadius:14,padding:"16px",textAlign:"center"}}>
+      <div style={{background:"var(--jg-card)",borderRadius:14,padding:"16px",textAlign:"center"}}>
         <div style={{fontSize:28,fontWeight:900,color:"#3b82f6"}}>{datesSet.length}</div>
-        <div style={{fontSize:12,color:"#94a3b8",marginTop:3}}>Sessions Recorded</div>
+        <div style={{fontSize:12,color:"var(--jg-muted)",marginTop:3}}>Sessions Recorded</div>
       </div>
-      <div style={{background:"#1e293b",borderRadius:14,padding:"16px",textAlign:"center"}}>
+      <div style={{background:"var(--jg-card)",borderRadius:14,padding:"16px",textAlign:"center"}}>
         <div style={{fontSize:28,fontWeight:900,color:"#f59e0b"}}>{totalVisits}</div>
-        <div style={{fontSize:12,color:"#94a3b8",marginTop:3}}>Total Check-ins</div>
+        <div style={{fontSize:12,color:"var(--jg-muted)",marginTop:3}}>Total Check-ins</div>
       </div>
-      <div style={{background:"#1e293b",borderRadius:14,padding:"16px",textAlign:"center"}}>
+      <div style={{background:"var(--jg-card)",borderRadius:14,padding:"16px",textAlign:"center"}}>
         <div style={{fontSize:28,fontWeight:900,color:"#a855f7"}}>{avgVisits}</div>
-        <div style={{fontSize:12,color:"#94a3b8",marginTop:3}}>Avg Visits / Member</div>
+        <div style={{fontSize:12,color:"var(--jg-muted)",marginTop:3}}>Avg Visits / Member</div>
       </div>
     </div>
 
@@ -2517,7 +2547,7 @@ function ExportTab({members,checkins,feedback}){
       {status.includes("Error")?"":"✅ "}{status}
     </div>}
 
-    <div style={{background:"#1e293b",border:"2px solid #22c55e44",borderRadius:14,padding:"18px",marginBottom:14}}>
+    <div style={{background:"var(--jg-card)",border:"2px solid #22c55e44",borderRadius:14,padding:"18px",marginBottom:14}}>
       <div style={{fontSize:32,marginBottom:8,textAlign:"center"}}>📊</div>
       <p style={{margin:"0 0 6px",fontWeight:700,color:"#86efac",fontSize:16,textAlign:"center"}}>Download as Excel (6 Sheets)</p>
       <div style={{marginBottom:14}}>
@@ -2531,17 +2561,17 @@ function ExportTab({members,checkins,feedback}){
         ].map(function(s,i){return(
           <div key={i} style={{display:"flex",gap:8,padding:"5px 0",borderBottom:"1px solid #334155"}}>
             <span style={{color:"#6c63ff",fontWeight:700,fontSize:12,minWidth:20}}>{i+1}.</span>
-            <div><span style={{color:"#e2e8f0",fontWeight:600,fontSize:12}}>{s.name}</span><br/><span style={{color:"#64748b",fontSize:11}}>{s.desc}</span></div>
+            <div><span style={{color:"var(--jg-text)",fontWeight:600,fontSize:12}}>{s.name}</span><br/><span style={{color:"var(--jg-muteddark)",fontSize:11}}>{s.desc}</span></div>
           </div>
         );})}
       </div>
       <button className="btn btn-reg" onClick={doXL} style={{fontSize:15}}>Download Excel Report (.xlsx)</button>
     </div>
 
-    <div style={{background:"#1e293b",border:"2px solid #3b82f644",borderRadius:14,padding:"18px"}}>
+    <div style={{background:"var(--jg-card)",border:"2px solid #3b82f644",borderRadius:14,padding:"18px"}}>
       <div style={{fontSize:32,marginBottom:8,textAlign:"center"}}>📄</div>
       <p style={{margin:"0 0 6px",fontWeight:700,color:"#93c5fd",fontSize:16,textAlign:"center"}}>Download as PDF</p>
-      <p style={{margin:"0 0 14px",fontSize:13,color:"#94a3b8",textAlign:"center"}}>Formatted report for printing. Opens print dialog - choose Save as PDF or Print.</p>
+      <p style={{margin:"0 0 14px",fontSize:13,color:"var(--jg-muted)",textAlign:"center"}}>Formatted report for printing. Opens print dialog - choose Save as PDF or Print.</p>
       <button onClick={doPDF} style={{width:"100%",background:"linear-gradient(135deg,#1d4ed8,#3b82f6)",color:"#fff",border:"none",borderRadius:12,padding:"13px",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Download PDF Report</button>
     </div>
   </div>);
@@ -2574,7 +2604,7 @@ function QRTab(){
 
   return(<div>
     <p className="page-title">QR Code for Entrance</p>
-    <p style={{color:"#94a3b8",fontSize:13,marginBottom:18}}>Print the QR code, share the link, or copy it to send via WhatsApp.</p>
+    <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:18}}>Print the QR code, share the link, or copy it to send via WhatsApp.</p>
 
     <div className="qr-box">
       <img src={"https://api.qrserver.com/v1/create-qr-code/?size=240x240&data="+encodeURIComponent(url)} alt="QR" width={240} height={240} style={{borderRadius:12}}/>
@@ -2591,9 +2621,9 @@ function QRTab(){
       </button>
     </div>
 
-    <div style={{background:"#1e293b",border:"2px solid #334155",borderRadius:12,padding:"14px",marginBottom:14}}>
-      <p style={{margin:"0 0 8px",fontWeight:700,fontSize:13,color:"#e2e8f0"}}>Send via WhatsApp</p>
-      <p style={{margin:"0 0 10px",fontSize:13,color:"#94a3b8"}}>Tap below to share the check-in link with your youth group directly.</p>
+    <div style={{background:"var(--jg-card)",border:"2px solid var(--jg-border)",borderRadius:12,padding:"14px",marginBottom:14}}>
+      <p style={{margin:"0 0 8px",fontWeight:700,fontSize:13,color:"var(--jg-text)"}}>Send via WhatsApp</p>
+      <p style={{margin:"0 0 10px",fontSize:13,color:"var(--jg-muted)"}}>Tap below to share the check-in link with your youth group directly.</p>
       <a href={"https://wa.me/?text="+encodeURIComponent("Hi! Here is the Jeremiah Generation Friday Check-In link. Tap to register or check in: "+url)}
         target="_blank"
         style={{display:"block",background:"#22c55e",color:"#fff",borderRadius:12,padding:"13px",fontSize:15,fontWeight:700,textDecoration:"none",textAlign:"center"}}>
@@ -2625,7 +2655,7 @@ function LeaderAttendanceTab(){
 
   return(<div>
     <p className="page-title">📋 Leader Attendance Log</p>
-    <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Track who is present at each Friday and event.</p>
+    <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:14}}>Track who is present at each Friday and event.</p>
 
     {leaders.length===0&&<p className="empty-msg">No leaders registered. Add them in the Leaders tab first.</p>}
 
@@ -2633,12 +2663,12 @@ function LeaderAttendanceTab(){
       <p style={{color:"#a5b4fc",fontSize:12,fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>LEADER STATS</p>
       {stats.map(function(s){
         var L=s.leader;
-        return(<div key={L.id} style={{background:"#1e293b",borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
+        return(<div key={L.id} style={{background:"var(--jg-card)",borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
           {L.photo?<img src={L.photo} width="40" height="40" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:40,height:40,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{L.role==="Senior"?"⭐":"🌱"}</div>}
           <div style={{flex:1}}>
-            <strong style={{fontSize:14,color:"#e2e8f0"}}>{L.name} {L.surname}</strong>
-            <div style={{fontSize:12,color:"#94a3b8"}}>{L.role} Leader · {s.count} attendance{s.count!==1?"s":""}</div>
-            {s.lastVisit&&<div style={{fontSize:11,color:"#64748b"}}>Last: {s.lastVisit}</div>}
+            <strong style={{fontSize:14,color:"var(--jg-text)"}}>{L.name} {L.surname}</strong>
+            <div style={{fontSize:12,color:"var(--jg-muted)"}}>{L.role} Leader · {s.count} attendance{s.count!==1?"s":""}</div>
+            {s.lastVisit&&<div style={{fontSize:11,color:"var(--jg-muteddark)"}}>Last: {s.lastVisit}</div>}
           </div>
           <div style={{fontSize:22,fontWeight:900,color:s.count>0?"#86efac":"#475569"}}>{s.count}</div>
         </div>);
@@ -2650,7 +2680,7 @@ function LeaderAttendanceTab(){
       {dates.map(function(d){
         var dt=new Date(d+"T00:00:00");
         var dayName=dt.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"short",year:"numeric"});
-        return(<div key={d} style={{background:"#1e293b",borderRadius:13,padding:"14px",marginBottom:10}}>
+        return(<div key={d} style={{background:"var(--jg-card)",borderRadius:13,padding:"14px",marginBottom:10}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:8,flexWrap:"wrap",gap:6}}>
             <strong style={{color:"#86efac",fontSize:14}}>{dayName}</strong>
             <span style={{color:"#a5b4fc",fontSize:13,fontWeight:700}}>{byDate[d].length} present</span>
@@ -2734,13 +2764,13 @@ function LeadersTab(){
     return(<div>
       <button onClick={function(){setShowLog(null);}} className="btn btn-admin" style={{marginBottom:14}}>← Back to Leaders</button>
       <p className="page-title">📋 Login Log: {L.name} {L.surname}</p>
-      <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Total logins: {logs.length}</p>
+      <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:14}}>Total logins: {logs.length}</p>
       {logs.length===0&&<p className="empty-msg">No login records yet.</p>}
       {logs.map(function(entry,i){
         var d=new Date(entry.date);
-        return(<div key={i} style={{background:"#1e293b",borderRadius:10,padding:"10px 14px",marginBottom:6}}>
-          <div style={{color:"#e2e8f0",fontWeight:600,fontSize:13}}>{d.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"short",year:"numeric"})}</div>
-          <div style={{color:"#94a3b8",fontSize:12}}>at {d.toLocaleTimeString("en-ZA")}</div>
+        return(<div key={i} style={{background:"var(--jg-card)",borderRadius:10,padding:"10px 14px",marginBottom:6}}>
+          <div style={{color:"var(--jg-text)",fontWeight:600,fontSize:13}}>{d.toLocaleDateString("en-ZA",{weekday:"long",day:"numeric",month:"short",year:"numeric"})}</div>
+          <div style={{color:"var(--jg-muted)",fontSize:12}}>at {d.toLocaleTimeString("en-ZA")}</div>
         </div>);
       })}
     </div>);
@@ -2753,13 +2783,13 @@ function LeadersTab(){
 
     return(<div>
       <p className="page-title">{editing?"Edit Leader":"➕ Register New Leader"}</p>
-      <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Leaders sync to Google Sheets, so their PINs work on every device. Senior leaders can log in to admin with their PIN.</p>
-      <div style={{background:"#1e293b",borderRadius:13,padding:"16px"}}>
+      <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:14}}>Leaders sync to Google Sheets, so their PINs work on every device. Senior leaders can log in to admin with their PIN.</p>
+      <div style={{background:"var(--jg-card)",borderRadius:13,padding:"16px"}}>
 
         {/* Member picker - pick from existing members */}
         {!editing&&<div style={{marginBottom:16}}>
           <label style={{display:"block",fontSize:13,fontWeight:600,color:"#6ee7b7",marginBottom:6}}>👥 Pick from existing members</label>
-          <select className="input" style={{background:"#0f172a",color:"#fff"}} value=""
+          <select className="input" style={{background:"var(--jg-bg)",color:"#fff"}} value=""
             onChange={function(e){
               var m=sortedMembers.find(function(x){return String(x.id)===String(e.target.value);});
               if(m){setForm(Object.assign({},form,{name:m.name,surname:m.surname,phone:m.phone||m.whatsapp||""}));}
@@ -2771,28 +2801,28 @@ function LeadersTab(){
           </select>
           <p style={{fontSize:11,color:"#475569",marginTop:4}}>Or fill in manually below</p>
         </div>}
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>First Name *</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>First Name *</label>
         <input className="input" value={form.name} onChange={function(e){setForm(Object.assign({},form,{name:e.target.value}));}}/>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Surname *</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Surname *</label>
         <input className="input" value={form.surname} onChange={function(e){setForm(Object.assign({},form,{surname:e.target.value}));}}/>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Phone Number</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Phone Number</label>
         <input className="input" type="tel" value={form.phone} onChange={function(e){setForm(Object.assign({},form,{phone:e.target.value}));}}/>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Leader Role *</label>
-        <select className="input" style={{background:"#0f172a",color:"#fff"}} value={form.role} onChange={function(e){setForm(Object.assign({},form,{role:e.target.value}));}}>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Leader Role *</label>
+        <select className="input" style={{background:"var(--jg-bg)",color:"#fff"}} value={form.role} onChange={function(e){setForm(Object.assign({},form,{role:e.target.value}));}}>
           <option value="Senior">⭐ Senior Leader (admin access)</option>
           <option value="Junior">🌱 Junior Leader (no admin access)</option>
         </select>
-        <p style={{fontSize:11,color:"#64748b",marginTop:-8,marginBottom:12}}>
+        <p style={{fontSize:11,color:"var(--jg-muteddark)",marginTop:-8,marginBottom:12}}>
           {form.role==="Senior"?"Senior leaders can log in to admin with their PIN.":"Junior leaders are tracked but cannot access admin."}
         </p>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Notes (optional)</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Notes (optional)</label>
         <textarea className="input" style={{height:60,resize:"none"}} value={form.notes} onChange={function(e){setForm(Object.assign({},form,{notes:e.target.value}));}}/>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:8}}>Profile Photo</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:8}}>Profile Photo</label>
         <input type="file" accept="image/*" capture="user" id="leader-selfie" style={{display:"none"}}
           onChange={function(e){
             if(e.target.files[0]){
@@ -2813,14 +2843,14 @@ function LeadersTab(){
             }
           }}/>
         {!form.photo?(
-          <div onClick={function(){document.getElementById("leader-selfie").click();}} style={{background:"#0f172a",border:"2px dashed #6c63ff",borderRadius:14,padding:"22px",textAlign:"center",cursor:"pointer",marginBottom:12}}>
+          <div onClick={function(){document.getElementById("leader-selfie").click();}} style={{background:"var(--jg-bg)",border:"2px dashed #6c63ff",borderRadius:14,padding:"22px",textAlign:"center",cursor:"pointer",marginBottom:12}}>
             <div style={{fontSize:36,marginBottom:6}}>📸</div>
             <p style={{color:"#6c63ff",fontWeight:700,fontSize:14,margin:0}}>Tap to Take Selfie</p>
           </div>
         ):(
           <div style={{textAlign:"center",marginBottom:12}}>
             <img src={form.photo} width="80" height="80" style={{borderRadius:"50%",objectFit:"cover",border:"3px solid #fbbf24"}}/>
-            <button type="button" onClick={function(){document.getElementById("leader-selfie").click();}} style={{display:"block",margin:"6px auto 0",background:"#1e293b",border:"1px solid #334155",color:"#94a3b8",borderRadius:8,padding:"5px 12px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Retake</button>
+            <button type="button" onClick={function(){document.getElementById("leader-selfie").click();}} style={{display:"block",margin:"6px auto 0",background:"var(--jg-card)",border:"1px solid var(--jg-border)",color:"var(--jg-muted)",borderRadius:8,padding:"5px 12px",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Retake</button>
           </div>
         )}
 
@@ -2838,7 +2868,7 @@ function LeadersTab(){
 
   return(<div>
     <p className="page-title">👥 Leaders ({leaders.length})</p>
-    <p style={{color:"#94a3b8",fontSize:13,marginBottom:14}}>Manage leaders and track their attendance. PINs auto-generate as 20261, 20262, etc.</p>
+    <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:14}}>Manage leaders and track their attendance. PINs auto-generate as 20261, 20262, etc.</p>
 
     <button className="btn btn-reg" style={{marginBottom:18}} onClick={function(){setShowForm(true);setForm(blank);setEditing(null);}}>
       ➕ Register New Leader
@@ -2853,9 +2883,9 @@ function LeadersTab(){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
             <div style={{flex:1,minWidth:160}}>
               <strong style={{fontSize:15,color:"#fde68a"}}>{L.name} {L.surname}</strong>
-              <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>📞 {L.phone||"—"}</div>
+              <div style={{fontSize:12,color:"var(--jg-muted)",marginTop:2}}>📞 {L.phone||"—"}</div>
               <div style={{fontSize:13,color:"#a5b4fc",marginTop:6,fontWeight:700}}>🔑 PIN: {L.pin}</div>
-              <div style={{fontSize:11,color:"#64748b",marginTop:4}}>{loginCount} login{loginCount!==1?"s":""} recorded</div>
+              <div style={{fontSize:11,color:"var(--jg-muteddark)",marginTop:4}}>{loginCount} login{loginCount!==1?"s":""} recorded</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:5}}>
               {toWA(L.phone)&&<a href={toWA(L.phone,pinMsg)} target="_blank" style={{background:"#16a34a",color:"#fff",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,textDecoration:"none",textAlign:"center"}}>📲 Send PIN</a>}
@@ -2864,7 +2894,7 @@ function LeadersTab(){
               <button onClick={function(){deleteLeader(L.id);}} style={{background:"#7f1d1d",color:"#fecaca",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑</button>
             </div>
           </div>
-          {L.notes&&<p style={{fontSize:12,color:"#94a3b8",margin:"8px 0 0",fontStyle:"italic"}}>{L.notes}</p>}
+          {L.notes&&<p style={{fontSize:12,color:"var(--jg-muted)",margin:"8px 0 0",fontStyle:"italic"}}>{L.notes}</p>}
         </div>);
       })}
     </div>)}
@@ -2873,12 +2903,12 @@ function LeadersTab(){
       <p style={{color:"#86efac",fontSize:12,fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>🌱 JUNIOR LEADERS (home tiles only)</p>
       {juniors.map(function(L){
         var pinMsg="Hi "+L.name+"! \u271d\ufe0f\n\nYou have been registered as a *Junior Leader* at Jeremiah Generation Youth - Living Waters Fellowship.\n\n*Your PIN: "+L.pin+"*\n\n*How to use your PIN:*\n1. Open the portal: https://senoskyjj-beep.github.io/-jg-youth/\n2. On the home screen tap any of the 3 number tiles:\n   - *Registered* = see all registered members\n   - *Here Today* = see who checked in today\n   - *Visitors Today* = see today's visitors\n3. Enter your PIN: *"+L.pin+"*\n\nThis allows you to see member names and help with check-in if needed.\n\nPlease keep your PIN private and do not share it.\n\nGod bless! \ud83d\ude4f\nJoshua, Priscilla & Pastor Billy\nJG Youth Leadership - Living Waters Fellowship";
-        return(<div key={L.id} style={{background:"#1e293b",border:"2px solid #22c55e22",borderRadius:13,padding:"12px 14px",marginBottom:10}}>
+        return(<div key={L.id} style={{background:"var(--jg-card)",border:"2px solid #22c55e22",borderRadius:13,padding:"12px 14px",marginBottom:10}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
             <div style={{flex:1,minWidth:160}}>
               <strong style={{fontSize:14,color:"#86efac"}}>{L.name} {L.surname}</strong>
-              <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>📞 {L.phone||"—"}</div>
-              <div style={{fontSize:11,color:"#64748b",marginTop:2}}>PIN: {L.pin} (home tiles only)</div>
+              <div style={{fontSize:12,color:"var(--jg-muted)",marginTop:2}}>📞 {L.phone||"—"}</div>
+              <div style={{fontSize:11,color:"var(--jg-muteddark)",marginTop:2}}>PIN: {L.pin} (home tiles only)</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:5}}>
               {toWA(L.phone)&&<a href={toWA(L.phone,pinMsg)} target="_blank" style={{background:"#16a34a",color:"#fff",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,textDecoration:"none",textAlign:"center"}}>📲 Send PIN</a>}
@@ -2933,22 +2963,22 @@ function EventsTab({data,setData}){
   if(showForm){
     return(<div>
       <p className="page-title">{editing?"Edit Event":"➕ New Event"}</p>
-      <p style={{color:"#94a3b8",fontSize:13,marginBottom:16}}>When this event happens, attendance counts start at zero.</p>
-      <div style={{background:"#1e293b",borderRadius:13,padding:"16px"}}>
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Event Title *</label>
+      <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:16}}>When this event happens, attendance counts start at zero.</p>
+      <div style={{background:"var(--jg-card)",borderRadius:13,padding:"16px"}}>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Event Title *</label>
         <input className="input" placeholder="e.g. Youth Camp, Movie Night" value={form.title} onChange={function(e){setForm(Object.assign({},form,{title:e.target.value}));}}/>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Date *</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Date *</label>
         <input className="input" type="date" value={form.date} onChange={function(e){setForm(Object.assign({},form,{date:e.target.value}));}}/>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Time</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Time</label>
         <input className="input" type="time" value={form.time} onChange={function(e){setForm(Object.assign({},form,{time:e.target.value}));}}/>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Location</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Location</label>
         <input className="input" placeholder="e.g. Church hall, Waterberg Park" value={form.location} onChange={function(e){setForm(Object.assign({},form,{location:e.target.value}));}}/>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Event Type</label>
-        <select className="input" style={{background:"#0f172a",color:"#fff"}} value={form.type} onChange={function(e){setForm(Object.assign({},form,{type:e.target.value}));}}>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Event Type</label>
+        <select className="input" style={{background:"var(--jg-bg)",color:"#fff"}} value={form.type} onChange={function(e){setForm(Object.assign({},form,{type:e.target.value}));}}>
           <option value="Friday Youth">Friday Youth (regular)</option>
           <option value="Special Service">Special Service</option>
           <option value="Outing">Outing / Trip</option>
@@ -2959,7 +2989,7 @@ function EventsTab({data,setData}){
           <option value="Other">Other</option>
         </select>
 
-        <label style={{display:"block",fontSize:13,fontWeight:600,color:"#94a3b8",marginBottom:4}}>Description / Notes</label>
+        <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>Description / Notes</label>
         <textarea className="input" style={{height:80,resize:"none"}} placeholder="Optional details..." value={form.description} onChange={function(e){setForm(Object.assign({},form,{description:e.target.value}));}}/>
 
         <button className="btn btn-reg" onClick={saveEvent}>{editing?"Update Event":"Create Event"}</button>
@@ -2970,7 +3000,7 @@ function EventsTab({data,setData}){
 
   return(<div>
     <p className="page-title">📅 Events</p>
-    <p style={{color:"#94a3b8",fontSize:13,marginBottom:16}}>Create events. Attendance resets to zero each new event day.</p>
+    <p style={{color:"var(--jg-muted)",fontSize:13,marginBottom:16}}>Create events. Attendance resets to zero each new event day.</p>
 
     <button className="btn btn-reg" style={{marginBottom:16}} onClick={function(){setShowForm(true);setForm(blank);setEditing(null);}}>
       ➕ Create New Event
@@ -2985,7 +3015,7 @@ function EventsTab({data,setData}){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6,flexWrap:"wrap",gap:6}}>
             <div style={{flex:1,minWidth:180}}>
               <strong style={{fontSize:16,color:"#86efac"}}>{e.title}</strong>
-              <div style={{fontSize:12,color:"#64748b",marginTop:2}}>{e.type}</div>
+              <div style={{fontSize:12,color:"var(--jg-muteddark)",marginTop:2}}>{e.type}</div>
             </div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={function(){editEvent(e);}} style={{background:"#334155",color:"#cbd5e1",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✏️ Edit</button>
@@ -2994,21 +3024,21 @@ function EventsTab({data,setData}){
           </div>
           <div style={{fontSize:13,color:"#cbd5e1"}}>📅 {dateStr}{e.time?" at "+e.time:""}</div>
           {e.location&&<div style={{fontSize:13,color:"#cbd5e1"}}>📍 {e.location}</div>}
-          {e.description&&<p style={{fontSize:13,color:"#94a3b8",margin:"8px 0 0"}}>{e.description}</p>}
+          {e.description&&<p style={{fontSize:13,color:"var(--jg-muted)",margin:"8px 0 0"}}>{e.description}</p>}
         </div>);
       })}
     </div>)}
 
     {past.length>0&&(<div>
-      <p style={{fontSize:12,color:"#64748b",fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>PAST EVENTS</p>
+      <p style={{fontSize:12,color:"var(--jg-muteddark)",fontWeight:700,letterSpacing:"1.5px",marginBottom:10}}>PAST EVENTS</p>
       {past.slice(0,10).map(function(e){
         var dt=new Date(e.date);
         var dateStr=dt.toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"});
-        return(<div key={e.id} style={{background:"#1e293b",borderRadius:12,padding:"12px 14px",marginBottom:8,opacity:0.7}}>
+        return(<div key={e.id} style={{background:"var(--jg-card)",borderRadius:12,padding:"12px 14px",marginBottom:8,opacity:0.7}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:6}}>
             <div>
-              <strong style={{fontSize:14,color:"#94a3b8"}}>{e.title}</strong>
-              <div style={{fontSize:12,color:"#64748b"}}>📅 {dateStr} · {e.type}</div>
+              <strong style={{fontSize:14,color:"var(--jg-muted)"}}>{e.title}</strong>
+              <div style={{fontSize:12,color:"var(--jg-muteddark)"}}>📅 {dateStr} · {e.type}</div>
             </div>
             <button onClick={function(){deleteEvent(e.id);}} style={{background:"#7f1d1d",color:"#fecaca",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>🗑</button>
           </div>
@@ -3055,7 +3085,7 @@ function ResetTab({data,setData}){
     <div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:14,padding:"20px",textAlign:"center"}}>
       <div style={{fontSize:40,marginBottom:10}}>🎉</div>
       <p style={{fontSize:16,fontWeight:700,color:"#86efac",margin:"0 0 6px"}}>All cleared!</p>
-      <p style={{fontSize:13,color:"#94a3b8"}}>Your system is fresh and ready. Counters back to zero.</p>
+      <p style={{fontSize:13,color:"var(--jg-muted)"}}>Your system is fresh and ready. Counters back to zero.</p>
     </div>
     <button className="btn btn-admin" style={{marginTop:16}} onClick={function(){setStep("warn");}}>← Back</button>
   </div>);
@@ -3066,30 +3096,30 @@ function ResetTab({data,setData}){
       ⚠️ WARNING: These actions cannot be undone. Google Sheets data is NOT affected — only local app data.
     </p>
 
-    <div style={{background:"#1e293b",border:"2px solid #f59e0b44",borderRadius:14,padding:"18px",marginBottom:12}}>
+    <div style={{background:"var(--jg-card)",border:"2px solid #f59e0b44",borderRadius:14,padding:"18px",marginBottom:12}}>
       <div style={{fontSize:28,marginBottom:8,textAlign:"center"}}>📅</div>
       <p style={{margin:"0 0 6px",fontWeight:700,color:"#fcd34d",fontSize:15,textAlign:"center"}}>Reset This Week Only</p>
-      <p style={{margin:"0 0 14px",fontSize:13,color:"#94a3b8",textAlign:"center"}}>Clears only check-ins from this Friday onwards. Past history stays.</p>
+      <p style={{margin:"0 0 14px",fontSize:13,color:"var(--jg-muted)",textAlign:"center"}}>Clears only check-ins from this Friday onwards. Past history stays.</p>
       <button onClick={function(){if(confirm("Reset check-ins for this week only?"))resetCurrentWeekOnly();}}
         style={{width:"100%",background:"linear-gradient(135deg,#f59e0b,#ea580c)",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
         Reset This Week Only
       </button>
     </div>
 
-    <div style={{background:"#1e293b",border:"2px solid #3b82f644",borderRadius:14,padding:"18px",marginBottom:12}}>
+    <div style={{background:"var(--jg-card)",border:"2px solid #3b82f644",borderRadius:14,padding:"18px",marginBottom:12}}>
       <div style={{fontSize:28,marginBottom:8,textAlign:"center"}}>🧹</div>
       <p style={{margin:"0 0 6px",fontWeight:700,color:"#93c5fd",fontSize:15,textAlign:"center"}}>Clear All Check-ins</p>
-      <p style={{margin:"0 0 14px",fontSize:13,color:"#94a3b8",textAlign:"center"}}>Removes ALL check-in history but keeps members. Good for clearing test data.</p>
+      <p style={{margin:"0 0 14px",fontSize:13,color:"var(--jg-muted)",textAlign:"center"}}>Removes ALL check-in history but keeps members. Good for clearing test data.</p>
       <button onClick={function(){if(confirm("Delete ALL check-ins? Members will stay."))resetCheckinsOnly();}}
         style={{width:"100%",background:"linear-gradient(135deg,#3b82f6,#1d4ed8)",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
         Clear All Check-ins
       </button>
     </div>
 
-    <div style={{background:"#1e293b",border:"2px solid #ef444444",borderRadius:14,padding:"18px"}}>
+    <div style={{background:"var(--jg-card)",border:"2px solid #ef444444",borderRadius:14,padding:"18px"}}>
       <div style={{fontSize:28,marginBottom:8,textAlign:"center"}}>💥</div>
       <p style={{margin:"0 0 6px",fontWeight:700,color:"#f87171",fontSize:15,textAlign:"center"}}>Full Factory Reset</p>
-      <p style={{margin:"0 0 14px",fontSize:13,color:"#94a3b8",textAlign:"center"}}>Deletes ALL data — members, check-ins, feedback, events, photos. Starts totally fresh.</p>
+      <p style={{margin:"0 0 14px",fontSize:13,color:"var(--jg-muted)",textAlign:"center"}}>Deletes ALL data — members, check-ins, feedback, events, photos. Starts totally fresh.</p>
       <button onClick={function(){if(confirm("⚠️ DELETE EVERYTHING — members, check-ins, feedback, photos, events? This cannot be undone.")){if(confirm("Are you ABSOLUTELY sure? Type OK in your head to confirm.")){resetAll();}}}}
         style={{width:"100%",background:"linear-gradient(135deg,#ef4444,#7f1d1d)",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
         💥 Full Factory Reset
@@ -3216,7 +3246,7 @@ function PendingSyncTab(){
     {/* ── FORCE RE-UPLOAD EVERYTHING ── */}
     <div style={{background:"#0c1e3a",border:"2px solid #6366f1",borderRadius:14,padding:14,marginBottom:18}}>
       <p style={{color:"#c7d2fe",fontSize:14,fontWeight:800,margin:"0 0 4px"}}>🔁 Re-upload Everything to Google</p>
-      <p style={{color:"#94a3b8",fontSize:12,margin:"0 0 10px"}}>
+      <p style={{color:"var(--jg-muted)",fontSize:12,margin:"0 0 10px"}}>
         Re-sends ALL members, check-ins, feedback and photos — including anything that quietly never saved.
         Safe: it fills the gaps and won't create duplicates. Big photos are compressed so they actually go up. Stay on Wi-Fi.
       </p>
@@ -3226,7 +3256,7 @@ function PendingSyncTab(){
       </button>
       {forceProg&&<div style={{marginTop:10}}>
         <p style={{color:"#a5b4fc",fontSize:12,margin:"0 0 4px"}}>{forceProg.label}: {forceProg.done} / {forceProg.total}</p>
-        <div style={{background:"#1e293b",borderRadius:6,height:8,overflow:"hidden"}}>
+        <div style={{background:"var(--jg-card)",borderRadius:6,height:8,overflow:"hidden"}}>
           <div style={{background:"#6366f1",height:8,width:(forceProg.total?Math.round(forceProg.done/forceProg.total*100):0)+"%",transition:"width .2s"}}></div>
         </div>
       </div>}
@@ -3248,7 +3278,7 @@ function PendingSyncTab(){
     {/* ── CLEAN DUPLICATES ── */}
     <div style={{background:"#1e1433",border:"2px solid #a855f7",borderRadius:14,padding:14,marginBottom:18}}>
       <p style={{color:"#e9d5ff",fontSize:14,fontWeight:800,margin:"0 0 4px"}}>🧹 Clean Duplicates</p>
-      <p style={{color:"#94a3b8",fontSize:12,margin:"0 0 10px"}}>
+      <p style={{color:"var(--jg-muted)",fontSize:12,margin:"0 0 10px"}}>
         Finds people listed more than once (same name or same phone), keeps the best record, fills in any details only the extra copies had, moves their attendance onto it, then deletes the extra copies from Google. Two different people who share a name (different phone, parent phone or birthday) are kept separate. Attendance is kept. Stay on Wi-Fi.
       </p>
       <button onClick={runCleanDuplicates} disabled={dupBusy}
@@ -3257,7 +3287,7 @@ function PendingSyncTab(){
       </button>
       {dupProg&&<div style={{marginTop:10}}>
         <p style={{color:"#d8b4fe",fontSize:12,margin:"0 0 4px"}}>Cleaning up: {dupProg.done} / {dupProg.total}</p>
-        <div style={{background:"#1e293b",borderRadius:6,height:8,overflow:"hidden"}}>
+        <div style={{background:"var(--jg-card)",borderRadius:6,height:8,overflow:"hidden"}}>
           <div style={{background:"#a855f7",height:8,width:(dupProg.total?Math.round(dupProg.done/dupProg.total*100):0)+"%",transition:"width .2s"}}></div>
         </div>
       </div>}
@@ -3280,7 +3310,7 @@ function PendingSyncTab(){
 
     {/* ── DATA SYNC SECTION ── */}
     <p style={{color:"#fbbf24",fontSize:12,fontWeight:700,marginBottom:6}}>📋 DATA — Google Sheets ({items.length})</p>
-    <p style={{color:"#94a3b8",fontSize:12,marginTop:0,marginBottom:10}}>
+    <p style={{color:"var(--jg-muted)",fontSize:12,marginTop:0,marginBottom:10}}>
       Member data not yet saved to Google Sheets. Retries every 30 seconds.
     </p>
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
@@ -3303,11 +3333,11 @@ function PendingSyncTab(){
         {items.map(function(item){
           var when=new Date(item.queuedAt);
           var whenStr=when.toLocaleString();
-          return(<div key={item.id} style={{background:"#1e293b",border:"1px solid #334155",borderRadius:10,padding:"10px 12px"}}>
+          return(<div key={item.id} style={{background:"var(--jg-card)",border:"1px solid var(--jg-border)",borderRadius:10,padding:"10px 12px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>{describe(item)}</div>
-                <div style={{fontSize:11,color:"#64748b",marginTop:3}}>
+                <div style={{fontSize:14,fontWeight:600,color:"var(--jg-text)"}}>{describe(item)}</div>
+                <div style={{fontSize:11,color:"var(--jg-muteddark)",marginTop:3}}>
                   Queued {whenStr} · {item.attempts||1} attempt{(item.attempts||1)>1?"s":""}
                   {item.lastError?" · "+item.lastError:""}
                 </div>
@@ -3324,7 +3354,7 @@ function PendingSyncTab(){
 
     {/* ── PHOTO SYNC SECTION ── */}
     <p style={{color:"#fbbf24",fontSize:12,fontWeight:700,marginBottom:6}}>📸 PHOTOS — Google Drive ({photos.length})</p>
-    <p style={{color:"#94a3b8",fontSize:12,marginTop:0,marginBottom:10}}>
+    <p style={{color:"var(--jg-muted)",fontSize:12,marginTop:0,marginBottom:10}}>
       Photos not yet uploaded to Google Drive. Retries every 60 seconds. Photos only upload on a strong connection.
     </p>
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
@@ -3347,13 +3377,13 @@ function PendingSyncTab(){
         {photos.map(function(photo){
           var member=loadData().members.find(function(m){return m.id===photo.memberId;})||{};
           var when=new Date(photo.queuedAt).toLocaleString();
-          return(<div key={photo.memberId} style={{background:"#1e293b",border:"1px solid #334155",borderRadius:10,padding:"10px 12px"}}>
+          return(<div key={photo.memberId} style={{background:"var(--jg-card)",border:"1px solid var(--jg-border)",borderRadius:10,padding:"10px 12px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:14,fontWeight:600,color:"#e2e8f0"}}>
+                <div style={{fontSize:14,fontWeight:600,color:"var(--jg-text)"}}>
                   📸 Photo: {member.name||"Unknown"} {member.surname||""}
                 </div>
-                <div style={{fontSize:11,color:"#64748b",marginTop:3}}>
+                <div style={{fontSize:11,color:"var(--jg-muteddark)",marginTop:3}}>
                   Queued {when} · {photo.attempts||0} attempt{(photo.attempts||0)!==1?"s":""}
                 </div>
               </div>
@@ -3572,13 +3602,13 @@ function ImportTab({data,setData}){
     <p className="page-title">Import Old Registers</p>
 
     {msg&&<p style={{color:"#86efac",fontWeight:700,marginBottom:14,fontSize:14,background:"#0d2818",padding:"10px 14px",borderRadius:10}}>{msg}</p>}
-    <div style={{background:"#1e293b",border:"2px solid #6c63ff44",borderRadius:13,padding:"16px",marginBottom:16}}>
+    <div style={{background:"var(--jg-card)",border:"2px solid #6c63ff44",borderRadius:13,padding:"16px",marginBottom:16}}>
       <p style={{margin:"0 0 4px",fontWeight:700,color:"#a5b4fc",fontSize:15}}>Upload Excel or PDF Register</p>
-      <p style={{margin:"0 0 12px",fontSize:13,color:"#94a3b8"}}>
+      <p style={{margin:"0 0 12px",fontSize:13,color:"var(--jg-muted)"}}>
         Upload your register Excel file (.xlsx). The app reads your Register sheet automatically — finds Name, Surname, Cell Number, Address, Grade, School columns and all attendance dates.
       </p>
       <div onClick={function(){document.getElementById("import-file-input").click();}}
-        style={{background:"#0f172a",border:"2px dashed #6c63ff",borderRadius:14,padding:"22px",textAlign:"center",cursor:"pointer",marginBottom:10}}>
+        style={{background:"var(--jg-bg)",border:"2px dashed #6c63ff",borderRadius:14,padding:"22px",textAlign:"center",cursor:"pointer",marginBottom:10}}>
         <div style={{fontSize:36,marginBottom:6}}>📂</div>
         <p style={{color:"#6c63ff",fontWeight:700,fontSize:15,margin:"0 0 4px"}}>Tap to Choose File</p>
         <p style={{color:"#475569",fontSize:12,margin:0}}>Excel (.xlsx) or PDF only</p>
@@ -3587,7 +3617,7 @@ function ImportTab({data,setData}){
       {preview.length>0&&<div>
         <p style={{color:"#86efac",fontWeight:700,margin:"10px 0 8px"}}>{msg}</p>
         <div style={{maxHeight:250,overflowY:"auto",marginBottom:10}}>
-          {preview.slice(0,15).map(function(m,i){return(<div key={i} style={{fontSize:13,color:"#94a3b8",padding:"4px 0",borderBottom:"1px solid #334155"}}>{m.name} {m.surname} | {m.phone||"no phone"} | {m.school||"no school"}</div>);})}
+          {preview.slice(0,15).map(function(m,i){return(<div key={i} style={{fontSize:13,color:"var(--jg-muted)",padding:"4px 0",borderBottom:"1px solid #334155"}}>{m.name} {m.surname} | {m.phone||"no phone"} | {m.school||"no school"}</div>);})}
           {preview.length>15&&<p style={{fontSize:12,color:"#475569"}}>...and {preview.length-15} more</p>}
         </div>
         <div style={{marginTop:10}}>
@@ -3601,7 +3631,7 @@ function ImportTab({data,setData}){
             ✅ Upload Now — Add to System
           </button>
           <button onClick={function(){setPreview([]);setPreviewData(null);setMsg("Skipped. You can upload another file anytime.");}}
-            style={{width:"100%",padding:"13px",borderRadius:12,border:"2px solid #334155",background:"#1e293b",color:"#94a3b8",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit",marginBottom:6}}>
+            style={{width:"100%",padding:"13px",borderRadius:12,border:"2px solid var(--jg-border)",background:"var(--jg-card)",color:"var(--jg-muted)",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit",marginBottom:6}}>
             ⏸ Upload Later / Skip
           </button>
           <button onClick={function(){setPreview([]);setPreviewData(null);setMsg("");}}
@@ -3612,8 +3642,8 @@ function ImportTab({data,setData}){
       </div>}
     </div>
 
-    <div style={{background:"#1e293b",border:"2px solid #334155",borderRadius:13,padding:"16px"}}>
-      <p style={{margin:"0 0 10px",fontWeight:700,color:"#e2e8f0"}}>Currently in system: {(data.members||[]).length} members</p>
+    <div style={{background:"var(--jg-card)",border:"2px solid var(--jg-border)",borderRadius:13,padding:"16px"}}>
+      <p style={{margin:"0 0 10px",fontWeight:700,color:"var(--jg-text)"}}>Currently in system: {(data.members||[]).length} members</p>
       <div style={{maxHeight:300,overflowY:"auto"}}>
         {sortAlpha(data.members||[]).map(function(m,i){return(<div key={m.id||i} style={{fontSize:13,padding:"5px 0",borderBottom:"1px solid #334155",display:"flex",justifyContent:"space-between"}}>
           <span style={{color:m.incomplete?"#f59e0b":"#cbd5e1"}}>{m.name} {m.surname}{m.incomplete?" (incomplete)":""}</span>
@@ -3634,10 +3664,10 @@ function ConfirmScreen({confirm,onUpload,onDone,uploading}){
 
   if(c.status==="saving"||uploading){
     return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{...box,background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"1px solid #334155"}}>
+      <div style={{...box,background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"1px solid var(--jg-border)"}}>
         <div style={{fontSize:42,marginBottom:10}}>⏳</div>
-        <p style={{color:"#e2e8f0",fontSize:18,fontWeight:800,margin:"0 0 6px"}}>Saving to the cloud…</p>
-        <p style={{color:"#94a3b8",fontSize:13,margin:0}}>Checking that {name.trim()||"this person"} reached Google Sheets. Please keep the app open.</p>
+        <p style={{color:"var(--jg-text)",fontSize:18,fontWeight:800,margin:"0 0 6px"}}>Saving to the cloud…</p>
+        <p style={{color:"var(--jg-muted)",fontSize:13,margin:0}}>Checking that {name.trim()||"this person"} reached Google Sheets. Please keep the app open.</p>
       </div>
     </div>);
   }
@@ -3652,7 +3682,7 @@ function ConfirmScreen({confirm,onUpload,onDone,uploading}){
         <p style={{color:"#4ade80",fontSize:12,margin:"8px 0 0"}}>If anything doesn't sync, the home screen will show it with an Upload button.</p>
       </div>
       <button onClick={onDone} style={{marginTop:22,background:"#22c55e",color:"#04130a",border:"none",borderRadius:14,padding:"16px",fontSize:17,fontWeight:800,width:"100%",maxWidth:440,cursor:"pointer"}}>Done — register next</button>
-      <button onClick={onUpload} style={{marginTop:12,background:"transparent",color:"#94a3b8",border:"1px solid #475569",borderRadius:14,padding:"12px",fontSize:13,fontWeight:600,width:"100%",maxWidth:440,cursor:"pointer"}}>⬆️ Upload &amp; verify now (optional)</button>
+      <button onClick={onUpload} style={{marginTop:12,background:"transparent",color:"var(--jg-muted)",border:"1px solid #475569",borderRadius:14,padding:"12px",fontSize:13,fontWeight:600,width:"100%",maxWidth:440,cursor:"pointer"}}>⬆️ Upload &amp; verify now (optional)</button>
     </div>);
   }
 
@@ -3679,8 +3709,17 @@ function ConfirmScreen({confirm,onUpload,onDone,uploading}){
       <p style={{color:"#fbbf24",fontSize:13,margin:"10px 0 0"}}>📶 Check that this phone has Wi-Fi or signal, then press the button below.</p>
     </div>
     <button onClick={onUpload} style={{marginTop:22,background:"#f59e0b",color:"#1a0f00",border:"none",borderRadius:14,padding:"18px",fontSize:18,fontWeight:900,width:"100%",maxWidth:440,cursor:"pointer",boxShadow:"0 0 24px rgba(245,158,11,0.45)"}}>⬆️  Upload Now</button>
-    <button onClick={onDone} style={{marginTop:12,background:"transparent",color:"#94a3b8",border:"1px solid #475569",borderRadius:14,padding:"12px",fontSize:14,fontWeight:600,width:"100%",maxWidth:440,cursor:"pointer"}}>Continue (it will keep retrying)</button>
+    <button onClick={onDone} style={{marginTop:12,background:"transparent",color:"var(--jg-muted)",border:"1px solid #475569",borderRadius:14,padding:"12px",fontSize:14,fontWeight:600,width:"100%",maxWidth:440,cursor:"pointer"}}>Continue (it will keep retrying)</button>
   </div>);
+}
+
+// Fixed-position toggle rendered on every screen (Home has its own version over the banner).
+function ThemeToggle({theme,onToggle}){
+  return(<button onClick={onToggle} aria-label="Toggle light/dark theme" className="btn-press" style={{
+    position:"fixed",top:14,right:14,zIndex:300,width:40,height:40,borderRadius:20,
+    background:"var(--jg-card)",border:"2px solid var(--jg-border)",color:"var(--jg-text)",
+    fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",
+  }}>{theme==="dark"?"☀️":"🌙"}</button>);
 }
 
 // Theme tokens for the Home screen redesign (dark is the long-standing look; light is new).
@@ -3694,6 +3733,11 @@ function App(){
   var [theme,setTheme]=useState(function(){try{return localStorage.getItem("jg_theme")||"dark";}catch(e){return "dark";}});
   function toggleTheme(){setTheme(function(t){var next=t==="dark"?"light":"dark";try{localStorage.setItem("jg_theme",next);}catch(e){}return next;});}
   var c=themeTokens(theme);
+  // Drive every CSS-class-styled screen (buttons, cards, inputs, tabs, tables, PIN pad,
+  // modals) from the same theme toggle — styles.css reads this via :root[data-theme].
+  useEffect(function(){
+    document.documentElement.setAttribute("data-theme",theme);
+  },[theme]);
   var [homeTilePopup,setHomeTilePopup]=useState(null);
   var [homeTilePin,setHomeTilePin]=useState("");
   var [homeTilePinError,setHomeTilePinError]=useState(false);
@@ -4000,12 +4044,12 @@ function App(){
     return m&&m.originalStatus==="Visitor";
   }).length;
 
-  if(screen==="register")return(<div className="container"><RegistrationForm existingMembers={data.members||[]} prefill={prefill} onDone={function(m,isNew){setPrefill(null);registerAndConfirm(m,isNew);}} onBack={function(){setPrefill(null);setScreen("home");}}/></div>);
-  if(screen==="confirm")return(<div className="container"><ConfirmScreen confirm={confirm} uploading={confirmBusy} onUpload={confirmUploadNow} onDone={function(){setConfirm(null);setScreen("home");}}/></div>);
-  if(screen==="checkin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}}/></div>);
-  if(screen==="leadercheckin")return(<div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}} initialMode="leader"/></div>);
-  if(screen==="pin")return <PinScreen onSuccess={function(){setScreen("admin");}} onBack={function(){setScreen("home");}}/>;
-  if(screen==="admin")return(<div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){clearAdminSession();setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div>);
+  if(screen==="register")return(<><ThemeToggle theme={theme} onToggle={toggleTheme}/><div className="container"><RegistrationForm existingMembers={data.members||[]} prefill={prefill} onDone={function(m,isNew){setPrefill(null);registerAndConfirm(m,isNew);}} onBack={function(){setPrefill(null);setScreen("home");}}/></div></>);
+  if(screen==="confirm")return(<><ThemeToggle theme={theme} onToggle={toggleTheme}/><div className="container"><ConfirmScreen confirm={confirm} uploading={confirmBusy} onUpload={confirmUploadNow} onDone={function(){setConfirm(null);setScreen("home");}}/></div></>);
+  if(screen==="checkin")return(<><ThemeToggle theme={theme} onToggle={toggleTheme}/><div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}}/></div></>);
+  if(screen==="leadercheckin")return(<><ThemeToggle theme={theme} onToggle={toggleTheme}/><div className="container"><CheckInPage members={data.members||[]} checkins={data.checkins||[]} onCheckin={handleCheckin} onBack={function(){setScreen("home");}} onCompleteProfile={function(m){setPrefill(m);setScreen("register");}} initialMode="leader"/></div></>);
+  if(screen==="pin")return(<><ThemeToggle theme={theme} onToggle={toggleTheme}/><PinScreen onSuccess={function(){setScreen("admin");}} onBack={function(){setScreen("home");}}/></>);
+  if(screen==="admin")return(<><ThemeToggle theme={theme} onToggle={toggleTheme}/><div className="container"><AdminDashboard data={data} setData={function(d){setData(d);saveData(d);}} onExit={function(){clearAdminSession();setScreen("home");}} onRefresh={loadFromGoogle} syncing={syncing}/></div></>);
 
   return(<div style={{minHeight:"100vh",background:c.bg,display:"flex",flexDirection:"column",transition:"background 0.3s"}}>
     {/* Banner Image Hero */}
@@ -4136,9 +4180,9 @@ function App(){
       }
       return(
         <div onClick={closeHomeTilePopup} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}>
-          <div onClick={function(e){e.stopPropagation();}} style={{background:"#0f172a",borderRadius:20,maxHeight:"85vh",width:"100%",maxWidth:520,overflowY:"auto",border:"3px solid "+color,position:"relative"}}>
+          <div onClick={function(e){e.stopPropagation();}} style={{background:"var(--jg-bg)",borderRadius:20,maxHeight:"85vh",width:"100%",maxWidth:520,overflowY:"auto",border:"3px solid "+color,position:"relative"}}>
             {/* Sticky top bar with Back button */}
-            <div style={{padding:"14px 16px",position:"sticky",top:0,background:"#0f172a",borderBottom:"2px solid "+color+"44",display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}>
+            <div style={{padding:"14px 16px",position:"sticky",top:0,background:"var(--jg-bg)",borderBottom:"2px solid "+color+"44",display:"flex",justifyContent:"space-between",alignItems:"center",zIndex:10}}>
               <h3 style={{margin:0,color:color,fontSize:16}}>{title}</h3>
               <button onClick={closeHomeTilePopup} style={{background:color,border:"none",color:"#fff",borderRadius:8,padding:"7px 14px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>✕ Close</button>
             </div>
@@ -4146,8 +4190,8 @@ function App(){
             {!homeTilePinUnlocked?(
               <div style={{padding:"40px 20px",textAlign:"center"}}>
                 <div style={{fontSize:48,marginBottom:14}}>🔒</div>
-                <p style={{color:"#e2e8f0",fontSize:16,fontWeight:700,margin:"0 0 6px"}}>Leader PIN Required</p>
-                <p style={{color:"#94a3b8",fontSize:13,margin:"0 0 18px"}}>Names are private. Enter your PIN to see them.</p>
+                <p style={{color:"var(--jg-text)",fontSize:16,fontWeight:700,margin:"0 0 6px"}}>Leader PIN Required</p>
+                <p style={{color:"var(--jg-muted)",fontSize:13,margin:"0 0 18px"}}>Names are private. Enter your PIN to see them.</p>
                 <div style={{display:"flex",justifyContent:"center",gap:10,margin:"18px 0"}}>
                   {[0,1,2,3,4].map(function(i){return <div key={i} style={{width:14,height:14,borderRadius:"50%",background:homeTilePin.length>i?color:"#1e293b",border:"2px solid "+(homeTilePinError?"#ef4444":"#334155"),transition:"all 0.2s"}}/>;})}
                 </div>
@@ -4167,18 +4211,18 @@ function App(){
               </div>
             ):(<div>
               <div style={{padding:"12px 16px"}}>
-                <button onClick={closeHomeTilePopup} style={{background:"#1e293b",color:"#94a3b8",border:"1px solid #334155",borderRadius:10,padding:"8px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:10}}>← Back</button>
-                {list.length===0&&<p style={{color:"#64748b",textAlign:"center",padding:20}}>No one yet.</p>}
+                <button onClick={closeHomeTilePopup} style={{background:"var(--jg-card)",color:"var(--jg-muted)",border:"1px solid var(--jg-border)",borderRadius:10,padding:"8px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:10}}>← Back</button>
+                {list.length===0&&<p style={{color:"var(--jg-muteddark)",textAlign:"center",padding:20}}>No one yet.</p>}
                 {list.map(function(m){
                   if(!m)return null;
                   var status=computeStatus(m,data.checkins||[]);
                   var isVisitor=homeTilePopup==="visitors";
-                  return(<div key={m.id} style={{background:"#1e293b",borderRadius:12,padding:"10px 12px",marginBottom:6}}>
+                  return(<div key={m.id} style={{background:"var(--jg-card)",borderRadius:12,padding:"10px 12px",marginBottom:6}}>
                     <div style={{display:"flex",alignItems:"center",gap:10}}>
                       {m.photo?<img src={m.photo} width="40" height="40" style={{borderRadius:"50%",objectFit:"cover",flexShrink:0}}/>:<div style={{width:40,height:40,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>👤</div>}
                       <div style={{flex:1,minWidth:0}}>
-                        <strong style={{fontSize:13,color:"#e2e8f0"}}>{m.name} {m.surname}</strong>
-                        <div style={{fontSize:11,color:"#94a3b8"}}>{status}{m.grade?" · Gr "+m.grade:""}{m.school?" · "+m.school:""}</div>
+                        <strong style={{fontSize:13,color:"var(--jg-text)"}}>{m.name} {m.surname}</strong>
+                        <div style={{fontSize:11,color:"var(--jg-muted)"}}>{status}{m.grade?" · Gr "+m.grade:""}{m.school?" · "+m.school:""}</div>
                         {isVisitor&&m.visitReason&&<div style={{fontSize:10,color:"#e879f9",marginTop:2}}>💫 {m.visitReason}</div>}
                       </div>
                     </div>

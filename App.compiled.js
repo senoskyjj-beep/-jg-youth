@@ -1711,7 +1711,7 @@ function PinScreen({
     style: {
       background: "transparent",
       border: "none",
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       fontSize: 14,
       cursor: "pointer",
       fontFamily: "inherit",
@@ -1728,7 +1728,7 @@ function PinScreen({
     }
   }, "Admin Access"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 14,
       margin: "0 0 6px"
     }
@@ -1912,7 +1912,7 @@ function RegistrationForm({
     }
   }, form.status === "Visitor" ? "Welcome, Visitor!" : "Registered! ✝"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginBottom: 16
     }
   }, "Welcome to Jeremiah Generation 🙏"), photoSkipped && /*#__PURE__*/React.createElement("div", {
@@ -1933,7 +1933,7 @@ function RegistrationForm({
     }
   }, "📸 No photo taken"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 13,
       margin: 0
     }
@@ -1958,7 +1958,7 @@ function RegistrationForm({
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, label), /*#__PURE__*/React.createElement("input", {
@@ -2016,7 +2016,7 @@ function RegistrationForm({
     }, "Living Waters Fellowship")), /*#__PURE__*/React.createElement("p", {
       style: {
         textAlign: "center",
-        color: "#e2e8f0",
+        color: "var(--jg-text)",
         fontSize: 18,
         fontWeight: 700,
         margin: "0 0 6px"
@@ -2024,7 +2024,7 @@ function RegistrationForm({
     }, "Welcome! 👋"), /*#__PURE__*/React.createElement("p", {
       style: {
         textAlign: "center",
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         fontSize: 14,
         margin: "0 0 28px"
       }
@@ -2177,7 +2177,7 @@ function RegistrationForm({
     style: {
       background: "none",
       border: "none",
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       fontSize: 12,
       cursor: "pointer",
       marginTop: 6,
@@ -2204,7 +2204,7 @@ function RegistrationForm({
     className: "input",
     value: form.visitReason,
     style: {
-      background: "#0f172a",
+      background: "var(--jg-bg)",
       color: "#fff",
       borderColor: errors.visitReason ? "#ef4444" : "#a855f744"
     },
@@ -2264,7 +2264,7 @@ function RegistrationForm({
     })) return null;
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        background: "#0f172a",
+        background: "var(--jg-bg)",
         borderRadius: 10,
         marginTop: 6,
         padding: 6,
@@ -2306,7 +2306,7 @@ function RegistrationForm({
       }, "👤"), /*#__PURE__*/React.createElement("span", {
         style: {
           fontSize: 13,
-          color: "#e2e8f0"
+          color: "var(--jg-text)"
         }
       }, em.name, " ", em.surname));
     }));
@@ -2333,7 +2333,7 @@ function RegistrationForm({
       display: "block",
       fontSize: 13,
       fontWeight: 600,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginBottom: 4
     }
   }, "School *"), /*#__PURE__*/React.createElement("select", {
@@ -2341,7 +2341,7 @@ function RegistrationForm({
     value: form.school,
     style: {
       borderColor: errors.school ? "#ef4444" : undefined,
-      background: "#1e293b",
+      background: "var(--jg-card)",
       color: "#fff"
     },
     onChange: function (e) {
@@ -2356,7 +2356,7 @@ function RegistrationForm({
       value: s,
       disabled: s.startsWith("--"),
       style: {
-        background: "#1e293b"
+        background: "var(--jg-card)"
       }
     }, s);
   })), errors.school && /*#__PURE__*/React.createElement("p", {
@@ -2374,7 +2374,7 @@ function RegistrationForm({
       display: "block",
       fontSize: 13,
       fontWeight: 600,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginBottom: 6
     }
   }, "Date of Birth * ", form.birthday && calcAge(form.birthday) !== null && /*#__PURE__*/React.createElement("span", {
@@ -2391,7 +2391,7 @@ function RegistrationForm({
   }, /*#__PURE__*/React.createElement("select", {
     className: "input",
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       color: "#fff"
     },
     value: form.birthday ? form.birthday.split("-")[2] || "" : "",
@@ -2412,7 +2412,7 @@ function RegistrationForm({
   })), /*#__PURE__*/React.createElement("select", {
     className: "input",
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       color: "#fff"
     },
     value: form.birthday ? form.birthday.split("-")[1] || "" : "",
@@ -2431,7 +2431,7 @@ function RegistrationForm({
   })), /*#__PURE__*/React.createElement("select", {
     className: "input",
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       color: "#fff"
     },
     value: form.birthday ? form.birthday.split("-")[0] || "" : "",
@@ -2464,7 +2464,7 @@ function RegistrationForm({
       display: "block",
       fontSize: 13,
       fontWeight: 600,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginBottom: 8
     }
   }, "Profile Photo *"), /*#__PURE__*/React.createElement("input", {
@@ -2546,9 +2546,9 @@ function RegistrationForm({
       document.getElementById("selfie-input").click();
     },
     style: {
-      background: "#1e293b",
-      border: "2px solid #334155",
-      color: "#94a3b8",
+      background: "var(--jg-card)",
+      border: "2px solid var(--jg-border)",
+      color: "var(--jg-muted)",
       borderRadius: 10,
       padding: "8px 16px",
       fontSize: 13,
@@ -2582,7 +2582,7 @@ function RegistrationForm({
     style: {
       margin: "0 0 10px",
       fontSize: 12,
-      color: "#64748b"
+      color: "var(--jg-muteddark)"
     }
   }, "We will add you within one week of registering."), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2675,6 +2675,27 @@ function CheckInPage({
   var [isAnon, setIsAnon] = useState(false);
   var [cat, setCat] = useState("");
   var [message, setMessage] = useState("");
+  var [flippedId, setFlippedId] = useState(null);
+  var [checkinMoods, setCheckinMoods] = useState({});
+  var MOODS = [{
+    e: "😄",
+    bg: "rgba(34,197,94,0.15)"
+  }, {
+    e: "😊",
+    bg: "rgba(59,130,246,0.15)"
+  }, {
+    e: "😐",
+    bg: "rgba(148,163,184,0.15)"
+  }, {
+    e: "😔",
+    bg: "rgba(245,158,11,0.15)"
+  }, {
+    e: "😢",
+    bg: "rgba(239,68,68,0.15)"
+  }, {
+    e: "🤩",
+    bg: "rgba(168,85,247,0.15)"
+  }];
 
   // After a check-in (member or leader), show the welcome briefly then return Home automatically.
   // If the user taps another button first (e.g. "Check In Another Leader"), the cleanup cancels it.
@@ -2774,7 +2795,7 @@ function CheckInPage({
     }
   }, "Welcome, ", done.name, "!"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8"
+      color: "var(--jg-muted)"
     }
   }, "Checked in for today. God bless you!"));
   if (step === "incomplete" && selected) return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
@@ -2825,7 +2846,7 @@ function CheckInPage({
     style: {
       margin: 0,
       fontSize: 13,
-      color: "#94a3b8"
+      color: "var(--jg-muted)"
     }
   }, "It only takes 2 minutes to complete!")), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-reg",
@@ -2893,7 +2914,7 @@ function CheckInPage({
     }
   }, "Great to see you today!")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 16,
       padding: "20px",
       textAlign: "center"
@@ -2902,13 +2923,13 @@ function CheckInPage({
     style: {
       fontSize: 16,
       fontWeight: 700,
-      color: "#e2e8f0",
+      color: "var(--jg-text)",
       margin: "0 0 6px"
     }
   }, "Any suggestions, requests or feedback today?"), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 13,
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       margin: "0 0 18px"
     }
   }, "Games, sports, prayer, advice - anything at all."), /*#__PURE__*/React.createElement("div", {
@@ -2939,9 +2960,9 @@ function CheckInPage({
     style: {
       padding: "16px",
       borderRadius: 12,
-      border: "2px solid #334155",
-      background: "#1e293b",
-      color: "#94a3b8",
+      border: "2px solid var(--jg-border)",
+      background: "var(--jg-card)",
+      color: "var(--jg-muted)",
       fontWeight: 700,
       fontSize: 15,
       cursor: "pointer",
@@ -3014,7 +3035,7 @@ function CheckInPage({
       display: "block",
       fontSize: 13,
       fontWeight: 700,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginBottom: 6
     }
   }, "Your message (optional):"), /*#__PURE__*/React.createElement("textarea", {
@@ -3030,7 +3051,7 @@ function CheckInPage({
     }
   })), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 12,
       padding: "14px",
       marginBottom: 14
@@ -3040,7 +3061,7 @@ function CheckInPage({
       margin: "0 0 8px",
       fontWeight: 700,
       fontSize: 13,
-      color: "#e2e8f0"
+      color: "var(--jg-text)"
     }
   }, "Privacy:"), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3128,7 +3149,7 @@ function CheckInPage({
         }
       }, "Welcome, ", leaderDone.name, "!"), /*#__PURE__*/React.createElement("p", {
         style: {
-          color: "#94a3b8",
+          color: "var(--jg-muted)",
           fontSize: 14,
           margin: "0 0 20px"
         }
@@ -3160,7 +3181,7 @@ function CheckInPage({
       className: "page-title"
     }, "⭐ Leader Check-In"), /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         fontSize: 13,
         marginBottom: 14
       }
@@ -3225,7 +3246,7 @@ function CheckInPage({
       }, L.name, " ", L.surname), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 12,
-          color: "#94a3b8"
+          color: "var(--jg-muted)"
         }
       }, L.role, " Leader", alreadyToday ? " · ✓ Already checked in today" : "")));
     }));
@@ -3240,7 +3261,7 @@ function CheckInPage({
     className: "page-title"
   }, "✅ Member Check-In"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 13,
       marginBottom: 10
     }
@@ -3255,11 +3276,49 @@ function CheckInPage({
   }), results.map(function (m) {
     var status = computeStatus(m, checkins);
     var bs = statusBadge(status);
+    var flipped = flippedId === m.id;
+    var mood = checkinMoods[m.id];
+    function flipToMood() {
+      if (m.incomplete) {
+        setSelected(m);
+        setStep("incomplete");
+        return;
+      }
+      setFlippedId(flipped ? null : m.id);
+    }
+    function confirmCheckin() {
+      if (!mood) return;
+      setFlippedId(null);
+      tap(m);
+    }
     return /*#__PURE__*/React.createElement("div", {
       key: m.id,
+      style: {
+        perspective: 1000,
+        marginBottom: 10,
+        position: "relative",
+        zIndex: flipped ? 5 : 1,
+        height: flipped ? 148 : 74,
+        transition: "height 0.35s"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        transformStyle: "preserve-3d",
+        transition: "transform 0.6s",
+        transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
       className: "card" + (m.incomplete ? " card-absent" : ""),
-      onClick: function () {
-        tap(m);
+      onClick: flipToMood,
+      style: {
+        position: "absolute",
+        inset: 0,
+        margin: 0,
+        backfaceVisibility: "hidden",
+        pointerEvents: flipped ? "none" : "auto"
       }
     }, m.photo ? /*#__PURE__*/React.createElement("img", {
       src: m.photo,
@@ -3275,7 +3334,7 @@ function CheckInPage({
         width: 46,
         height: 46,
         borderRadius: "50%",
-        background: "#334155",
+        background: "var(--jg-border)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -3294,7 +3353,7 @@ function CheckInPage({
       }
     }, "incomplete"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("small", {
       style: {
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, m.school || "", calcAge(m.birthday) ? " Age " + calcAge(m.birthday) : "")), /*#__PURE__*/React.createElement("span", {
       style: {
@@ -3307,7 +3366,80 @@ function CheckInPage({
         fontWeight: 700,
         whiteSpace: "nowrap"
       }
-    }, status));
+    }, status), !m.incomplete && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 16,
+        marginLeft: 8,
+        color: "var(--jg-muted)"
+      }
+    }, "›")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "absolute",
+        inset: 0,
+        backfaceVisibility: "hidden",
+        transform: "rotateY(180deg)",
+        background: "var(--jg-card2)",
+        borderRadius: 13,
+        border: "2px solid #22c55e",
+        padding: "12px 14px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        gap: 8,
+        pointerEvents: flipped ? "auto" : "none",
+        overflow: "hidden"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        fontWeight: 700,
+        color: "var(--jg-text)"
+      }
+    }, "How do you feel today, ", m.name, "?"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        justifyContent: "space-between"
+      }
+    }, MOODS.map(function (mo) {
+      var isSel = mood === mo.e;
+      return /*#__PURE__*/React.createElement("button", {
+        key: mo.e,
+        onClick: function () {
+          setCheckinMoods(Object.assign({}, checkinMoods, {
+            [m.id]: mo.e
+          }));
+        },
+        style: {
+          fontSize: 20,
+          width: 34,
+          height: 34,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 10,
+          cursor: "pointer",
+          background: isSel ? mo.bg : "transparent",
+          border: isSel ? "2px solid #22c55e" : "2px solid transparent",
+          transform: isSel ? "scale(1.12)" : "scale(1)",
+          transition: "transform 0.15s,background 0.15s"
+        }
+      }, mo.e);
+    })), /*#__PURE__*/React.createElement("button", {
+      onClick: confirmCheckin,
+      disabled: !mood,
+      style: {
+        marginTop: 2,
+        padding: 9,
+        borderRadius: 10,
+        border: "none",
+        fontWeight: 700,
+        fontSize: 13,
+        cursor: mood ? "pointer" : "default",
+        background: mood ? "#22c55e" : "var(--jg-border)",
+        color: mood ? "#fff" : "var(--jg-muted)"
+      }
+    }, "✓ Confirm Check-In"))));
   }), results.length === 0 && search.length >= 1 && /*#__PURE__*/React.createElement("p", {
     className: "empty-msg"
   }, "Not found - please use Registration"), /*#__PURE__*/React.createElement("button", {
@@ -3403,7 +3535,7 @@ function VibeDashboard({
       },
       style: {
         background: "linear-gradient(135deg,#1e293b,#0f172a)",
-        border: "2px solid #334155",
+        border: "2px solid var(--jg-border)",
         color: "#fff",
         borderRadius: 12,
         padding: "8px 18px",
@@ -3444,7 +3576,7 @@ function VibeDashboard({
     }
   }, "JG Dashboard"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       fontSize: 12,
       margin: 0
     }
@@ -3460,8 +3592,8 @@ function VibeDashboard({
     onClick: onRefresh,
     disabled: syncing,
     style: {
-      background: "#1e293b",
-      border: "1px solid #334155",
+      background: "var(--jg-card)",
+      border: "1px solid var(--jg-border)",
       color: syncing ? "#475569" : "#6ee7b7",
       borderRadius: 8,
       padding: "5px 12px",
@@ -3472,9 +3604,9 @@ function VibeDashboard({
   }, syncing ? "Syncing" : "🔄 Refresh"), /*#__PURE__*/React.createElement("button", {
     onClick: switchStyle,
     style: {
-      background: "#1e293b",
-      border: "1px solid #334155",
-      color: "#94a3b8",
+      background: "var(--jg-card)",
+      border: "1px solid var(--jg-border)",
+      color: "var(--jg-muted)",
       borderRadius: 8,
       padding: "5px 12px",
       fontSize: 12,
@@ -3586,7 +3718,7 @@ function VibeDashboard({
     }
   }, "Not here yet"))), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       fontSize: 12,
       fontWeight: 700,
       letterSpacing: "1.5px",
@@ -3675,7 +3807,7 @@ function VibeDashboard({
     }, t.label));
   })), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       fontSize: 12,
       fontWeight: 700,
       letterSpacing: "1.5px",
@@ -3748,7 +3880,7 @@ function VibeDashboard({
     }, t.label));
   })), todayIds.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#0f172a",
+      background: "var(--jg-bg)",
       border: "2px solid #22c55e44",
       borderRadius: 18,
       padding: "14px",
@@ -3776,7 +3908,7 @@ function VibeDashboard({
     return /*#__PURE__*/React.createElement("span", {
       key: id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         color: "#86efac",
         borderRadius: 20,
         padding: "6px 12px",
@@ -3786,7 +3918,7 @@ function VibeDashboard({
     }, m.name, " ✓");
   }), todayIds.length > 12 && /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       fontSize: 12,
       padding: "6px 0"
     }
@@ -3794,9 +3926,9 @@ function VibeDashboard({
     onClick: onExit,
     style: {
       width: "100%",
-      background: "#1e293b",
-      border: "2px solid #334155",
-      color: "#94a3b8",
+      background: "var(--jg-card)",
+      border: "2px solid var(--jg-border)",
+      color: "var(--jg-muted)",
       borderRadius: 14,
       padding: "14px",
       fontSize: 14,
@@ -4052,7 +4184,7 @@ function AdminDashboardEmbedded({
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 13,
         padding: "14px 16px",
         marginBottom: 10,
@@ -4106,7 +4238,7 @@ function AdminDashboardEmbedded({
     return /*#__PURE__*/React.createElement("div", {
       key: m.id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         border: "2px solid #a855f722",
         borderRadius: 13,
         padding: "14px 16px",
@@ -4126,7 +4258,7 @@ function AdminDashboardEmbedded({
     }, status), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginTop: 6
       }
     }, "📞 ", m.phone || "?", " · 🏫 ", m.school || "?", " · Visits: ", visits), m.visitReason && /*#__PURE__*/React.createElement("div", {
@@ -4218,7 +4350,7 @@ function AdminDashboardEmbedded({
     return /*#__PURE__*/React.createElement("div", {
       key: m.id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 14,
         padding: "12px 14px",
         marginBottom: 10,
@@ -4266,7 +4398,7 @@ function AdminDashboardEmbedded({
     }, status), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, "📞 ", m.phone || "?", " · ", vc(m), " visits", wk >= 3 ? " · ⚠️ " + wk + "wks" : ""))));
   }));
@@ -4293,7 +4425,7 @@ function AdminDashboardEmbedded({
     }, /*#__PURE__*/React.createElement("strong", null, m.name, " ", m.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, "📞 ", m.phone || "?", " · 👨‍👩‍👦 ", m.parentPhone || "?")), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -4356,7 +4488,7 @@ function AdminDashboardEmbedded({
     return /*#__PURE__*/React.createElement("div", {
       key: m.id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 12,
         padding: "13px",
         marginBottom: 8,
@@ -4372,7 +4504,7 @@ function AdminDashboardEmbedded({
     }, /*#__PURE__*/React.createElement("strong", null, m.name, " ", m.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, m.phone)), /*#__PURE__*/React.createElement("a", {
       href: toWA(m.phone),
@@ -4387,7 +4519,7 @@ function AdminDashboardEmbedded({
       },
       style: {
         background: "#334155",
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         border: "none",
         borderRadius: 9,
         padding: "8px 12px",
@@ -4402,12 +4534,12 @@ function AdminDashboardEmbedded({
     className: "page-title"
   }, "📊 Reports"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 13
     }
   }, "Reports view - for the full health dashboard use Classic View."), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 14,
       padding: "14px",
       marginBottom: 12
@@ -4809,8 +4941,8 @@ function AdminDashboard({
     onClick: onRefresh,
     disabled: syncing,
     style: {
-      background: "#1e293b",
-      border: "1px solid #334155",
+      background: "var(--jg-card)",
+      border: "1px solid var(--jg-border)",
       color: syncing ? "#475569" : "#6ee7b7",
       borderRadius: 8,
       padding: "5px 12px",
@@ -4850,7 +4982,7 @@ function AdminDashboard({
     }, t.badge));
   })), tab === "overview" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       fontSize: 11,
       fontWeight: 700,
       letterSpacing: "1px",
@@ -4904,7 +5036,7 @@ function AdminDashboard({
     }, s.l));
   })), absentToday.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       border: "2px solid #f59e0b44",
       borderRadius: 13,
       padding: "14px 16px",
@@ -4941,7 +5073,7 @@ function AdminDashboard({
     className: "page-title"
   }, "Absent Today"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 12,
       marginBottom: 12
     }
@@ -5107,7 +5239,7 @@ function AdminDashboard({
     className: "page-title"
   }, "✅ Sent Today"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 12,
       marginBottom: 12
     }
@@ -5158,7 +5290,7 @@ function AdminDashboard({
     }, m.name, " ", m.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
-        color: "#64748b"
+        color: "var(--jg-muteddark)"
       }
     }, "Week ", wk, " message · ", wk, " week", wk !== 1 ? "s" : "", " absent")), /*#__PURE__*/React.createElement("span", {
       style: {
@@ -5197,7 +5329,7 @@ function AdminDashboard({
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 13,
         padding: "14px 16px",
         marginBottom: 10,
@@ -5276,7 +5408,7 @@ function AdminDashboard({
     return /*#__PURE__*/React.createElement("div", {
       key: m.id || i,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         border: "2px solid #a855f722",
         borderRadius: 13,
         padding: "14px 16px",
@@ -5308,13 +5440,13 @@ function AdminDashboard({
     }, status)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         textAlign: "right"
       }
     }, visits, " visit", visits !== 1 ? "s" : "", /*#__PURE__*/React.createElement("br", null), "Last: ", last || "never")), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 6
       }
     }, "Phone: ", m.phone || "?", " | School: ", m.school || "?"), m.visitReason && /*#__PURE__*/React.createElement("div", {
@@ -5443,12 +5575,12 @@ function AdminDashboard({
     }, /*#__PURE__*/React.createElement("strong", null, m.name, " ", m.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, "Phone: ", m.phone || "?"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, "Parent: ", m.parentName || "", " ", m.parentSurname || "", " | ", m.parentPhone || "?")), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5530,7 +5662,7 @@ function AdminDashboard({
     return /*#__PURE__*/React.createElement("div", {
       key: m.id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 14,
         padding: "14px 16px",
         marginBottom: 12,
@@ -5598,7 +5730,7 @@ function AdminDashboard({
     }, status), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginLeft: 8
       }
     }, visits, " visit", visits !== 1 ? "s" : ""))), /*#__PURE__*/React.createElement("button", {
@@ -5617,7 +5749,7 @@ function AdminDashboard({
         gridTemplateColumns: "1fr 1fr",
         gap: "3px 16px",
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 10
       }
     }, /*#__PURE__*/React.createElement("span", null, "Age: ", calcAge(m.birthday) || "?"), /*#__PURE__*/React.createElement("span", null, "School: ", m.school || "?"), /*#__PURE__*/React.createElement("span", null, "Phone: ", m.phone || "?"), /*#__PURE__*/React.createElement("span", null, "Address: ", m.address || "?"), /*#__PURE__*/React.createElement("span", null, "Parent: ", m.parentName || "", " ", m.parentSurname || ""), /*#__PURE__*/React.createElement("span", null, "Parent Phone: ", m.parentPhone || "?")), /*#__PURE__*/React.createElement("div", {
@@ -5718,7 +5850,7 @@ function AdminDashboard({
     return /*#__PURE__*/React.createElement("div", {
       key: m.id || i,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 12,
         padding: "13px 15px",
         marginBottom: 9,
@@ -5734,7 +5866,7 @@ function AdminDashboard({
     }, /*#__PURE__*/React.createElement("strong", null, m.name, " ", m.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 13,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, "Phone: ", m.phone || "?")), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5754,7 +5886,7 @@ function AdminDashboard({
       },
       style: {
         background: "#334155",
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         border: "none",
         borderRadius: 9,
         padding: "8px 12px",
@@ -5789,7 +5921,7 @@ function AdminDashboard({
     var healthColor = health === "THRIVING" ? "#22c55e" : health === "GROWING" ? "#f59e0b" : "#ef4444";
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         border: "2px solid " + healthColor + "44",
         borderRadius: 14,
         padding: "16px",
@@ -5808,7 +5940,7 @@ function AdminDashboard({
       style: {
         margin: 0,
         fontSize: 13,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, "Unit Health Status"), /*#__PURE__*/React.createElement("p", {
       style: {
@@ -5832,7 +5964,7 @@ function AdminDashboard({
       style: {
         margin: 0,
         fontSize: 12,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, "Overall Attendance"))), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -5856,7 +5988,7 @@ function AdminDashboard({
       return /*#__PURE__*/React.createElement("div", {
         key: s.l,
         style: {
-          background: "#0f172a",
+          background: "var(--jg-bg)",
           borderRadius: 10,
           padding: "10px",
           textAlign: "center"
@@ -5870,7 +6002,7 @@ function AdminDashboard({
       }, s.v), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 10,
-          color: "#64748b",
+          color: "var(--jg-muteddark)",
           marginTop: 2
         }
       }, s.l));
@@ -5925,7 +6057,7 @@ function AdminDashboard({
         gap: 14,
         flexWrap: "wrap",
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         margin: "0 0 10px"
       }
     }, /*#__PURE__*/React.createElement("span", null, dates.length, " session(s) | ", presentIds.length, "/", members.length, " attended"), /*#__PURE__*/React.createElement("span", {
@@ -6147,7 +6279,7 @@ function AdminDashboard({
       e.stopPropagation();
     },
     style: {
-      background: "#0f172a",
+      background: "var(--jg-bg)",
       borderTopLeftRadius: 24,
       borderTopRightRadius: 24,
       maxHeight: "85vh",
@@ -6161,7 +6293,7 @@ function AdminDashboard({
       padding: "20px 20px 12px",
       position: "sticky",
       top: 0,
-      background: "#0f172a",
+      background: "var(--jg-bg)",
       borderBottom: "1px solid #1e293b",
       display: "flex",
       justifyContent: "space-between",
@@ -6176,9 +6308,9 @@ function AdminDashboard({
   }, popup.title), /*#__PURE__*/React.createElement("button", {
     onClick: closePopup,
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       border: "none",
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       borderRadius: 8,
       padding: "6px 14px",
       fontSize: 13,
@@ -6192,7 +6324,7 @@ function AdminDashboard({
     }
   }, popup.list.length === 0 && /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       textAlign: "center",
       padding: 20
     }
@@ -6200,7 +6332,7 @@ function AdminDashboard({
     return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 10,
         padding: "12px 14px",
         marginBottom: 6,
@@ -6225,7 +6357,7 @@ function AdminDashboard({
     return /*#__PURE__*/React.createElement("div", {
       key: m.id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 12,
         padding: "12px 14px",
         marginBottom: 8,
@@ -6262,12 +6394,12 @@ function AdminDashboard({
     }, /*#__PURE__*/React.createElement("strong", {
       style: {
         fontSize: 14,
-        color: "#e2e8f0"
+        color: "var(--jg-text)"
       }
     }, m.name, " ", m.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -6333,7 +6465,7 @@ function ExportTab({
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 14,
       padding: "16px",
       textAlign: "center"
@@ -6347,12 +6479,12 @@ function ExportTab({
   }, members.length), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginTop: 3
     }
   }, "Total Members")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 14,
       padding: "16px",
       textAlign: "center"
@@ -6366,12 +6498,12 @@ function ExportTab({
   }, datesSet.length), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginTop: 3
     }
   }, "Sessions Recorded")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 14,
       padding: "16px",
       textAlign: "center"
@@ -6385,12 +6517,12 @@ function ExportTab({
   }, totalVisits), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginTop: 3
     }
   }, "Total Check-ins")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 14,
       padding: "16px",
       textAlign: "center"
@@ -6404,7 +6536,7 @@ function ExportTab({
   }, avgVisits), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       marginTop: 3
     }
   }, "Avg Visits / Member"))), status && /*#__PURE__*/React.createElement("div", {
@@ -6420,7 +6552,7 @@ function ExportTab({
     }
   }, status.includes("Error") ? "" : "✅ ", status), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       border: "2px solid #22c55e44",
       borderRadius: 14,
       padding: "18px",
@@ -6480,13 +6612,13 @@ function ExportTab({
       }
     }, i + 1, "."), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
       style: {
-        color: "#e2e8f0",
+        color: "var(--jg-text)",
         fontWeight: 600,
         fontSize: 12
       }
     }, s.name), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
       style: {
-        color: "#64748b",
+        color: "var(--jg-muteddark)",
         fontSize: 11
       }
     }, s.desc)));
@@ -6498,7 +6630,7 @@ function ExportTab({
     }
   }, "Download Excel Report (.xlsx)")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       border: "2px solid #3b82f644",
       borderRadius: 14,
       padding: "18px"
@@ -6521,7 +6653,7 @@ function ExportTab({
     style: {
       margin: "0 0 14px",
       fontSize: 13,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       textAlign: "center"
     }
   }, "Formatted report for printing. Opens print dialog - choose Save as PDF or Print."), /*#__PURE__*/React.createElement("button", {
@@ -6582,7 +6714,7 @@ function QRTab() {
     className: "page-title"
   }, "QR Code for Entrance"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 13,
       marginBottom: 18
     }
@@ -6626,8 +6758,8 @@ function QRTab() {
     }
   }, copied ? "Copied!" : "Copy Link")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
-      border: "2px solid #334155",
+      background: "var(--jg-card)",
+      border: "2px solid var(--jg-border)",
       borderRadius: 12,
       padding: "14px",
       marginBottom: 14
@@ -6637,13 +6769,13 @@ function QRTab() {
       margin: "0 0 8px",
       fontWeight: 700,
       fontSize: 13,
-      color: "#e2e8f0"
+      color: "var(--jg-text)"
     }
   }, "Send via WhatsApp"), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: "0 0 10px",
       fontSize: 13,
-      color: "#94a3b8"
+      color: "var(--jg-muted)"
     }
   }, "Tap below to share the check-in link with your youth group directly."), /*#__PURE__*/React.createElement("a", {
     href: "https://wa.me/?text=" + encodeURIComponent("Hi! Here is the Jeremiah Generation Friday Check-In link. Tap to register or check in: " + url),
@@ -6714,7 +6846,7 @@ function LeaderAttendanceTab() {
     className: "page-title"
   }, "📋 Leader Attendance Log"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 13,
       marginBottom: 14
     }
@@ -6737,7 +6869,7 @@ function LeaderAttendanceTab() {
     return /*#__PURE__*/React.createElement("div", {
       key: L.id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 12,
         padding: "12px 14px",
         marginBottom: 8,
@@ -6771,17 +6903,17 @@ function LeaderAttendanceTab() {
     }, /*#__PURE__*/React.createElement("strong", {
       style: {
         fontSize: 14,
-        color: "#e2e8f0"
+        color: "var(--jg-text)"
       }
     }, L.name, " ", L.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, L.role, " Leader · ", s.count, " attendance", s.count !== 1 ? "s" : ""), s.lastVisit && /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
-        color: "#64748b"
+        color: "var(--jg-muteddark)"
       }
     }, "Last: ", s.lastVisit)), /*#__PURE__*/React.createElement("div", {
       style: {
@@ -6809,7 +6941,7 @@ function LeaderAttendanceTab() {
     return /*#__PURE__*/React.createElement("div", {
       key: d,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 13,
         padding: "14px",
         marginBottom: 10
@@ -6967,7 +7099,7 @@ function LeadersTab() {
       className: "page-title"
     }, "📋 Login Log: ", L.name, " ", L.surname), /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         fontSize: 13,
         marginBottom: 14
       }
@@ -6978,14 +7110,14 @@ function LeadersTab() {
       return /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
-          background: "#1e293b",
+          background: "var(--jg-card)",
           borderRadius: 10,
           padding: "10px 14px",
           marginBottom: 6
         }
       }, /*#__PURE__*/React.createElement("div", {
         style: {
-          color: "#e2e8f0",
+          color: "var(--jg-text)",
           fontWeight: 600,
           fontSize: 13
         }
@@ -6996,7 +7128,7 @@ function LeadersTab() {
         year: "numeric"
       })), /*#__PURE__*/React.createElement("div", {
         style: {
-          color: "#94a3b8",
+          color: "var(--jg-muted)",
           fontSize: 12
         }
       }, "at ", d.toLocaleTimeString("en-ZA")));
@@ -7016,13 +7148,13 @@ function LeadersTab() {
       className: "page-title"
     }, editing ? "Edit Leader" : "➕ Register New Leader"), /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         fontSize: 13,
         marginBottom: 14
       }
     }, "Leaders sync to Google Sheets, so their PINs work on every device. Senior leaders can log in to admin with their PIN."), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 13,
         padding: "16px"
       }
@@ -7041,7 +7173,7 @@ function LeadersTab() {
     }, "👥 Pick from existing members"), /*#__PURE__*/React.createElement("select", {
       className: "input",
       style: {
-        background: "#0f172a",
+        background: "var(--jg-bg)",
         color: "#fff"
       },
       value: "",
@@ -7075,7 +7207,7 @@ function LeadersTab() {
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "First Name *"), /*#__PURE__*/React.createElement("input", {
@@ -7091,7 +7223,7 @@ function LeadersTab() {
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Surname *"), /*#__PURE__*/React.createElement("input", {
@@ -7107,7 +7239,7 @@ function LeadersTab() {
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Phone Number"), /*#__PURE__*/React.createElement("input", {
@@ -7124,13 +7256,13 @@ function LeadersTab() {
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Leader Role *"), /*#__PURE__*/React.createElement("select", {
       className: "input",
       style: {
-        background: "#0f172a",
+        background: "var(--jg-bg)",
         color: "#fff"
       },
       value: form.role,
@@ -7146,7 +7278,7 @@ function LeadersTab() {
     }, "🌱 Junior Leader (no admin access)")), /*#__PURE__*/React.createElement("p", {
       style: {
         fontSize: 11,
-        color: "#64748b",
+        color: "var(--jg-muteddark)",
         marginTop: -8,
         marginBottom: 12
       }
@@ -7155,7 +7287,7 @@ function LeadersTab() {
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Notes (optional)"), /*#__PURE__*/React.createElement("textarea", {
@@ -7175,7 +7307,7 @@ function LeadersTab() {
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 8
       }
     }, "Profile Photo"), /*#__PURE__*/React.createElement("input", {
@@ -7213,7 +7345,7 @@ function LeadersTab() {
         document.getElementById("leader-selfie").click();
       },
       style: {
-        background: "#0f172a",
+        background: "var(--jg-bg)",
         border: "2px dashed #6c63ff",
         borderRadius: 14,
         padding: "22px",
@@ -7255,9 +7387,9 @@ function LeadersTab() {
       style: {
         display: "block",
         margin: "6px auto 0",
-        background: "#1e293b",
-        border: "1px solid #334155",
-        color: "#94a3b8",
+        background: "var(--jg-card)",
+        border: "1px solid var(--jg-border)",
+        color: "var(--jg-muted)",
         borderRadius: 8,
         padding: "5px 12px",
         fontSize: 11,
@@ -7300,7 +7432,7 @@ function LeadersTab() {
     className: "page-title"
   }, "👥 Leaders (", leaders.length, ")"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 13,
       marginBottom: 14
     }
@@ -7359,7 +7491,7 @@ function LeadersTab() {
     }, L.name, " ", L.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginTop: 2
       }
     }, "📞 ", L.phone || "—"), /*#__PURE__*/React.createElement("div", {
@@ -7372,7 +7504,7 @@ function LeadersTab() {
     }, "🔑 PIN: ", L.pin), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
-        color: "#64748b",
+        color: "var(--jg-muteddark)",
         marginTop: 4
       }
     }, loginCount, " login", loginCount !== 1 ? "s" : "", " recorded")), /*#__PURE__*/React.createElement("div", {
@@ -7442,7 +7574,7 @@ function LeadersTab() {
     }, "🗑"))), L.notes && /*#__PURE__*/React.createElement("p", {
       style: {
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         margin: "8px 0 0",
         fontStyle: "italic"
       }
@@ -7460,7 +7592,7 @@ function LeadersTab() {
     return /*#__PURE__*/React.createElement("div", {
       key: L.id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         border: "2px solid #22c55e22",
         borderRadius: 13,
         padding: "12px 14px",
@@ -7487,13 +7619,13 @@ function LeadersTab() {
     }, L.name, " ", L.surname), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginTop: 2
       }
     }, "📞 ", L.phone || "—"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
-        color: "#64748b",
+        color: "var(--jg-muteddark)",
         marginTop: 2
       }
     }, "PIN: ", L.pin, " (home tiles only)")), /*#__PURE__*/React.createElement("div", {
@@ -7628,13 +7760,13 @@ function EventsTab({
       className: "page-title"
     }, editing ? "Edit Event" : "➕ New Event"), /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         fontSize: 13,
         marginBottom: 16
       }
     }, "When this event happens, attendance counts start at zero."), /*#__PURE__*/React.createElement("div", {
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 13,
         padding: "16px"
       }
@@ -7643,7 +7775,7 @@ function EventsTab({
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Event Title *"), /*#__PURE__*/React.createElement("input", {
@@ -7660,7 +7792,7 @@ function EventsTab({
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Date *"), /*#__PURE__*/React.createElement("input", {
@@ -7677,7 +7809,7 @@ function EventsTab({
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Time"), /*#__PURE__*/React.createElement("input", {
@@ -7694,7 +7826,7 @@ function EventsTab({
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Location"), /*#__PURE__*/React.createElement("input", {
@@ -7711,13 +7843,13 @@ function EventsTab({
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Event Type"), /*#__PURE__*/React.createElement("select", {
       className: "input",
       style: {
-        background: "#0f172a",
+        background: "var(--jg-bg)",
         color: "#fff"
       },
       value: form.type,
@@ -7747,7 +7879,7 @@ function EventsTab({
         display: "block",
         fontSize: 13,
         fontWeight: 600,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         marginBottom: 4
       }
     }, "Description / Notes"), /*#__PURE__*/React.createElement("textarea", {
@@ -7779,7 +7911,7 @@ function EventsTab({
     className: "page-title"
   }, "📅 Events"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 13,
       marginBottom: 16
     }
@@ -7844,7 +7976,7 @@ function EventsTab({
     }, e.title), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#64748b",
+        color: "var(--jg-muteddark)",
         marginTop: 2
       }
     }, e.type)), /*#__PURE__*/React.createElement("div", {
@@ -7895,14 +8027,14 @@ function EventsTab({
     }, "📍 ", e.location), e.description && /*#__PURE__*/React.createElement("p", {
       style: {
         fontSize: 13,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         margin: "8px 0 0"
       }
     }, e.description));
   })), past.length > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 12,
-      color: "#64748b",
+      color: "var(--jg-muteddark)",
       fontWeight: 700,
       letterSpacing: "1.5px",
       marginBottom: 10
@@ -7917,7 +8049,7 @@ function EventsTab({
     return /*#__PURE__*/React.createElement("div", {
       key: e.id,
       style: {
-        background: "#1e293b",
+        background: "var(--jg-card)",
         borderRadius: 12,
         padding: "12px 14px",
         marginBottom: 8,
@@ -7934,12 +8066,12 @@ function EventsTab({
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
       style: {
         fontSize: 14,
-        color: "#94a3b8"
+        color: "var(--jg-muted)"
       }
     }, e.title), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
-        color: "#64748b"
+        color: "var(--jg-muteddark)"
       }
     }, "📅 ", dateStr, " · ", e.type)), /*#__PURE__*/React.createElement("button", {
       onClick: function () {
@@ -8030,7 +8162,7 @@ function ResetTab({
   }, "All cleared!"), /*#__PURE__*/React.createElement("p", {
     style: {
       fontSize: 13,
-      color: "#94a3b8"
+      color: "var(--jg-muted)"
     }
   }, "Your system is fresh and ready. Counters back to zero.")), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-admin",
@@ -8055,7 +8187,7 @@ function ResetTab({
     }
   }, "⚠️ WARNING: These actions cannot be undone. Google Sheets data is NOT affected — only local app data."), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       border: "2px solid #f59e0b44",
       borderRadius: 14,
       padding: "18px",
@@ -8079,7 +8211,7 @@ function ResetTab({
     style: {
       margin: "0 0 14px",
       fontSize: 13,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       textAlign: "center"
     }
   }, "Clears only check-ins from this Friday onwards. Past history stays."), /*#__PURE__*/React.createElement("button", {
@@ -8100,7 +8232,7 @@ function ResetTab({
     }
   }, "Reset This Week Only")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       border: "2px solid #3b82f644",
       borderRadius: 14,
       padding: "18px",
@@ -8124,7 +8256,7 @@ function ResetTab({
     style: {
       margin: "0 0 14px",
       fontSize: 13,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       textAlign: "center"
     }
   }, "Removes ALL check-in history but keeps members. Good for clearing test data."), /*#__PURE__*/React.createElement("button", {
@@ -8145,7 +8277,7 @@ function ResetTab({
     }
   }, "Clear All Check-ins")), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       border: "2px solid #ef444444",
       borderRadius: 14,
       padding: "18px"
@@ -8168,7 +8300,7 @@ function ResetTab({
     style: {
       margin: "0 0 14px",
       fontSize: 13,
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       textAlign: "center"
     }
   }, "Deletes ALL data — members, check-ins, feedback, events, photos. Starts totally fresh."), /*#__PURE__*/React.createElement("button", {
@@ -8363,7 +8495,7 @@ function PendingSyncTab() {
     }
   }, "🔁 Re-upload Everything to Google"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 12,
       margin: "0 0 10px"
     }
@@ -8394,7 +8526,7 @@ function PendingSyncTab() {
     }
   }, forceProg.label, ": ", forceProg.done, " / ", forceProg.total), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 6,
       height: 8,
       overflow: "hidden"
@@ -8488,7 +8620,7 @@ function PendingSyncTab() {
     }
   }, "🧹 Clean Duplicates"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 12,
       margin: "0 0 10px"
     }
@@ -8519,7 +8651,7 @@ function PendingSyncTab() {
     }
   }, "Cleaning up: ", dupProg.done, " / ", dupProg.total), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       borderRadius: 6,
       height: 8,
       overflow: "hidden"
@@ -8617,7 +8749,7 @@ function PendingSyncTab() {
     }
   }, "📋 DATA — Google Sheets (", items.length, ")"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 12,
       marginTop: 0,
       marginBottom: 10
@@ -8686,8 +8818,8 @@ function PendingSyncTab() {
     return /*#__PURE__*/React.createElement("div", {
       key: item.id,
       style: {
-        background: "#1e293b",
-        border: "1px solid #334155",
+        background: "var(--jg-card)",
+        border: "1px solid var(--jg-border)",
         borderRadius: 10,
         padding: "10px 12px"
       }
@@ -8707,12 +8839,12 @@ function PendingSyncTab() {
       style: {
         fontSize: 14,
         fontWeight: 600,
-        color: "#e2e8f0"
+        color: "var(--jg-text)"
       }
     }, describe(item)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
-        color: "#64748b",
+        color: "var(--jg-muteddark)",
         marginTop: 3
       }
     }, "Queued ", whenStr, " · ", item.attempts || 1, " attempt", (item.attempts || 1) > 1 ? "s" : "", item.lastError ? " · " + item.lastError : "")), /*#__PURE__*/React.createElement("button", {
@@ -8739,7 +8871,7 @@ function PendingSyncTab() {
     }
   }, "📸 PHOTOS — Google Drive (", photos.length, ")"), /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       fontSize: 12,
       marginTop: 0,
       marginBottom: 10
@@ -8808,8 +8940,8 @@ function PendingSyncTab() {
     return /*#__PURE__*/React.createElement("div", {
       key: photo.memberId,
       style: {
-        background: "#1e293b",
-        border: "1px solid #334155",
+        background: "var(--jg-card)",
+        border: "1px solid var(--jg-border)",
         borderRadius: 10,
         padding: "10px 12px"
       }
@@ -8829,12 +8961,12 @@ function PendingSyncTab() {
       style: {
         fontSize: 14,
         fontWeight: 600,
-        color: "#e2e8f0"
+        color: "var(--jg-text)"
       }
     }, "📸 Photo: ", member.name || "Unknown", " ", member.surname || ""), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
-        color: "#64748b",
+        color: "var(--jg-muteddark)",
         marginTop: 3
       }
     }, "Queued ", when, " · ", photo.attempts || 0, " attempt", (photo.attempts || 0) !== 1 ? "s" : "")), /*#__PURE__*/React.createElement("button", {
@@ -9156,7 +9288,7 @@ function ImportTab({
     }
   }, msg), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
+      background: "var(--jg-card)",
       border: "2px solid #6c63ff44",
       borderRadius: 13,
       padding: "16px",
@@ -9173,14 +9305,14 @@ function ImportTab({
     style: {
       margin: "0 0 12px",
       fontSize: 13,
-      color: "#94a3b8"
+      color: "var(--jg-muted)"
     }
   }, "Upload your register Excel file (.xlsx). The app reads your Register sheet automatically — finds Name, Surname, Cell Number, Address, Grade, School columns and all attendance dates."), /*#__PURE__*/React.createElement("div", {
     onClick: function () {
       document.getElementById("import-file-input").click();
     },
     style: {
-      background: "#0f172a",
+      background: "var(--jg-bg)",
       border: "2px dashed #6c63ff",
       borderRadius: 14,
       padding: "22px",
@@ -9231,7 +9363,7 @@ function ImportTab({
       key: i,
       style: {
         fontSize: 13,
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         padding: "4px 0",
         borderBottom: "1px solid #334155"
       }
@@ -9276,9 +9408,9 @@ function ImportTab({
       width: "100%",
       padding: "13px",
       borderRadius: 12,
-      border: "2px solid #334155",
-      background: "#1e293b",
-      color: "#94a3b8",
+      border: "2px solid var(--jg-border)",
+      background: "var(--jg-card)",
+      color: "var(--jg-muted)",
       fontWeight: 700,
       fontSize: 14,
       cursor: "pointer",
@@ -9305,8 +9437,8 @@ function ImportTab({
     }
   }, "✕ Cancel")))), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: "#1e293b",
-      border: "2px solid #334155",
+      background: "var(--jg-card)",
+      border: "2px solid var(--jg-border)",
       borderRadius: 13,
       padding: "16px"
     }
@@ -9314,7 +9446,7 @@ function ImportTab({
     style: {
       margin: "0 0 10px",
       fontWeight: 700,
-      color: "#e2e8f0"
+      color: "var(--jg-text)"
     }
   }, "Currently in system: ", (data.members || []).length, " members"), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9375,7 +9507,7 @@ function ConfirmScreen({
       style: {
         ...box,
         background: "linear-gradient(135deg,#1e293b,#0f172a)",
-        border: "1px solid #334155"
+        border: "1px solid var(--jg-border)"
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9384,14 +9516,14 @@ function ConfirmScreen({
       }
     }, "⏳"), /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#e2e8f0",
+        color: "var(--jg-text)",
         fontSize: 18,
         fontWeight: 800,
         margin: "0 0 6px"
       }
     }, "Saving to the cloud…"), /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         fontSize: 13,
         margin: 0
       }
@@ -9469,7 +9601,7 @@ function ConfirmScreen({
       style: {
         marginTop: 12,
         background: "transparent",
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         border: "1px solid #475569",
         borderRadius: 14,
         padding: "12px",
@@ -9606,7 +9738,7 @@ function ConfirmScreen({
     style: {
       marginTop: 12,
       background: "transparent",
-      color: "#94a3b8",
+      color: "var(--jg-muted)",
       border: "1px solid #475569",
       borderRadius: 14,
       padding: "12px",
@@ -9617,6 +9749,35 @@ function ConfirmScreen({
       cursor: "pointer"
     }
   }, "Continue (it will keep retrying)"));
+}
+
+// Fixed-position toggle rendered on every screen (Home has its own version over the banner).
+function ThemeToggle({
+  theme,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    onClick: onToggle,
+    "aria-label": "Toggle light/dark theme",
+    className: "btn-press",
+    style: {
+      position: "fixed",
+      top: 14,
+      right: 14,
+      zIndex: 300,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      background: "var(--jg-card)",
+      border: "2px solid var(--jg-border)",
+      color: "var(--jg-text)",
+      fontSize: 18,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer"
+    }
+  }, theme === "dark" ? "☀️" : "🌙");
 }
 
 // Theme tokens for the Home screen redesign (dark is the long-standing look; light is new).
@@ -9664,6 +9825,11 @@ function App() {
     });
   }
   var c = themeTokens(theme);
+  // Drive every CSS-class-styled screen (buttons, cards, inputs, tabs, tables, PIN pad,
+  // modals) from the same theme toggle — styles.css reads this via :root[data-theme].
+  useEffect(function () {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
   var [homeTilePopup, setHomeTilePopup] = useState(null);
   var [homeTilePin, setHomeTilePin] = useState("");
   var [homeTilePinError, setHomeTilePinError] = useState(false);
@@ -10106,7 +10272,10 @@ function App() {
     });
     return m && m.originalStatus === "Visitor";
   }).length;
-  if (screen === "register") return /*#__PURE__*/React.createElement("div", {
+  if (screen === "register") return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ThemeToggle, {
+    theme: theme,
+    onToggle: toggleTheme
+  }), /*#__PURE__*/React.createElement("div", {
     className: "container"
   }, /*#__PURE__*/React.createElement(RegistrationForm, {
     existingMembers: data.members || [],
@@ -10119,8 +10288,11 @@ function App() {
       setPrefill(null);
       setScreen("home");
     }
-  }));
-  if (screen === "confirm") return /*#__PURE__*/React.createElement("div", {
+  })));
+  if (screen === "confirm") return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ThemeToggle, {
+    theme: theme,
+    onToggle: toggleTheme
+  }), /*#__PURE__*/React.createElement("div", {
     className: "container"
   }, /*#__PURE__*/React.createElement(ConfirmScreen, {
     confirm: confirm,
@@ -10130,8 +10302,11 @@ function App() {
       setConfirm(null);
       setScreen("home");
     }
-  }));
-  if (screen === "checkin") return /*#__PURE__*/React.createElement("div", {
+  })));
+  if (screen === "checkin") return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ThemeToggle, {
+    theme: theme,
+    onToggle: toggleTheme
+  }), /*#__PURE__*/React.createElement("div", {
     className: "container"
   }, /*#__PURE__*/React.createElement(CheckInPage, {
     members: data.members || [],
@@ -10144,8 +10319,11 @@ function App() {
       setPrefill(m);
       setScreen("register");
     }
-  }));
-  if (screen === "leadercheckin") return /*#__PURE__*/React.createElement("div", {
+  })));
+  if (screen === "leadercheckin") return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ThemeToggle, {
+    theme: theme,
+    onToggle: toggleTheme
+  }), /*#__PURE__*/React.createElement("div", {
     className: "container"
   }, /*#__PURE__*/React.createElement(CheckInPage, {
     members: data.members || [],
@@ -10159,16 +10337,22 @@ function App() {
       setScreen("register");
     },
     initialMode: "leader"
-  }));
-  if (screen === "pin") return /*#__PURE__*/React.createElement(PinScreen, {
+  })));
+  if (screen === "pin") return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ThemeToggle, {
+    theme: theme,
+    onToggle: toggleTheme
+  }), /*#__PURE__*/React.createElement(PinScreen, {
     onSuccess: function () {
       setScreen("admin");
     },
     onBack: function () {
       setScreen("home");
     }
-  });
-  if (screen === "admin") return /*#__PURE__*/React.createElement("div", {
+  }));
+  if (screen === "admin") return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ThemeToggle, {
+    theme: theme,
+    onToggle: toggleTheme
+  }), /*#__PURE__*/React.createElement("div", {
     className: "container"
   }, /*#__PURE__*/React.createElement(AdminDashboard, {
     data: data,
@@ -10182,7 +10366,7 @@ function App() {
     },
     onRefresh: loadFromGoogle,
     syncing: syncing
-  }));
+  })));
   return /*#__PURE__*/React.createElement("div", {
     style: {
       minHeight: "100vh",
@@ -10653,7 +10837,7 @@ function App() {
         e.stopPropagation();
       },
       style: {
-        background: "#0f172a",
+        background: "var(--jg-bg)",
         borderRadius: 20,
         maxHeight: "85vh",
         width: "100%",
@@ -10667,7 +10851,7 @@ function App() {
         padding: "14px 16px",
         position: "sticky",
         top: 0,
-        background: "#0f172a",
+        background: "var(--jg-bg)",
         borderBottom: "2px solid " + color + "44",
         display: "flex",
         justifyContent: "space-between",
@@ -10705,14 +10889,14 @@ function App() {
       }
     }, "🔒"), /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#e2e8f0",
+        color: "var(--jg-text)",
         fontSize: 16,
         fontWeight: 700,
         margin: "0 0 6px"
       }
     }, "Leader PIN Required"), /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#94a3b8",
+        color: "var(--jg-muted)",
         fontSize: 13,
         margin: "0 0 18px"
       }
@@ -10788,9 +10972,9 @@ function App() {
     }, /*#__PURE__*/React.createElement("button", {
       onClick: closeHomeTilePopup,
       style: {
-        background: "#1e293b",
-        color: "#94a3b8",
-        border: "1px solid #334155",
+        background: "var(--jg-card)",
+        color: "var(--jg-muted)",
+        border: "1px solid var(--jg-border)",
         borderRadius: 10,
         padding: "8px 16px",
         fontSize: 12,
@@ -10801,7 +10985,7 @@ function App() {
       }
     }, "← Back"), list.length === 0 && /*#__PURE__*/React.createElement("p", {
       style: {
-        color: "#64748b",
+        color: "var(--jg-muteddark)",
         textAlign: "center",
         padding: 20
       }
@@ -10812,7 +10996,7 @@ function App() {
       return /*#__PURE__*/React.createElement("div", {
         key: m.id,
         style: {
-          background: "#1e293b",
+          background: "var(--jg-card)",
           borderRadius: 12,
           padding: "10px 12px",
           marginBottom: 6
@@ -10852,12 +11036,12 @@ function App() {
       }, /*#__PURE__*/React.createElement("strong", {
         style: {
           fontSize: 13,
-          color: "#e2e8f0"
+          color: "var(--jg-text)"
         }
       }, m.name, " ", m.surname), /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: 11,
-          color: "#94a3b8"
+          color: "var(--jg-muted)"
         }
       }, status, m.grade ? " · Gr " + m.grade : "", m.school ? " · " + m.school : ""), isVisitor && m.visitReason && /*#__PURE__*/React.createElement("div", {
         style: {
