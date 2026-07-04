@@ -1825,6 +1825,8 @@ function RegistrationForm({
   var [errors, setErrors] = useState({});
   var [done, setDone] = useState(false);
   var [photoSkipped, setPhotoSkipped] = useState(false);
+  var [regVariant, setRegVariant] = useState("onepage"); // "onepage" (existing, default) or "stepbystep" (new)
+  var [stepIndex, setStepIndex] = useState(0);
   var age = calcAge(form.birthday);
   function set(f, v) {
     setForm(function (p) {
@@ -1898,6 +1900,11 @@ function RegistrationForm({
     onDone(member, !existing);
     setDone(true);
   }
+
+  // NOTE: submit() below always routes through the parent's registerAndConfirm(),
+  // which switches App's screen to "confirm" in the same tick — so this component
+  // unmounts before `done` ever renders. The actual post-registration screen the
+  // user sees is ConfirmScreen (the confetti/reward-code celebration lives there).
   if (done) return /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
@@ -1982,6 +1989,316 @@ function RegistrationForm({
         marginBottom: 10
       }
     }, errors[key]));
+  }
+  function schoolField() {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 12
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "block",
+        fontSize: 13,
+        fontWeight: 600,
+        color: "var(--jg-muted)",
+        marginBottom: 4
+      }
+    }, "School *"), /*#__PURE__*/React.createElement("select", {
+      className: "input",
+      value: form.school,
+      style: {
+        borderColor: errors.school ? "#ef4444" : undefined,
+        background: "var(--jg-card)",
+        color: "#fff"
+      },
+      onChange: function (e) {
+        var v = e.target.value;
+        if (!v.startsWith("--")) set("school", v);
+      }
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "-- Select school --"), SCHOOLS.map(function (s) {
+      return /*#__PURE__*/React.createElement("option", {
+        key: s,
+        value: s,
+        disabled: s.startsWith("--"),
+        style: {
+          background: "var(--jg-card)"
+        }
+      }, s);
+    })), errors.school && /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: "#f87171",
+        fontSize: 12,
+        marginBottom: 8
+      }
+    }, errors.school));
+  }
+  function birthdayField() {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 12
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "block",
+        fontSize: 13,
+        fontWeight: 600,
+        color: "var(--jg-muted)",
+        marginBottom: 6
+      }
+    }, "Date of Birth * ", form.birthday && calcAge(form.birthday) !== null && /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: "#6ee7b7",
+        marginLeft: 8
+      }
+    }, "Age: ", calcAge(form.birthday))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1.4fr",
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("select", {
+      className: "input",
+      style: {
+        background: "var(--jg-card)",
+        color: "#fff"
+      },
+      value: form.birthday ? form.birthday.split("-")[2] || "" : "",
+      onChange: function (e) {
+        var parts = (form.birthday || "----").split("-");
+        set("birthday", (parts[0] || "2000") + "-" + (parts[1] || "01") + "-" + e.target.value);
+      }
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "Day"), Array.from({
+      length: 31
+    }, function (_, i) {
+      var d = String(i + 1).padStart(2, "0");
+      return /*#__PURE__*/React.createElement("option", {
+        key: d,
+        value: d
+      }, i + 1);
+    })), /*#__PURE__*/React.createElement("select", {
+      className: "input",
+      style: {
+        background: "var(--jg-card)",
+        color: "#fff"
+      },
+      value: form.birthday ? form.birthday.split("-")[1] || "" : "",
+      onChange: function (e) {
+        var parts = (form.birthday || "----").split("-");
+        set("birthday", (parts[0] || "2000") + "-" + e.target.value + "-" + (parts[2] || "01"));
+      }
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "Month"), ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(function (m, i) {
+      var v = String(i + 1).padStart(2, "0");
+      return /*#__PURE__*/React.createElement("option", {
+        key: v,
+        value: v
+      }, m);
+    })), /*#__PURE__*/React.createElement("select", {
+      className: "input",
+      style: {
+        background: "var(--jg-card)",
+        color: "#fff"
+      },
+      value: form.birthday ? form.birthday.split("-")[0] || "" : "",
+      onChange: function (e) {
+        var parts = (form.birthday || "----").split("-");
+        set("birthday", e.target.value + "-" + (parts[1] || "01") + "-" + (parts[2] || "01"));
+      }
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "Year"), Array.from({
+      length: 26
+    }, function (_, i) {
+      var y = String(new Date().getFullYear() - 5 - i);
+      return /*#__PURE__*/React.createElement("option", {
+        key: y,
+        value: y
+      }, y);
+    }))), errors.birthday && /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: "#f87171",
+        fontSize: 12,
+        marginTop: 4
+      }
+    }, errors.birthday));
+  }
+  function photoField() {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "block",
+        fontSize: 13,
+        fontWeight: 600,
+        color: "var(--jg-muted)",
+        marginBottom: 8
+      }
+    }, "Profile Photo *"), /*#__PURE__*/React.createElement("input", {
+      type: "file",
+      accept: "image/*",
+      capture: "user",
+      id: "selfie-input",
+      style: {
+        display: "none"
+      },
+      onChange: function (e) {
+        if (e.target.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function (ev) {
+            var img = new Image();
+            img.onload = function () {
+              var canvas = document.createElement("canvas");
+              canvas.width = img.width;
+              canvas.height = img.height;
+              var ctx = canvas.getContext("2d");
+              ctx.translate(img.width, 0);
+              ctx.scale(-1, 1);
+              ctx.drawImage(img, 0, 0);
+              set("photo", canvas.toDataURL("image/jpeg", 0.85));
+            };
+            img.src = ev.target.result;
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      }
+    }), !form.photo ? /*#__PURE__*/React.createElement("div", {
+      onClick: function () {
+        document.getElementById("selfie-input").click();
+      },
+      style: {
+        background: "linear-gradient(135deg,#1e293b,#0f172a)",
+        border: "3px dashed " + (errors.photo ? "#ef4444" : "#6c63ff"),
+        borderRadius: 16,
+        padding: "28px 20px",
+        textAlign: "center",
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 52,
+        marginBottom: 8
+      }
+    }, "📸"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: errors.photo ? "#f87171" : "#6c63ff",
+        fontWeight: 700,
+        fontSize: 16,
+        margin: "0 0 4px"
+      }
+    }, "Tap to Take Your Selfie"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: "#475569",
+        fontSize: 13,
+        margin: 0
+      }
+    }, "Your photo will be saved to your profile")) : /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: "center"
+      }
+    }, /*#__PURE__*/React.createElement("img", {
+      src: form.photo,
+      width: "100",
+      height: "100",
+      style: {
+        borderRadius: "50%",
+        objectFit: "cover",
+        border: "3px solid #6c63ff",
+        display: "block",
+        margin: "0 auto 10px"
+      }
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: function () {
+        document.getElementById("selfie-input").click();
+      },
+      style: {
+        background: "var(--jg-card)",
+        border: "2px solid var(--jg-border)",
+        color: "var(--jg-muted)",
+        borderRadius: 10,
+        padding: "8px 16px",
+        fontSize: 13,
+        cursor: "pointer",
+        fontFamily: "inherit"
+      }
+    }, "Retake Photo")), errors.photo && /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: "#f87171",
+        fontSize: 12,
+        marginTop: 8,
+        textAlign: "center",
+        fontWeight: 600
+      }
+    }, "📸 A photo is required to register"));
+  }
+  function whatsappOptInField() {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "#0d2818",
+        border: "2px solid #22c55e44",
+        borderRadius: 12,
+        padding: "14px",
+        marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 8px",
+        fontWeight: 700,
+        fontSize: 14,
+        color: "#86efac"
+      }
+    }, "Join our WhatsApp Group?"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 10px",
+        fontSize: 12,
+        color: "var(--jg-muteddark)"
+      }
+    }, "We will add you within one week of registering."), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: function () {
+        set("wantsWhatsApp", true);
+      },
+      style: {
+        padding: "11px",
+        borderRadius: 10,
+        border: form.wantsWhatsApp === true ? "2px solid #22c55e" : "2px solid #334155",
+        background: form.wantsWhatsApp === true ? "#0d2818" : "var(--jg-card)",
+        color: form.wantsWhatsApp === true ? "#86efac" : "var(--jg-muteddark)",
+        fontWeight: 700,
+        fontSize: 13,
+        cursor: "pointer",
+        fontFamily: "inherit"
+      }
+    }, "Yes please!"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: function () {
+        set("wantsWhatsApp", false);
+      },
+      style: {
+        padding: "11px",
+        borderRadius: 10,
+        border: form.wantsWhatsApp === false ? "2px solid #ef4444" : "2px solid #334155",
+        background: form.wantsWhatsApp === false ? "#1a0505" : "var(--jg-card)",
+        color: form.wantsWhatsApp === false ? "#f87171" : "var(--jg-muteddark)",
+        fontWeight: 700,
+        fontSize: 13,
+        cursor: "pointer",
+        fontFamily: "inherit"
+      }
+    }, "No thanks")));
   }
 
   // Big Visitor or Member selector shows first
@@ -2129,6 +2446,267 @@ function RegistrationForm({
       onClick: onBack
     }, "← Back to Home"));
   }
+  function visitReasonField() {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 14,
+        background: "#1a0a1e",
+        border: "2px solid #a855f744",
+        borderRadius: 13,
+        padding: "14px"
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "block",
+        fontSize: 13,
+        fontWeight: 700,
+        color: "#e879f9",
+        marginBottom: 8
+      }
+    }, "What brought you to JG today? *"), /*#__PURE__*/React.createElement("select", {
+      className: "input",
+      value: form.visitReason,
+      style: {
+        background: "var(--jg-bg)",
+        color: "#fff",
+        borderColor: errors.visitReason ? "#ef4444" : "#a855f744"
+      },
+      onChange: function (e) {
+        set("visitReason", e.target.value);
+        if (e.target.value !== "Friend invited me" && e.target.value !== "Family member") set("invitedBy", "");
+      }
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "-- Choose one --"), /*#__PURE__*/React.createElement("option", {
+      value: "Friend invited me"
+    }, "👥 A friend invited me"), /*#__PURE__*/React.createElement("option", {
+      value: "Heard from school"
+    }, "🏫 Heard from school friends"), /*#__PURE__*/React.createElement("option", {
+      value: "Family member"
+    }, "👨‍👩‍👧 Family member attends"), /*#__PURE__*/React.createElement("option", {
+      value: "Saw it online"
+    }, "📱 Saw it online / social media"), /*#__PURE__*/React.createElement("option", {
+      value: "Church / Pastor"
+    }, "⛪ Pastor or church invited me"), /*#__PURE__*/React.createElement("option", {
+      value: "Flyer or poster"
+    }, "📄 Flyer or poster"), /*#__PURE__*/React.createElement("option", {
+      value: "Other"
+    }, "💫 Other reason")), errors.visitReason && /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: "#f87171",
+        fontSize: 12,
+        marginTop: 4
+      }
+    }, "Please select a reason"), (form.visitReason === "Friend invited me" || form.visitReason === "Family member") && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 14,
+        paddingTop: 14,
+        borderTop: "1px solid #a855f722"
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "block",
+        fontSize: 13,
+        fontWeight: 700,
+        color: "#e879f9",
+        marginBottom: 8
+      }
+    }, "Who invited you? Search the youth member:"), /*#__PURE__*/React.createElement("input", {
+      className: "input",
+      placeholder: "Type their name...",
+      value: form.invitedBy || "",
+      onChange: function (e) {
+        set("invitedBy", e.target.value);
+      }
+    }), form.invitedBy && form.invitedBy.length >= 1 && function () {
+      var matches = existingMembers.filter(function (em) {
+        return (em.name + " " + em.surname).toLowerCase().includes(form.invitedBy.toLowerCase());
+      }).slice(0, 5);
+      if (matches.length === 0 || matches.find(function (em) {
+        return (em.name + " " + em.surname).toLowerCase() === form.invitedBy.toLowerCase();
+      })) return null;
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          background: "var(--jg-bg)",
+          borderRadius: 10,
+          marginTop: 6,
+          padding: 6,
+          border: "1px solid #a855f744"
+        }
+      }, matches.map(function (em) {
+        return /*#__PURE__*/React.createElement("div", {
+          key: em.id,
+          onClick: function () {
+            set("invitedBy", em.name + " " + em.surname);
+          },
+          style: {
+            padding: "8px 10px",
+            cursor: "pointer",
+            borderRadius: 7,
+            display: "flex",
+            alignItems: "center",
+            gap: 8
+          }
+        }, em.photo ? /*#__PURE__*/React.createElement("img", {
+          src: em.photo,
+          width: "28",
+          height: "28",
+          style: {
+            borderRadius: "50%",
+            objectFit: "cover"
+          }
+        }) : /*#__PURE__*/React.createElement("div", {
+          style: {
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            background: "var(--jg-border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 14
+          }
+        }, "👤"), /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: 13,
+            color: "var(--jg-text)"
+          }
+        }, em.name, " ", em.surname));
+      }));
+    }()));
+  }
+  var STEP_DEFS = function () {
+    var steps = [{
+      key: "name",
+      required: true,
+      render: function () {
+        return field("First Name *", "name", "text", "e.g. Lebo");
+      }
+    }, {
+      key: "surname",
+      required: true,
+      render: function () {
+        return field("Surname *", "surname", "text", "e.g. Dlamini");
+      }
+    }, {
+      key: "phone",
+      required: true,
+      render: function () {
+        return field("Cell Number *", "phone", "tel", "e.g. 071 234 5678");
+      }
+    }, {
+      key: "whatsapp",
+      required: false,
+      render: function () {
+        return field("WhatsApp Number", "whatsapp", "tel", "If different from cell");
+      }
+    }, {
+      key: "parentName",
+      required: true,
+      render: function () {
+        return field("Parent First Name *", "parentName", "text", "e.g. Mary");
+      }
+    }, {
+      key: "parentSurname",
+      required: true,
+      render: function () {
+        return field("Parent Surname *", "parentSurname", "text", "e.g. Dlamini");
+      }
+    }, {
+      key: "parentPhone",
+      required: true,
+      render: function () {
+        return field("Parent / Guardian Phone *", "parentPhone", "tel", "e.g. 082 456 7890");
+      }
+    }, {
+      key: "school",
+      required: true,
+      render: schoolField
+    }, {
+      key: "address",
+      required: true,
+      render: function () {
+        return field("Home Address *", "address", "text", "e.g. 12 Main St, Lephalale");
+      }
+    }, {
+      key: "birthday",
+      required: true,
+      render: birthdayField
+    }, {
+      key: "photo",
+      required: false,
+      render: photoField
+    }, {
+      key: "whatsappOptIn",
+      required: false,
+      render: whatsappOptInField
+    }];
+    if (form.status === "Visitor") steps.unshift({
+      key: "visitReason",
+      required: true,
+      render: visitReasonField
+    });
+    return steps;
+  }();
+  function renderStepByStep() {
+    var total = STEP_DEFS.length;
+    var idx = Math.min(stepIndex, total - 1);
+    var cur = STEP_DEFS[idx];
+    var canNext = !cur.required || !!form[cur.key];
+    function goNext() {
+      if (idx >= total - 1) {
+        submit();
+        return;
+      }
+      setStepIndex(idx + 1);
+    }
+    function goPrev() {
+      setStepIndex(Math.max(0, idx - 1));
+    }
+    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        justifyContent: "center",
+        flexWrap: "wrap",
+        marginBottom: 20
+      }
+    }, STEP_DEFS.map(function (_, i) {
+      return /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          width: 8,
+          height: 8,
+          borderRadius: "50%",
+          background: i <= idx ? "#6c63ff" : "var(--jg-border)"
+        }
+      });
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        minHeight: 140
+      }
+    }, cur.render()), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 10,
+        marginTop: 22
+      }
+    }, idx > 0 && /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-admin",
+      style: {
+        flex: 1
+      },
+      onClick: goPrev
+    }, "Back"), /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-reg",
+      style: {
+        flex: 2,
+        opacity: canNext ? 1 : 0.5
+      },
+      disabled: !canNext,
+      onClick: goNext
+    }, idx >= total - 1 ? "Complete Registration" : "Next")));
+  }
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
     className: "btn btn-admin",
     onClick: onBack,
@@ -2184,135 +2762,52 @@ function RegistrationForm({
       textDecoration: "underline",
       fontFamily: "inherit"
     }
-  }, "← Change")), form.status === "Visitor" && /*#__PURE__*/React.createElement("div", {
+  }, "← Change")), !prefill && /*#__PURE__*/React.createElement("div", {
     style: {
-      marginBottom: 14,
-      background: "#1a0a1e",
-      border: "2px solid #a855f744",
-      borderRadius: 13,
-      padding: "14px"
+      display: "flex",
+      background: "var(--jg-card)",
+      borderRadius: 12,
+      padding: 4,
+      marginBottom: 20
     }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "block",
-      fontSize: 13,
-      fontWeight: 700,
-      color: "#e879f9",
-      marginBottom: 8
-    }
-  }, "What brought you to JG today? *"), /*#__PURE__*/React.createElement("select", {
-    className: "input",
-    value: form.visitReason,
-    style: {
-      background: "var(--jg-bg)",
-      color: "#fff",
-      borderColor: errors.visitReason ? "#ef4444" : "#a855f744"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: function () {
+      setRegVariant("stepbystep");
+      setStepIndex(0);
     },
-    onChange: function (e) {
-      set("visitReason", e.target.value);
-      if (e.target.value !== "Friend invited me" && e.target.value !== "Family member") set("invitedBy", "");
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "-- Choose one --"), /*#__PURE__*/React.createElement("option", {
-    value: "Friend invited me"
-  }, "👥 A friend invited me"), /*#__PURE__*/React.createElement("option", {
-    value: "Heard from school"
-  }, "🏫 Heard from school friends"), /*#__PURE__*/React.createElement("option", {
-    value: "Family member"
-  }, "👨‍👩‍👧 Family member attends"), /*#__PURE__*/React.createElement("option", {
-    value: "Saw it online"
-  }, "📱 Saw it online / social media"), /*#__PURE__*/React.createElement("option", {
-    value: "Church / Pastor"
-  }, "⛪ Pastor or church invited me"), /*#__PURE__*/React.createElement("option", {
-    value: "Flyer or poster"
-  }, "📄 Flyer or poster"), /*#__PURE__*/React.createElement("option", {
-    value: "Other"
-  }, "💫 Other reason")), errors.visitReason && /*#__PURE__*/React.createElement("p", {
     style: {
-      color: "#f87171",
-      fontSize: 12,
-      marginTop: 4
-    }
-  }, "Please select a reason"), (form.visitReason === "Friend invited me" || form.visitReason === "Family member") && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 14,
-      paddingTop: 14,
-      borderTop: "1px solid #a855f722"
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "block",
+      flex: 1,
+      padding: 9,
+      borderRadius: 9,
       fontSize: 13,
       fontWeight: 700,
-      color: "#e879f9",
-      marginBottom: 8
+      border: "none",
+      cursor: "pointer",
+      fontFamily: "inherit",
+      background: regVariant === "stepbystep" ? "#6c63ff" : "transparent",
+      color: regVariant === "stepbystep" ? "#fff" : "var(--jg-muted)"
     }
-  }, "Who invited you? Search the youth member:"), /*#__PURE__*/React.createElement("input", {
-    className: "input",
-    placeholder: "Type their name...",
-    value: form.invitedBy || "",
-    onChange: function (e) {
-      set("invitedBy", e.target.value);
-    }
-  }), form.invitedBy && form.invitedBy.length >= 1 && function () {
-    var matches = existingMembers.filter(function (em) {
-      return (em.name + " " + em.surname).toLowerCase().includes(form.invitedBy.toLowerCase());
-    }).slice(0, 5);
-    if (matches.length === 0 || matches.find(function (em) {
-      return (em.name + " " + em.surname).toLowerCase() === form.invitedBy.toLowerCase();
-    })) return null;
-    return /*#__PURE__*/React.createElement("div", {
-      style: {
-        background: "var(--jg-bg)",
-        borderRadius: 10,
-        marginTop: 6,
-        padding: 6,
-        border: "1px solid #a855f744"
-      }
-    }, matches.map(function (em) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: em.id,
-        onClick: function () {
-          set("invitedBy", em.name + " " + em.surname);
-        },
-        style: {
-          padding: "8px 10px",
-          cursor: "pointer",
-          borderRadius: 7,
-          display: "flex",
-          alignItems: "center",
-          gap: 8
-        }
-      }, em.photo ? /*#__PURE__*/React.createElement("img", {
-        src: em.photo,
-        width: "28",
-        height: "28",
-        style: {
-          borderRadius: "50%",
-          objectFit: "cover"
-        }
-      }) : /*#__PURE__*/React.createElement("div", {
-        style: {
-          width: 28,
-          height: 28,
-          borderRadius: "50%",
-          background: "#334155",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: 14
-        }
-      }, "👤"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 13,
-          color: "var(--jg-text)"
-        }
-      }, em.name, " ", em.surname));
-    }));
-  }())), field("First Name *", "name", "text", "e.g. Lebo"), field("Surname *", "surname", "text", "e.g. Dlamini"), field("Cell Number *", "phone", "tel", "e.g. 071 234 5678"), field("WhatsApp Number", "whatsapp", "tel", "If different from cell"), /*#__PURE__*/React.createElement("div", {
+  }, "Step-by-step"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: function () {
+      setRegVariant("onepage");
+    },
     style: {
-      background: "#182032",
+      flex: 1,
+      padding: 9,
+      borderRadius: 9,
+      fontSize: 13,
+      fontWeight: 700,
+      border: "none",
+      cursor: "pointer",
+      fontFamily: "inherit",
+      background: regVariant === "onepage" ? "#6c63ff" : "transparent",
+      color: regVariant === "onepage" ? "#fff" : "var(--jg-muted)"
+    }
+  }, "One page")), !prefill && regVariant === "stepbystep" ? renderStepByStep() : /*#__PURE__*/React.createElement("div", null, form.status === "Visitor" && visitReasonField(), field("First Name *", "name", "text", "e.g. Lebo"), field("Surname *", "surname", "text", "e.g. Dlamini"), field("Cell Number *", "phone", "tel", "e.g. 071 234 5678"), field("WhatsApp Number", "whatsapp", "tel", "If different from cell"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "var(--jg-card2)",
       borderRadius: 12,
       padding: "14px 14px 2px",
       marginBottom: 12
@@ -2324,311 +2819,13 @@ function RegistrationForm({
       fontWeight: 700,
       color: "#6ee7b7"
     }
-  }, "Parent / Guardian"), field("Parent First Name *", "parentName", "text", "e.g. Mary"), field("Parent Surname *", "parentSurname", "text", "e.g. Dlamini"), field("Parent / Guardian Phone *", "parentPhone", "tel", "e.g. 082 456 7890")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 12
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "block",
-      fontSize: 13,
-      fontWeight: 600,
-      color: "var(--jg-muted)",
-      marginBottom: 4
-    }
-  }, "School *"), /*#__PURE__*/React.createElement("select", {
-    className: "input",
-    value: form.school,
-    style: {
-      borderColor: errors.school ? "#ef4444" : undefined,
-      background: "var(--jg-card)",
-      color: "#fff"
-    },
-    onChange: function (e) {
-      var v = e.target.value;
-      if (!v.startsWith("--")) set("school", v);
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "-- Select school --"), SCHOOLS.map(function (s) {
-    return /*#__PURE__*/React.createElement("option", {
-      key: s,
-      value: s,
-      disabled: s.startsWith("--"),
-      style: {
-        background: "var(--jg-card)"
-      }
-    }, s);
-  })), errors.school && /*#__PURE__*/React.createElement("p", {
-    style: {
-      color: "#f87171",
-      fontSize: 12,
-      marginBottom: 8
-    }
-  }, errors.school)), field("Home Address *", "address", "text", "e.g. 12 Main St, Lephalale"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 12
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "block",
-      fontSize: 13,
-      fontWeight: 600,
-      color: "var(--jg-muted)",
-      marginBottom: 6
-    }
-  }, "Date of Birth * ", form.birthday && calcAge(form.birthday) !== null && /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "#6ee7b7",
-      marginLeft: 8
-    }
-  }, "Age: ", calcAge(form.birthday))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr 1.4fr",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("select", {
-    className: "input",
-    style: {
-      background: "var(--jg-card)",
-      color: "#fff"
-    },
-    value: form.birthday ? form.birthday.split("-")[2] || "" : "",
-    onChange: function (e) {
-      var parts = (form.birthday || "----").split("-");
-      set("birthday", (parts[0] || "2000") + "-" + (parts[1] || "01") + "-" + e.target.value);
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "Day"), Array.from({
-    length: 31
-  }, function (_, i) {
-    var d = String(i + 1).padStart(2, "0");
-    return /*#__PURE__*/React.createElement("option", {
-      key: d,
-      value: d
-    }, i + 1);
-  })), /*#__PURE__*/React.createElement("select", {
-    className: "input",
-    style: {
-      background: "var(--jg-card)",
-      color: "#fff"
-    },
-    value: form.birthday ? form.birthday.split("-")[1] || "" : "",
-    onChange: function (e) {
-      var parts = (form.birthday || "----").split("-");
-      set("birthday", (parts[0] || "2000") + "-" + e.target.value + "-" + (parts[2] || "01"));
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "Month"), ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map(function (m, i) {
-    var v = String(i + 1).padStart(2, "0");
-    return /*#__PURE__*/React.createElement("option", {
-      key: v,
-      value: v
-    }, m);
-  })), /*#__PURE__*/React.createElement("select", {
-    className: "input",
-    style: {
-      background: "var(--jg-card)",
-      color: "#fff"
-    },
-    value: form.birthday ? form.birthday.split("-")[0] || "" : "",
-    onChange: function (e) {
-      var parts = (form.birthday || "----").split("-");
-      set("birthday", e.target.value + "-" + (parts[1] || "01") + "-" + (parts[2] || "01"));
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "Year"), Array.from({
-    length: 26
-  }, function (_, i) {
-    var y = String(new Date().getFullYear() - 5 - i);
-    return /*#__PURE__*/React.createElement("option", {
-      key: y,
-      value: y
-    }, y);
-  }))), errors.birthday && /*#__PURE__*/React.createElement("p", {
-    style: {
-      color: "#f87171",
-      fontSize: 12,
-      marginTop: 4
-    }
-  }, errors.birthday)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    style: {
-      display: "block",
-      fontSize: 13,
-      fontWeight: 600,
-      color: "var(--jg-muted)",
-      marginBottom: 8
-    }
-  }, "Profile Photo *"), /*#__PURE__*/React.createElement("input", {
-    type: "file",
-    accept: "image/*",
-    capture: "user",
-    id: "selfie-input",
-    style: {
-      display: "none"
-    },
-    onChange: function (e) {
-      if (e.target.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function (ev) {
-          var img = new Image();
-          img.onload = function () {
-            var canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            var ctx = canvas.getContext("2d");
-            ctx.translate(img.width, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(img, 0, 0);
-            set("photo", canvas.toDataURL("image/jpeg", 0.85));
-          };
-          img.src = ev.target.result;
-        };
-        reader.readAsDataURL(e.target.files[0]);
-      }
-    }
-  }), !form.photo ? /*#__PURE__*/React.createElement("div", {
-    onClick: function () {
-      document.getElementById("selfie-input").click();
-    },
-    style: {
-      background: "linear-gradient(135deg,#1e293b,#0f172a)",
-      border: "3px dashed " + (errors.photo ? "#ef4444" : "#6c63ff"),
-      borderRadius: 16,
-      padding: "28px 20px",
-      textAlign: "center",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontSize: 52,
-      marginBottom: 8
-    }
-  }, "📸"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      color: errors.photo ? "#f87171" : "#6c63ff",
-      fontWeight: 700,
-      fontSize: 16,
-      margin: "0 0 4px"
-    }
-  }, "Tap to Take Your Selfie"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      color: "#475569",
-      fontSize: 13,
-      margin: 0
-    }
-  }, "Your photo will be saved to your profile")) : /*#__PURE__*/React.createElement("div", {
-    style: {
-      textAlign: "center"
-    }
-  }, /*#__PURE__*/React.createElement("img", {
-    src: form.photo,
-    width: "100",
-    height: "100",
-    style: {
-      borderRadius: "50%",
-      objectFit: "cover",
-      border: "3px solid #6c63ff",
-      display: "block",
-      margin: "0 auto 10px"
-    }
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: function () {
-      document.getElementById("selfie-input").click();
-    },
-    style: {
-      background: "var(--jg-card)",
-      border: "2px solid var(--jg-border)",
-      color: "var(--jg-muted)",
-      borderRadius: 10,
-      padding: "8px 16px",
-      fontSize: 13,
-      cursor: "pointer",
-      fontFamily: "inherit"
-    }
-  }, "Retake Photo")), errors.photo && /*#__PURE__*/React.createElement("p", {
-    style: {
-      color: "#f87171",
-      fontSize: 12,
-      marginTop: 8,
-      textAlign: "center",
-      fontWeight: 600
-    }
-  }, "📸 A photo is required to register")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      background: "#0d2818",
-      border: "2px solid #22c55e44",
-      borderRadius: 12,
-      padding: "14px",
-      marginBottom: 14
-    }
-  }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "0 0 8px",
-      fontWeight: 700,
-      fontSize: 14,
-      color: "#86efac"
-    }
-  }, "Join our WhatsApp Group?"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "0 0 10px",
-      fontSize: 12,
-      color: "var(--jg-muteddark)"
-    }
-  }, "We will add you within one week of registering."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: function () {
-      set("wantsWhatsApp", true);
-    },
-    style: {
-      padding: "11px",
-      borderRadius: 10,
-      border: form.wantsWhatsApp === true ? "2px solid #22c55e" : "2px solid #334155",
-      background: form.wantsWhatsApp === true ? "#0d2818" : "#1e293b",
-      color: form.wantsWhatsApp === true ? "#86efac" : "#64748b",
-      fontWeight: 700,
-      fontSize: 13,
-      cursor: "pointer",
-      fontFamily: "inherit"
-    }
-  }, "Yes please!"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: function () {
-      set("wantsWhatsApp", false);
-    },
-    style: {
-      padding: "11px",
-      borderRadius: 10,
-      border: form.wantsWhatsApp === false ? "2px solid #ef4444" : "2px solid #334155",
-      background: form.wantsWhatsApp === false ? "#1a0505" : "#1e293b",
-      color: form.wantsWhatsApp === false ? "#f87171" : "#64748b",
-      fontWeight: 700,
-      fontSize: 13,
-      cursor: "pointer",
-      fontFamily: "inherit"
-    }
-  }, "No thanks"))), /*#__PURE__*/React.createElement("button", {
+  }, "Parent / Guardian"), field("Parent First Name *", "parentName", "text", "e.g. Mary"), field("Parent Surname *", "parentSurname", "text", "e.g. Dlamini"), field("Parent / Guardian Phone *", "parentPhone", "tel", "e.g. 082 456 7890")), schoolField(), field("Home Address *", "address", "text", "e.g. 12 Main St, Lephalale"), birthdayField(), photoField(), whatsappOptInField(), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-reg",
     onClick: submit
   }, "Submit and Check In"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-admin",
     onClick: onBack
-  }, "Back"));
+  }, "Back")));
 }
 
 // CHECK-IN
@@ -9493,6 +9690,51 @@ function ConfirmScreen({
     padding: "28px 22px",
     textAlign: "center"
   };
+  // One reward code per registration - stable for as long as this screen stays mounted.
+  var [rewardCode] = useState(function () {
+    return "JG-" + String(Math.floor(1000 + Math.random() * 9000));
+  });
+  var CONFETTI = [{
+    emoji: "🎉",
+    left: "6%",
+    dur: "2.6s",
+    delay: "0s"
+  }, {
+    emoji: "✨",
+    left: "18%",
+    dur: "3.1s",
+    delay: "0.3s"
+  }, {
+    emoji: "🎊",
+    left: "30%",
+    dur: "2.8s",
+    delay: "0.6s"
+  }, {
+    emoji: "⭐",
+    left: "42%",
+    dur: "3.4s",
+    delay: "0.1s"
+  }, {
+    emoji: "🎉",
+    left: "54%",
+    dur: "2.9s",
+    delay: "0.5s"
+  }, {
+    emoji: "✨",
+    left: "66%",
+    dur: "3.2s",
+    delay: "0.2s"
+  }, {
+    emoji: "🎊",
+    left: "78%",
+    dur: "2.7s",
+    delay: "0.4s"
+  }, {
+    emoji: "⭐",
+    left: "90%",
+    dur: "3.0s",
+    delay: "0.7s"
+  }];
   if (c.status === "saving" || uploading) {
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -9537,18 +9779,35 @@ function ConfirmScreen({
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: 20
+        padding: 20,
+        position: "relative",
+        overflow: "hidden"
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, CONFETTI.map(function (cf, i) {
+      return /*#__PURE__*/React.createElement("div", {
+        key: i,
+        style: {
+          position: "absolute",
+          top: 0,
+          left: cf.left,
+          fontSize: 22,
+          animation: "jgFall " + cf.dur + " linear " + cf.delay + " infinite",
+          pointerEvents: "none"
+        }
+      }, cf.emoji);
+    }), /*#__PURE__*/React.createElement("div", {
       style: {
         ...box,
         background: "#0d2818",
-        border: "1px solid #22c55e"
+        border: "1px solid #22c55e",
+        position: "relative"
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 46,
-        marginBottom: 8
+        marginBottom: 8,
+        display: "inline-block",
+        animation: "jgPop 0.6s cubic-bezier(.34,1.56,.64,1) both"
       }
     }, "✅"), /*#__PURE__*/React.createElement("p", {
       style: {
@@ -9581,7 +9840,35 @@ function ConfirmScreen({
         fontSize: 12,
         margin: "8px 0 0"
       }
-    }, "If anything doesn't sync, the home screen will show it with an Upload button.")), /*#__PURE__*/React.createElement("button", {
+    }, "If anything doesn't sync, the home screen will show it with an Upload button."), /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: "var(--jg-card2)",
+        border: "2px dashed #f59e0b",
+        borderRadius: 16,
+        padding: "16px",
+        margin: "16px 0 0"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 26,
+        marginBottom: 4
+      }
+    }, "🎁"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        fontSize: 12,
+        fontWeight: 700,
+        color: "var(--jg-text)",
+        margin: "0 0 6px"
+      }
+    }, "Show this code to your leader for a gift!"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        fontSize: 22,
+        fontWeight: 900,
+        letterSpacing: "3px",
+        color: "#f59e0b",
+        margin: 0
+      }
+    }, rewardCode))), /*#__PURE__*/React.createElement("button", {
       onClick: onDone,
       style: {
         marginTop: 22,

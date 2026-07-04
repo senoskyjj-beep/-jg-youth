@@ -1155,6 +1155,8 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
   var [errors,setErrors]=useState({});
   var [done,setDone]=useState(false);
   var [photoSkipped,setPhotoSkipped]=useState(false);
+  var [regVariant,setRegVariant]=useState("onepage"); // "onepage" (existing, default) or "stepbystep" (new)
+  var [stepIndex,setStepIndex]=useState(0);
   var age=calcAge(form.birthday);
 
   function set(f,v){setForm(function(p){return Object.assign({},p,{[f]:v});});setErrors(function(e){return Object.assign({},e,{[f]:""}); });}
@@ -1191,6 +1193,10 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
     onDone(member,!existing);setDone(true);
   }
 
+  // NOTE: submit() below always routes through the parent's registerAndConfirm(),
+  // which switches App's screen to "confirm" in the same tick — so this component
+  // unmounts before `done` ever renders. The actual post-registration screen the
+  // user sees is ConfirmScreen (the confetti/reward-code celebration lives there).
   if(done)return(<div className="card" style={{textAlign:"center",padding:"28px 16px"}}>
     <div className="success-circle">✓</div>
     <h2 style={{margin:"0 0 8px"}}>{form.status==="Visitor"?"Welcome, Visitor!":"Registered! ✝"}</h2>
@@ -1210,6 +1216,94 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
       onChange={function(e){set(key,e.target.value);}}/>
     {key==="birthday"&&age!==null&&<p className="age-tag">Age: {age} years old</p>}
     {errors[key]&&<p style={{color:"#f87171",fontSize:12,marginBottom:10}}>{errors[key]}</p>}
+  </div>);}
+
+  function schoolField(){return(<div style={{marginBottom:12}}>
+    <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>School *</label>
+    <select className="input" value={form.school} style={{borderColor:errors.school?"#ef4444":undefined,background:"var(--jg-card)",color:"#fff"}}
+      onChange={function(e){var v=e.target.value;if(!v.startsWith("--"))set("school",v);}}>
+      <option value="">-- Select school --</option>
+      {SCHOOLS.map(function(s){return <option key={s} value={s} disabled={s.startsWith("--")} style={{background:"var(--jg-card)"}}>{s}</option>;})}
+    </select>
+    {errors.school&&<p style={{color:"#f87171",fontSize:12,marginBottom:8}}>{errors.school}</p>}
+  </div>);}
+
+  function birthdayField(){return(<div style={{marginBottom:12}}>
+    <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:6}}>Date of Birth * {form.birthday&&calcAge(form.birthday)!==null&&<span style={{color:"#6ee7b7",marginLeft:8}}>Age: {calcAge(form.birthday)}</span>}</label>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1.4fr",gap:8}}>
+      <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[2]||"":""} onChange={function(e){
+        var parts=(form.birthday||"----").split("-");
+        set("birthday",(parts[0]||"2000")+"-"+(parts[1]||"01")+"-"+e.target.value);
+      }}>
+        <option value="">Day</option>
+        {Array.from({length:31},function(_,i){var d=String(i+1).padStart(2,"0");return <option key={d} value={d}>{i+1}</option>;})}
+      </select>
+      <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[1]||"":""} onChange={function(e){
+        var parts=(form.birthday||"----").split("-");
+        set("birthday",(parts[0]||"2000")+"-"+e.target.value+"-"+(parts[2]||"01"));
+      }}>
+        <option value="">Month</option>
+        {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map(function(m,i){var v=String(i+1).padStart(2,"0");return <option key={v} value={v}>{m}</option>;})}
+      </select>
+      <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[0]||"":""} onChange={function(e){
+        var parts=(form.birthday||"----").split("-");
+        set("birthday",e.target.value+"-"+(parts[1]||"01")+"-"+(parts[2]||"01"));
+      }}>
+        <option value="">Year</option>
+        {Array.from({length:26},function(_,i){var y=String(new Date().getFullYear()-5-i);return <option key={y} value={y}>{y}</option>;})}
+      </select>
+    </div>
+    {errors.birthday&&<p style={{color:"#f87171",fontSize:12,marginTop:4}}>{errors.birthday}</p>}
+  </div>);}
+
+  function photoField(){return(<div style={{marginBottom:14}}>
+    <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:8}}>Profile Photo *</label>
+    <input type="file" accept="image/*" capture="user" id="selfie-input" style={{display:"none"}}
+      onChange={function(e){
+        if(e.target.files[0]){
+          var reader=new FileReader();
+          reader.onload=function(ev){
+            var img=new Image();
+            img.onload=function(){
+              var canvas=document.createElement("canvas");
+              canvas.width=img.width; canvas.height=img.height;
+              var ctx=canvas.getContext("2d");
+              ctx.translate(img.width,0);
+              ctx.scale(-1,1);
+              ctx.drawImage(img,0,0);
+              set("photo",canvas.toDataURL("image/jpeg",0.85));
+            };
+            img.src=ev.target.result;
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      }}/>
+    {!form.photo?(
+      <div onClick={function(){document.getElementById("selfie-input").click();}}
+        style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"3px dashed "+(errors.photo?"#ef4444":"#6c63ff"),borderRadius:16,padding:"28px 20px",textAlign:"center",cursor:"pointer"}}>
+        <div style={{fontSize:52,marginBottom:8}}>📸</div>
+        <p style={{color:errors.photo?"#f87171":"#6c63ff",fontWeight:700,fontSize:16,margin:"0 0 4px"}}>Tap to Take Your Selfie</p>
+        <p style={{color:"#475569",fontSize:13,margin:0}}>Your photo will be saved to your profile</p>
+      </div>
+    ):(
+      <div style={{textAlign:"center"}}>
+        <img src={form.photo} width="100" height="100" style={{borderRadius:"50%",objectFit:"cover",border:"3px solid #6c63ff",display:"block",margin:"0 auto 10px"}}/>
+        <button type="button" onClick={function(){document.getElementById("selfie-input").click();}}
+          style={{background:"var(--jg-card)",border:"2px solid var(--jg-border)",color:"var(--jg-muted)",borderRadius:10,padding:"8px 16px",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
+          Retake Photo
+        </button>
+      </div>
+    )}
+    {errors.photo&&<p style={{color:"#f87171",fontSize:12,marginTop:8,textAlign:"center",fontWeight:600}}>📸 A photo is required to register</p>}
+  </div>);}
+
+  function whatsappOptInField(){return(<div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:12,padding:"14px",marginBottom:14}}>
+    <p style={{margin:"0 0 8px",fontWeight:700,fontSize:14,color:"#86efac"}}>Join our WhatsApp Group?</p>
+    <p style={{margin:"0 0 10px",fontSize:12,color:"var(--jg-muteddark)"}}>We will add you within one week of registering.</p>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+      <button type="button" onClick={function(){set("wantsWhatsApp",true);}} style={{padding:"11px",borderRadius:10,border:form.wantsWhatsApp===true?"2px solid #22c55e":"2px solid #334155",background:form.wantsWhatsApp===true?"#0d2818":"var(--jg-card)",color:form.wantsWhatsApp===true?"#86efac":"var(--jg-muteddark)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Yes please!</button>
+      <button type="button" onClick={function(){set("wantsWhatsApp",false);}} style={{padding:"11px",borderRadius:10,border:form.wantsWhatsApp===false?"2px solid #ef4444":"2px solid #334155",background:form.wantsWhatsApp===false?"#1a0505":"var(--jg-card)",color:form.wantsWhatsApp===false?"#f87171":"var(--jg-muteddark)",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>No thanks</button>
+    </div>
   </div>);}
 
   // Big Visitor or Member selector shows first
@@ -1260,19 +1354,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
     );
   }
 
-  return(<div>
-    <button className="btn btn-admin" onClick={onBack} style={{marginBottom:12}}>← Home</button>
-    <div style={{textAlign:"center",marginBottom:18}}>
-      <div style={{display:"inline-block",background:form.status==="Visitor"?"linear-gradient(135deg,#a855f7,#6c63ff)":"linear-gradient(135deg,#22c55e,#10b981)",color:"#fff",padding:"6px 16px",borderRadius:20,fontSize:13,fontWeight:700,marginBottom:8}}>
-        {form.status==="Visitor"?"🙋 Visitor Registration":"✝ Member Registration"}
-      </div>
-      <h2 style={{margin:"4px 0 2px",fontSize:18}}>{form.status==="Visitor"?"Tell us about yourself!":"Welcome to the family!"}</h2>
-      <p style={{color:"#6ee7b7",fontSize:13,fontWeight:600,margin:0}}>Living Waters Fellowship</p>
-      {prefill&&<p style={{color:"#f59e0b",fontSize:13,margin:"6px 0 0",fontWeight:600}}>Please complete your profile below</p>}
-      {!prefill&&<button onClick={function(){set("status","");}} style={{background:"none",border:"none",color:"var(--jg-muteddark)",fontSize:12,cursor:"pointer",marginTop:6,textDecoration:"underline",fontFamily:"inherit"}}>← Change</button>}
-    </div>
-
-    {form.status==="Visitor"&&(
+  function visitReasonField(){return(
       <div style={{marginBottom:14,background:"#1a0a1e",border:"2px solid #a855f744",borderRadius:13,padding:"14px"}}>
         <label style={{display:"block",fontSize:13,fontWeight:700,color:"#e879f9",marginBottom:8}}>What brought you to JG today? *</label>
         <select className="input" value={form.visitReason} style={{background:"var(--jg-bg)",color:"#fff",borderColor:errors.visitReason?"#ef4444":"#a855f744"}}
@@ -1300,7 +1382,7 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
               return(<div style={{background:"var(--jg-bg)",borderRadius:10,marginTop:6,padding:6,border:"1px solid #a855f744"}}>
                 {matches.map(function(em){
                   return(<div key={em.id} onClick={function(){set("invitedBy",em.name+" "+em.surname);}} style={{padding:"8px 10px",cursor:"pointer",borderRadius:7,display:"flex",alignItems:"center",gap:8}}>
-                    {em.photo?<img src={em.photo} width="28" height="28" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:28,height:28,borderRadius:"50%",background:"#334155",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>👤</div>}
+                    {em.photo?<img src={em.photo} width="28" height="28" style={{borderRadius:"50%",objectFit:"cover"}}/>:<div style={{width:28,height:28,borderRadius:"50%",background:"var(--jg-border)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>👤</div>}
                     <span style={{fontSize:13,color:"var(--jg-text)"}}>{em.name} {em.surname}</span>
                   </div>);
                 })}
@@ -1309,112 +1391,90 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
           </div>
         )}
       </div>
+  );}
+
+  var STEP_DEFS=(function(){
+    var steps=[
+      {key:"name",required:true,render:function(){return field("First Name *","name","text","e.g. Lebo");}},
+      {key:"surname",required:true,render:function(){return field("Surname *","surname","text","e.g. Dlamini");}},
+      {key:"phone",required:true,render:function(){return field("Cell Number *","phone","tel","e.g. 071 234 5678");}},
+      {key:"whatsapp",required:false,render:function(){return field("WhatsApp Number","whatsapp","tel","If different from cell");}},
+      {key:"parentName",required:true,render:function(){return field("Parent First Name *","parentName","text","e.g. Mary");}},
+      {key:"parentSurname",required:true,render:function(){return field("Parent Surname *","parentSurname","text","e.g. Dlamini");}},
+      {key:"parentPhone",required:true,render:function(){return field("Parent / Guardian Phone *","parentPhone","tel","e.g. 082 456 7890");}},
+      {key:"school",required:true,render:schoolField},
+      {key:"address",required:true,render:function(){return field("Home Address *","address","text","e.g. 12 Main St, Lephalale");}},
+      {key:"birthday",required:true,render:birthdayField},
+      {key:"photo",required:false,render:photoField},
+      {key:"whatsappOptIn",required:false,render:whatsappOptInField},
+    ];
+    if(form.status==="Visitor")steps.unshift({key:"visitReason",required:true,render:visitReasonField});
+    return steps;
+  })();
+
+  function renderStepByStep(){
+    var total=STEP_DEFS.length;
+    var idx=Math.min(stepIndex,total-1);
+    var cur=STEP_DEFS[idx];
+    var canNext=!cur.required||!!form[cur.key];
+    function goNext(){ if(idx>=total-1){submit();return;} setStepIndex(idx+1); }
+    function goPrev(){ setStepIndex(Math.max(0,idx-1)); }
+    return(<div>
+      <div style={{display:"flex",gap:6,justifyContent:"center",flexWrap:"wrap",marginBottom:20}}>
+        {STEP_DEFS.map(function(_,i){return <div key={i} style={{width:8,height:8,borderRadius:"50%",background:i<=idx?"#6c63ff":"var(--jg-border)"}}/>;})}
+      </div>
+      <div style={{minHeight:140}}>{cur.render()}</div>
+      <div style={{display:"flex",gap:10,marginTop:22}}>
+        {idx>0&&<button className="btn btn-admin" style={{flex:1}} onClick={goPrev}>Back</button>}
+        <button className="btn btn-reg" style={{flex:2,opacity:canNext?1:0.5}} disabled={!canNext} onClick={goNext}>{idx>=total-1?"Complete Registration":"Next"}</button>
+      </div>
+    </div>);
+  }
+
+  return(<div>
+    <button className="btn btn-admin" onClick={onBack} style={{marginBottom:12}}>← Home</button>
+    <div style={{textAlign:"center",marginBottom:18}}>
+      <div style={{display:"inline-block",background:form.status==="Visitor"?"linear-gradient(135deg,#a855f7,#6c63ff)":"linear-gradient(135deg,#22c55e,#10b981)",color:"#fff",padding:"6px 16px",borderRadius:20,fontSize:13,fontWeight:700,marginBottom:8}}>
+        {form.status==="Visitor"?"🙋 Visitor Registration":"✝ Member Registration"}
+      </div>
+      <h2 style={{margin:"4px 0 2px",fontSize:18}}>{form.status==="Visitor"?"Tell us about yourself!":"Welcome to the family!"}</h2>
+      <p style={{color:"#6ee7b7",fontSize:13,fontWeight:600,margin:0}}>Living Waters Fellowship</p>
+      {prefill&&<p style={{color:"#f59e0b",fontSize:13,margin:"6px 0 0",fontWeight:600}}>Please complete your profile below</p>}
+      {!prefill&&<button onClick={function(){set("status","");}} style={{background:"none",border:"none",color:"var(--jg-muteddark)",fontSize:12,cursor:"pointer",marginTop:6,textDecoration:"underline",fontFamily:"inherit"}}>← Change</button>}
+    </div>
+
+    {!prefill&&(
+      <div style={{display:"flex",background:"var(--jg-card)",borderRadius:12,padding:4,marginBottom:20}}>
+        <button type="button" onClick={function(){setRegVariant("stepbystep");setStepIndex(0);}} style={{flex:1,padding:9,borderRadius:9,fontSize:13,fontWeight:700,border:"none",cursor:"pointer",fontFamily:"inherit",background:regVariant==="stepbystep"?"#6c63ff":"transparent",color:regVariant==="stepbystep"?"#fff":"var(--jg-muted)"}}>Step-by-step</button>
+        <button type="button" onClick={function(){setRegVariant("onepage");}} style={{flex:1,padding:9,borderRadius:9,fontSize:13,fontWeight:700,border:"none",cursor:"pointer",fontFamily:"inherit",background:regVariant==="onepage"?"#6c63ff":"transparent",color:regVariant==="onepage"?"#fff":"var(--jg-muted)"}}>One page</button>
+      </div>
     )}
+
+    {(!prefill&&regVariant==="stepbystep")?renderStepByStep():(<div>
+
+    {form.status==="Visitor"&&visitReasonField()}
 
     {field("First Name *","name","text","e.g. Lebo")}
     {field("Surname *","surname","text","e.g. Dlamini")}
     {field("Cell Number *","phone","tel","e.g. 071 234 5678")}
     {field("WhatsApp Number","whatsapp","tel","If different from cell")}
 
-    <div style={{background:"#182032",borderRadius:12,padding:"14px 14px 2px",marginBottom:12}}>
+    <div style={{background:"var(--jg-card2)",borderRadius:12,padding:"14px 14px 2px",marginBottom:12}}>
       <p style={{margin:"0 0 10px",fontSize:13,fontWeight:700,color:"#6ee7b7"}}>Parent / Guardian</p>
       {field("Parent First Name *","parentName","text","e.g. Mary")}
       {field("Parent Surname *","parentSurname","text","e.g. Dlamini")}
       {field("Parent / Guardian Phone *","parentPhone","tel","e.g. 082 456 7890")}
     </div>
 
-    <div style={{marginBottom:12}}>
-      <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:4}}>School *</label>
-      <select className="input" value={form.school} style={{borderColor:errors.school?"#ef4444":undefined,background:"var(--jg-card)",color:"#fff"}}
-        onChange={function(e){var v=e.target.value;if(!v.startsWith("--"))set("school",v);}}>
-        <option value="">-- Select school --</option>
-        {SCHOOLS.map(function(s){return <option key={s} value={s} disabled={s.startsWith("--")} style={{background:"var(--jg-card)"}}>{s}</option>;})}
-      </select>
-      {errors.school&&<p style={{color:"#f87171",fontSize:12,marginBottom:8}}>{errors.school}</p>}
-    </div>
-
+    {schoolField()}
     {field("Home Address *","address","text","e.g. 12 Main St, Lephalale")}
-
-    <div style={{marginBottom:12}}>
-      <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:6}}>Date of Birth * {form.birthday&&calcAge(form.birthday)!==null&&<span style={{color:"#6ee7b7",marginLeft:8}}>Age: {calcAge(form.birthday)}</span>}</label>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1.4fr",gap:8}}>
-        <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[2]||"":""} onChange={function(e){
-          var parts=(form.birthday||"----").split("-");
-          set("birthday",(parts[0]||"2000")+"-"+(parts[1]||"01")+"-"+e.target.value);
-        }}>
-          <option value="">Day</option>
-          {Array.from({length:31},function(_,i){var d=String(i+1).padStart(2,"0");return <option key={d} value={d}>{i+1}</option>;})}
-        </select>
-        <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[1]||"":""} onChange={function(e){
-          var parts=(form.birthday||"----").split("-");
-          set("birthday",(parts[0]||"2000")+"-"+e.target.value+"-"+(parts[2]||"01"));
-        }}>
-          <option value="">Month</option>
-          {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map(function(m,i){var v=String(i+1).padStart(2,"0");return <option key={v} value={v}>{m}</option>;})}
-        </select>
-        <select className="input" style={{background:"var(--jg-card)",color:"#fff"}} value={form.birthday?form.birthday.split("-")[0]||"":""} onChange={function(e){
-          var parts=(form.birthday||"----").split("-");
-          set("birthday",e.target.value+"-"+(parts[1]||"01")+"-"+(parts[2]||"01"));
-        }}>
-          <option value="">Year</option>
-          {Array.from({length:26},function(_,i){var y=String(new Date().getFullYear()-5-i);return <option key={y} value={y}>{y}</option>;})}
-        </select>
-      </div>
-      {errors.birthday&&<p style={{color:"#f87171",fontSize:12,marginTop:4}}>{errors.birthday}</p>}
-    </div>
-
-    <div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:13,fontWeight:600,color:"var(--jg-muted)",marginBottom:8}}>Profile Photo *</label>
-      <input type="file" accept="image/*" capture="user" id="selfie-input" style={{display:"none"}}
-        onChange={function(e){
-          if(e.target.files[0]){
-            var reader=new FileReader();
-            reader.onload=function(ev){
-              var img=new Image();
-              img.onload=function(){
-                var canvas=document.createElement("canvas");
-                canvas.width=img.width; canvas.height=img.height;
-                var ctx=canvas.getContext("2d");
-                ctx.translate(img.width,0);
-                ctx.scale(-1,1);
-                ctx.drawImage(img,0,0);
-                set("photo",canvas.toDataURL("image/jpeg",0.85));
-              };
-              img.src=ev.target.result;
-            };
-            reader.readAsDataURL(e.target.files[0]);
-          }
-        }}/>
-      {!form.photo?(
-        <div onClick={function(){document.getElementById("selfie-input").click();}}
-          style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",border:"3px dashed "+(errors.photo?"#ef4444":"#6c63ff"),borderRadius:16,padding:"28px 20px",textAlign:"center",cursor:"pointer"}}>
-          <div style={{fontSize:52,marginBottom:8}}>📸</div>
-          <p style={{color:errors.photo?"#f87171":"#6c63ff",fontWeight:700,fontSize:16,margin:"0 0 4px"}}>Tap to Take Your Selfie</p>
-          <p style={{color:"#475569",fontSize:13,margin:0}}>Your photo will be saved to your profile</p>
-        </div>
-      ):(
-        <div style={{textAlign:"center"}}>
-          <img src={form.photo} width="100" height="100" style={{borderRadius:"50%",objectFit:"cover",border:"3px solid #6c63ff",display:"block",margin:"0 auto 10px"}}/>
-          <button type="button" onClick={function(){document.getElementById("selfie-input").click();}}
-            style={{background:"var(--jg-card)",border:"2px solid var(--jg-border)",color:"var(--jg-muted)",borderRadius:10,padding:"8px 16px",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>
-            Retake Photo
-          </button>
-        </div>
-      )}
-      {errors.photo&&<p style={{color:"#f87171",fontSize:12,marginTop:8,textAlign:"center",fontWeight:600}}>📸 A photo is required to register</p>}
-    </div>
-
-    <div style={{background:"#0d2818",border:"2px solid #22c55e44",borderRadius:12,padding:"14px",marginBottom:14}}>
-      <p style={{margin:"0 0 8px",fontWeight:700,fontSize:14,color:"#86efac"}}>Join our WhatsApp Group?</p>
-      <p style={{margin:"0 0 10px",fontSize:12,color:"var(--jg-muteddark)"}}>We will add you within one week of registering.</p>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-        <button type="button" onClick={function(){set("wantsWhatsApp",true);}} style={{padding:"11px",borderRadius:10,border:form.wantsWhatsApp===true?"2px solid #22c55e":"2px solid #334155",background:form.wantsWhatsApp===true?"#0d2818":"#1e293b",color:form.wantsWhatsApp===true?"#86efac":"#64748b",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Yes please!</button>
-        <button type="button" onClick={function(){set("wantsWhatsApp",false);}} style={{padding:"11px",borderRadius:10,border:form.wantsWhatsApp===false?"2px solid #ef4444":"2px solid #334155",background:form.wantsWhatsApp===false?"#1a0505":"#1e293b",color:form.wantsWhatsApp===false?"#f87171":"#64748b",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>No thanks</button>
-      </div>
-    </div>
+    {birthdayField()}
+    {photoField()}
+    {whatsappOptInField()}
 
     <button className="btn btn-reg" onClick={submit}>Submit and Check In</button>
     <button className="btn btn-admin" onClick={onBack}>Back</button>
+    </div>)}
   </div>);
 }
 
@@ -3661,6 +3721,14 @@ function ConfirmScreen({confirm,onUpload,onDone,uploading}){
   var c=confirm||{};
   var name=((c.member&&c.member.name)||"")+" "+((c.member&&c.member.surname)||"");
   var box={maxWidth:440,width:"100%",borderRadius:18,padding:"28px 22px",textAlign:"center"};
+  // One reward code per registration - stable for as long as this screen stays mounted.
+  var [rewardCode]=useState(function(){return "JG-"+String(Math.floor(1000+Math.random()*9000));});
+  var CONFETTI=[
+    {emoji:"🎉",left:"6%",dur:"2.6s",delay:"0s"},{emoji:"✨",left:"18%",dur:"3.1s",delay:"0.3s"},
+    {emoji:"🎊",left:"30%",dur:"2.8s",delay:"0.6s"},{emoji:"⭐",left:"42%",dur:"3.4s",delay:"0.1s"},
+    {emoji:"🎉",left:"54%",dur:"2.9s",delay:"0.5s"},{emoji:"✨",left:"66%",dur:"3.2s",delay:"0.2s"},
+    {emoji:"🎊",left:"78%",dur:"2.7s",delay:"0.4s"},{emoji:"⭐",left:"90%",dur:"3.0s",delay:"0.7s"},
+  ];
 
   if(c.status==="saving"||uploading){
     return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
@@ -3673,13 +3741,19 @@ function ConfirmScreen({confirm,onUpload,onDone,uploading}){
   }
 
   if(c.status==="saved"){
-    return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{...box,background:"#0d2818",border:"1px solid #22c55e"}}>
-        <div style={{fontSize:46,marginBottom:8}}>✅</div>
+    return(<div style={{minHeight:"70vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,position:"relative",overflow:"hidden"}}>
+      {CONFETTI.map(function(cf,i){return(<div key={i} style={{position:"absolute",top:0,left:cf.left,fontSize:22,animation:"jgFall "+cf.dur+" linear "+cf.delay+" infinite",pointerEvents:"none"}}>{cf.emoji}</div>);})}
+      <div style={{...box,background:"#0d2818",border:"1px solid #22c55e",position:"relative"}}>
+        <div style={{fontSize:46,marginBottom:8,display:"inline-block",animation:"jgPop 0.6s cubic-bezier(.34,1.56,.64,1) both"}}>✅</div>
         <p style={{color:"#86efac",fontSize:20,fontWeight:900,margin:"0 0 6px"}}>Registered!</p>
         <p style={{color:"#bbf7d0",fontSize:15,margin:"0 0 4px"}}>{name.trim()} is saved and syncing to the cloud.</p>
         {c.photoPending&&<p style={{color:"#fbbf24",fontSize:13,fontWeight:800,margin:"10px 0 0",lineHeight:1.45,background:"#3a1f00",border:"1px solid #f59e0b",borderRadius:10,padding:"10px 12px"}}>📷 The photo is still uploading — please keep this app OPEN and on Wi-Fi/signal until it finishes. It will upload on its own.</p>}
         <p style={{color:"#4ade80",fontSize:12,margin:"8px 0 0"}}>If anything doesn't sync, the home screen will show it with an Upload button.</p>
+        <div style={{background:"var(--jg-card2)",border:"2px dashed #f59e0b",borderRadius:16,padding:"16px",margin:"16px 0 0"}}>
+          <div style={{fontSize:26,marginBottom:4}}>🎁</div>
+          <p style={{fontSize:12,fontWeight:700,color:"var(--jg-text)",margin:"0 0 6px"}}>Show this code to your leader for a gift!</p>
+          <p style={{fontSize:22,fontWeight:900,letterSpacing:"3px",color:"#f59e0b",margin:0}}>{rewardCode}</p>
+        </div>
       </div>
       <button onClick={onDone} style={{marginTop:22,background:"#22c55e",color:"#04130a",border:"none",borderRadius:14,padding:"16px",fontSize:17,fontWeight:800,width:"100%",maxWidth:440,cursor:"pointer"}}>Done — register next</button>
       <button onClick={onUpload} style={{marginTop:12,background:"transparent",color:"var(--jg-muted)",border:"1px solid #475569",borderRadius:14,padding:"12px",fontSize:13,fontWeight:600,width:"100%",maxWidth:440,cursor:"pointer"}}>⬆️ Upload &amp; verify now (optional)</button>
