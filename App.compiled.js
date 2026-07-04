@@ -4813,6 +4813,14 @@ function AdminDashboard({
     };
   }, []);
   var [tab, setTab] = useState("overview");
+  var [adminGroup, setAdminGroup] = useState(null); // null = Admin Home; else one of ADMIN_GROUPS' ids
+  function openGroup(gid, defaultTab) {
+    setAdminGroup(gid);
+    setTab(defaultTab);
+  }
+  function closeGroup() {
+    setAdminGroup(null);
+  }
   var [period, setPeriod] = useState("weekly");
   var members = data.members || [];
   var checkins = data.checkins || [];
@@ -5162,22 +5170,219 @@ function AdminDashboard({
       fontFamily: "inherit",
       fontWeight: 700
     }
-  }, "✨ Switch to Vibe"))), /*#__PURE__*/React.createElement("div", {
-    className: "tabs"
-  }, tabs.map(function (t) {
-    return /*#__PURE__*/React.createElement("button", {
-      key: t.id,
-      className: "tab" + (tab === t.id ? " active" : ""),
+  }, "✨ Switch to Vibe"))), function () {
+    function tabById(id) {
+      return tabs.find(function (t) {
+        return t.id === id;
+      }) || {};
+    }
+    var ADMIN_GROUPS = [{
+      id: "absent",
+      label: "Absent Today",
+      emoji: "⚠️",
+      tabIds: ["absent", "sent"],
+      desc: "Message absentees and see who's been contacted"
+    }, {
+      id: "people",
+      label: "People",
+      emoji: "👥",
+      tabIds: ["members", "visitors", "contacts"],
+      desc: "Members, visitors and contacts"
+    }, {
+      id: "leaders",
+      label: "Leaders",
+      emoji: "⭐",
+      tabIds: ["leaders", "leader_attendance", "qr", "reset"],
+      desc: "PINs, attendance, QR check-in, reset"
+    }, {
+      id: "events",
+      label: "Special Events",
+      emoji: "📅",
+      tabIds: ["events"],
+      desc: "Create events, attach a poster, send invites"
+    }, {
+      id: "comms",
+      label: "Communication",
+      emoji: "💬",
+      tabIds: ["suggestions", "wagroup"],
+      desc: "Suggestions inbox and WhatsApp group requests",
+      badge: unreadFb + waRequests.length
+    }, {
+      id: "data",
+      label: "Data",
+      emoji: "📊",
+      tabIds: ["reports", "sheet", "export", "import", "pending"],
+      desc: "Reports, spreadsheet, export/import, pending sync",
+      badge: loadPendingQueue().length
+    }];
+    if (adminGroup) {
+      var g = ADMIN_GROUPS.find(function (x) {
+        return x.id === adminGroup;
+      }) || {
+        tabIds: [],
+        label: ""
+      };
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 310,
+          background: "var(--jg-bg)",
+          padding: "16px 16px 12px",
+          boxShadow: "0 4px 14px rgba(0,0,0,0.25)"
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: g.tabIds.length > 1 ? 12 : 0,
+          paddingRight: 56
+        }
+      }, /*#__PURE__*/React.createElement("h3", {
+        className: "page-title",
+        style: {
+          margin: 0
+        }
+      }, g.label), /*#__PURE__*/React.createElement("button", {
+        onClick: closeGroup,
+        style: {
+          width: 36,
+          height: 36,
+          borderRadius: 12,
+          background: "var(--jg-card)",
+          border: "none",
+          color: "var(--jg-text)",
+          fontSize: 16,
+          fontWeight: 800,
+          cursor: "pointer"
+        }
+      }, "✕")), g.tabIds.length > 1 && /*#__PURE__*/React.createElement("div", {
+        className: "tabs",
+        style: {
+          marginBottom: 0
+        }
+      }, g.tabIds.map(function (tid) {
+        var t = tabById(tid);
+        return /*#__PURE__*/React.createElement("button", {
+          key: tid,
+          className: "tab" + (tab === tid ? " active" : ""),
+          onClick: function () {
+            setTab(tid);
+          },
+          style: {
+            position: "relative"
+          }
+        }, t.label, t.badge > 0 && /*#__PURE__*/React.createElement("span", {
+          className: "badge"
+        }, t.badge));
+      })));
+    }
+    var restGroups = ADMIN_GROUPS.filter(function (g) {
+      return g.id !== "absent";
+    });
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 20
+      }
+    }, /*#__PURE__*/React.createElement("button", {
       onClick: function () {
-        setTab(t.id);
+        openGroup("absent", "absent");
       },
       style: {
-        position: "relative"
+        width: "100%",
+        textAlign: "center",
+        background: "linear-gradient(135deg,#ef4444,#f59e0b)",
+        border: "none",
+        borderRadius: 20,
+        padding: "20px",
+        cursor: "pointer",
+        fontFamily: "inherit",
+        marginBottom: 12,
+        boxShadow: "0 8px 24px rgba(239,68,68,0.35)"
       }
-    }, t.label, t.badge > 0 && /*#__PURE__*/React.createElement("span", {
-      className: "badge"
-    }, t.badge));
-  })), tab === "overview" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        fontWeight: 700,
+        color: "rgba(255,255,255,0.85)",
+        letterSpacing: "1.5px",
+        textTransform: "uppercase",
+        marginBottom: 6
+      }
+    }, "Absent Today"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 44,
+        fontWeight: 900,
+        color: "#fff",
+        lineHeight: 1
+      }
+    }, absentToday.length), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        fontWeight: 700,
+        color: "rgba(255,255,255,0.9)",
+        marginTop: 2
+      }
+    }, "of ", members.length, " did not attend"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: "rgba(255,255,255,0.85)",
+        marginTop: 8,
+        fontWeight: 600
+      }
+    }, "Tap to see who and follow up")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 10
+      }
+    }, restGroups.map(function (g) {
+      return /*#__PURE__*/React.createElement("button", {
+        key: g.id,
+        onClick: function () {
+          openGroup(g.id, g.tabIds[0]);
+        },
+        style: {
+          textAlign: "left",
+          background: "var(--jg-card)",
+          border: "none",
+          borderRadius: 16,
+          padding: "14px",
+          cursor: "pointer",
+          fontFamily: "inherit",
+          position: "relative"
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 22,
+          marginBottom: 6
+        }
+      }, g.emoji), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 14,
+          fontWeight: 800,
+          color: "var(--jg-text)",
+          marginBottom: 2
+        }
+      }, g.label), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: "var(--jg-muted)",
+          lineHeight: 1.3
+        }
+      }, g.desc), g.badge > 0 && /*#__PURE__*/React.createElement("span", {
+        className: "badge",
+        style: {
+          position: "absolute",
+          top: 10,
+          right: 10
+        }
+      }, g.badge));
+    })));
+  }(), !adminGroup && tab === "overview" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
     style: {
       color: "var(--jg-muteddark)",
       fontSize: 11,
@@ -5252,6 +5457,7 @@ function AdminDashboard({
       fontSize: 14
     },
     onClick: function () {
+      setAdminGroup("absent");
       setTab("absent");
     }
   }, "See Absent List and WhatsApp")), absentToday.length === 0 && members.length > 0 && /*#__PURE__*/React.createElement("div", {
@@ -5266,7 +5472,16 @@ function AdminDashboard({
     style: {
       margin: 0
     }
-  }, "Everyone is present today!"))), tab === "absent" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+  }, "Everyone is present today!"))), adminGroup && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 240,
+      background: "var(--jg-bg)",
+      overflowY: "auto",
+      padding: "76px 16px 30px"
+    }
+  }, tab === "absent" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
     className: "page-title"
   }, "Absent Today"), /*#__PURE__*/React.createElement("p", {
     style: {
@@ -6453,7 +6668,7 @@ function AdminDashboard({
   }), tab === "import" && /*#__PURE__*/React.createElement(ImportTab, {
     data: data,
     setData: setData
-  }), tab === "pending" && /*#__PURE__*/React.createElement(PendingSyncTab, null), tab === "qr" && /*#__PURE__*/React.createElement(QRTab, null), /*#__PURE__*/React.createElement("div", {
+  }), tab === "pending" && /*#__PURE__*/React.createElement(PendingSyncTab, null), tab === "qr" && /*#__PURE__*/React.createElement(QRTab, null)), !adminGroup && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 28
     }
