@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @keyframes jgPop { 0%{ transform: scale(0.3) rotate(-8deg); opacity:0; } 60%{ transform: scale(1.08) rotate(2deg); opacity:1; } 100%{ transform: scale(1) rotate(0deg); } }
+    @keyframes jgShake { 0%,100%{ transform: translateX(0); } 20%{ transform: translateX(-10px); } 40%{ transform: translateX(10px); } 60%{ transform: translateX(-8px); } 80%{ transform: translateX(8px); } }
+    @keyframes jgFall { 0%{ transform: translateY(-40px) rotate(0deg); opacity:1; } 100%{ transform: translateY(420px) rotate(360deg); opacity:0; } }
+    @keyframes jgFloat { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-6px); } }
+    @keyframes jgPress { 0%{ transform: scale(1); } 50%{ transform: scale(0.97); } 100%{ transform: scale(1); } }
+    @keyframes jgFlipIn { 0%{ transform: rotateX(-90deg); opacity:0; } 100%{ transform: rotateX(0deg); opacity:1; } }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    button { font-family: inherit; cursor:pointer; border:none; }
+    input { font-family: inherit; }
+  </style>
+</helmet>
+<div style="width:100%;min-height:100svh;min-height:100vh;display:flex;justify-content:center;background:{{ c.bg }};transition:background 0.3s;">
+<div style="width:100%;max-width:480px;min-height:100svh;min-height:100vh;background:{{ c.bg }};color:{{ c.text }};position:relative;overflow:hidden;">
+
+  <!-- Top bar -->
+  <div style="position:absolute;top:14px;right:14px;z-index:50;display:flex;gap:8px;">
+    <button onClick="{{ toggleTheme }}" style="width:40px;height:40px;border-radius:20px;background:{{ c.card }};border:1px solid {{ c.border }};font-size:18px;display:flex;align-items:center;justify-content:center;">{{ themeIcon }}</button>
+  </div>
+  <sc-if value="{{ showBack }}">
+    <button onClick="{{ goBack }}" style="position:absolute;top:14px;left:14px;z-index:50;width:40px;height:40px;border-radius:20px;background:{{ c.card }};border:1px solid {{ c.border }};font-size:18px;display:flex;align-items:center;justify-content:center;color:{{ c.text }};">←</button>
+  </sc-if>
+
+  <!-- HOME -->
+  <sc-if value="{{ isHome }}">
+  <div>
+    <div style="position:relative;height:230px;background:linear-gradient(135deg,#6c63ff,#3b82f6 60%,#a855f7);overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.65));"></div>
+      <div style="position:absolute;top:20px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:3px;color:#e0e7ff;font-weight:600;">LIVING WATERS FELLOWSHIP</div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+        <div style="font-size:38px;animation: jgFloat 3s ease-in-out infinite;">✝️</div>
+        <div style="font-size:34px;font-weight:900;color:#ffffff;letter-spacing:1px;text-shadow: 0 1px 0 #d6d1ff, 0 2px 0 #b7aeff, 0 3px 0 #9a8dff, 0 4px 0 #7d6eff, 0 6px 10px rgba(0,0,0,0.5);animation: jgPop 0.7s cubic-bezier(.34,1.56,.64,1) both;">Jeremiah Generation</div>
+      </div>
+    </div>
+
+    <div style="padding:18px 18px 4px;">
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;background:{{ c.card }};border-radius:14px;padding:12px 8px;text-align:center;border-top:3px solid #6c63ff;">
+          <div style="font-size:22px;font-weight:800;color:#6c63ff;">{{ stats.registered }}</div>
+          <div style="font-size:11px;color:{{ c.muted }};margin-top:2px;">Registered</div>
+        </div>
+        <div style="flex:1;background:{{ c.card }};border-radius:14px;padding:12px 8px;text-align:center;border-top:3px solid #22c55e;">
+          <div style="font-size:22px;font-weight:800;color:#22c55e;">{{ stats.here }}</div>
+          <div style="font-size:11px;color:{{ c.muted }};margin-top:2px;">Here Today</div>
+        </div>
+        <div style="flex:1;background:{{ c.card }};border-radius:14px;padding:12px 8px;text-align:center;border-top:3px solid #a855f7;">
+          <div style="font-size:22px;font-weight:800;color:#a855f7;">{{ stats.visitors }}</div>
+          <div style="font-size:11px;color:{{ c.muted }};margin-top:2px;">Visitors</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:16px 18px 30px;display:flex;flex-direction:column;gap:12px;">
+      <button onClick="{{ goRegister }}" style-active="transform:perspective(600px) rotateX(12deg) scale(0.96);filter:brightness(0.92);" style="width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px;justify-content:center;box-shadow:0 8px 20px rgba(108,99,255,0.35);transition:transform 0.15s,filter 0.15s;">📝 Registration</button>
+      <button onClick="{{ goCheckin }}" style-active="transform:perspective(600px) rotateX(12deg) scale(0.96);filter:brightness(0.92);" style="width:100%;padding:18px;border-radius:16px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px;justify-content:center;box-shadow:0 8px 20px rgba(34,197,94,0.3);transition:transform 0.15s,filter 0.15s;">✅ Member Check-In</button>
+      <button onClick="{{ goCheckin }}" style-active="transform:perspective(600px) rotateX(12deg) scale(0.96);filter:brightness(0.92);" style="width:100%;padding:16px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#3b2400;font-size:16px;font-weight:700;display:flex;align-items:center;gap:10px;justify-content:center;box-shadow:0 8px 20px rgba(245,158,11,0.3);transition:transform 0.15s,filter 0.15s;">⭐ Leader Check-In</button>
+      <button onClick="{{ goAdmin }}" style-active="transform:perspective(600px) rotateX(12deg) scale(0.96);filter:brightness(0.92);" style="width:100%;padding:11px;border-radius:14px;background:transparent;color:{{ c.muted }};font-size:13px;font-weight:600;border:1px solid {{ c.border }};display:flex;align-items:center;gap:8px;justify-content:center;transition:transform 0.15s,filter 0.15s;">🔐 Leadership Admin</button>
+    </div>
+    <div style="text-align:center;padding-bottom:22px;font-size:12px;color:{{ c.mutedDark }};">Joshua, Priscilla &amp; Pastor Billy · Living Waters Fellowship</div>
+  </div>
+  </sc-if>
+
+  <!-- PIN -->
+  <sc-if value="{{ isPin }}">
+  <div style="padding:60px 24px 24px;display:flex;flex-direction:column;align-items:center;">
+    <div style="font-size:44px;margin-bottom:6px;">✝️</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:26px;">Admin Access</div>
+    <div style="display:flex;gap:12px;margin-bottom:8px;animation:{{ pinShakeAnim }};">
+      <sc-for list="{{ pinDotsArr }}" as="d" hint-placeholder-count="5">
+        <div style="width:16px;height:16px;border-radius:50%;background:{{ d.filled }};border:2px solid {{ c.mint }};"></div>
+      </sc-for>
+    </div>
+    <div style="height:18px;color:#ef4444;font-size:13px;font-weight:600;margin-bottom:10px;">{{ pinError }}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,72px);gap:14px;margin-top:10px;">
+      <sc-for list="{{ numpadKeys }}" as="k" hint-placeholder-count="10">
+        <button onClick="{{ k.onClick }}" style="width:72px;height:72px;border-radius:50%;background:{{ k.bg }};color:{{ k.color }};font-size:22px;font-weight:700;">{{ k.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- CHECK-IN -->
+  <sc-if value="{{ isCheckin }}">
+  <div style="padding:60px 18px 24px;">
+    <div style="font-size:20px;font-weight:800;margin-bottom:14px;">Find your name</div>
+    <input value="{{ checkinSearch }}" onChange="{{ onCheckinSearch }}" placeholder="Search name..." style="width:100%;padding:14px 16px;border-radius:14px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:15px;margin-bottom:16px;" />
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <sc-for list="{{ checkinList }}" as="m" hint-placeholder-count="4">
+        <div style="perspective:1000px;height:{{ m.cardHeight }};transition:height 0.4s;">
+          <div style="position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform 0.6s;transform:{{ m.flipTransform }};">
+            <div onClick="{{ m.onFlip }}" style="position:absolute;inset:0;backface-visibility:hidden;background:{{ c.card }};border-radius:14px;border-left:4px solid {{ m.borderColor }};padding:14px 16px;display:flex;align-items:center;gap:12px;">
+              <div style="width:38px;height:38px;border-radius:50%;background:{{ m.avatarBg }};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px;flex-shrink:0;">{{ m.initials }}</div>
+              <div style="flex:1;">
+                <div style="font-weight:700;font-size:15px;">{{ m.name }}</div>
+                <div style="font-size:12px;color:{{ c.muted }};">{{ m.statusLabel }}</div>
+              </div>
+              <div style="font-size:20px;">{{ m.chevron }}</div>
+            </div>
+            <div style="position:absolute;inset:0;backface-visibility:hidden;transform:rotateY(180deg);background:{{ c.card2 }};border-radius:14px;border:2px solid #22c55e;padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:13px;font-weight:700;color:{{ c.text }};">How do you feel today, {{ m.firstName }}?</div>
+              <div style="display:flex;gap:6px;justify-content:space-between;">
+                <sc-for list="{{ m.moodOptions }}" as="mo" hint-placeholder-count="6">
+                  <button onClick="{{ mo.onClick }}" style="font-size:22px;background:{{ mo.bg }};border:{{ mo.border }};border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;line-height:1;">{{ mo.emoji }}</button>
+                </sc-for>
+              </div>
+              <button onClick="{{ m.onConfirm }}" style="margin-top:4px;padding:10px;border-radius:10px;background:#22c55e;color:#fff;font-weight:700;font-size:14px;">✓ Confirm Check-In</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- REGISTER -->
+  <sc-if value="{{ isRegister }}">
+  <div style="padding:60px 18px 24px;">
+    <sc-if value="{{ needsPersonType }}" hint-placeholder-val="{{ true }}">
+      <div style="font-size:20px;font-weight:800;margin-bottom:16px;">Which one are you?</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <button onClick="{{ pickVisitor }}" style="padding:26px;border-radius:18px;background:linear-gradient(135deg,#a855f7,#6c63ff);color:#fff;font-size:18px;font-weight:800;">🙋 Visitor</button>
+        <button onClick="{{ pickMember }}" style="padding:26px;border-radius:18px;background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;font-size:18px;font-weight:800;">✝️ Member</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showRegForm }}">
+      <div style="display:flex;background:{{ c.card }};border-radius:12px;padding:4px;margin-bottom:22px;">
+        <button onClick="{{ setVariant1 }}" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:{{ variant1Bg }};color:{{ variant1Fg }};">Step-by-step</button>
+        <button onClick="{{ setVariant2 }}" style="flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;background:{{ variant2Bg }};color:{{ variant2Fg }};">One page</button>
+      </div>
+
+      <sc-if value="{{ isVariant1 }}">
+        <div style="display:flex;gap:6px;justify-content:center;margin-bottom:26px;">
+          <sc-for list="{{ stepDots }}" as="sd" hint-placeholder-count="7">
+            <div style="width:8px;height:8px;border-radius:50%;background:{{ sd.bg }};"></div>
+          </sc-for>
+        </div>
+        <div style="min-height:180px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+          <div style="font-size:15px;color:{{ c.muted }};font-weight:600;margin-bottom:14px;">{{ stepLabel }}</div>
+          <sc-if value="{{ stepIsMood }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+              <sc-for list="{{ regMoodOptions }}" as="mo" hint-placeholder-count="6">
+                <button onClick="{{ mo.onClick }}" style="font-size:30px;width:52px;height:52px;border-radius:14px;background:{{ mo.bg }};">{{ mo.emoji }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ stepIsField }}" hint-placeholder-val="{{ true }}">
+            <input value="{{ stepValue }}" onChange="{{ onStepChange }}" placeholder="{{ stepPlaceholder }}" style="width:100%;max-width:280px;padding:16px;text-align:center;font-size:24px;font-weight:700;border-radius:14px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};" />
+          </sc-if>
+          <sc-if value="{{ stepIsBirthday }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;width:100%;max-width:320px;">
+              <select value="{{ regForm.birthDay }}" onChange="{{ onBirthDayChange }}" style="flex:1;padding:14px 4px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:16px;text-align:center;">
+                <sc-for list="{{ dayOptions }}" as="o" hint-placeholder-count="31"><option value="{{ o }}">{{ o }}</option></sc-for>
+              </select>
+              <select value="{{ regForm.birthMonth }}" onChange="{{ onBirthMonthChange }}" style="flex:1.4;padding:14px 4px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:16px;text-align:center;">
+                <sc-for list="{{ monthOptions }}" as="o" hint-placeholder-count="12"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+              </select>
+              <select value="{{ regForm.birthYear }}" onChange="{{ onBirthYearChange }}" style="flex:1.2;padding:14px 4px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:16px;text-align:center;">
+                <sc-for list="{{ yearOptions }}" as="o" hint-placeholder-count="26"><option value="{{ o }}">{{ o }}</option></sc-for>
+              </select>
+            </div>
+          </sc-if>
+          <sc-if value="{{ stepIsGuardianRelation }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+              <sc-for list="{{ guardianRelationOptions }}" as="r" hint-placeholder-count="5">
+                <button onClick="{{ r.onClick }}" style="padding:12px 18px;border-radius:12px;background:{{ r.bg }};color:{{ r.fg }};font-weight:700;font-size:15px;">{{ r.label }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ stepIsAddress }}" hint-placeholder-val="{{ false }}">
+            <div style="position:relative;width:100%;max-width:280px;">
+              <input value="{{ regForm.address }}" onChange="{{ onFieldAddress }}" placeholder="Start typing your address..." style="width:100%;padding:16px;text-align:center;font-size:18px;font-weight:600;border-radius:14px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};" />
+              <sc-if value="{{ showAddressSuggestions }}" hint-placeholder-val="{{ false }}">
+                <div style="position:absolute;top:60px;left:0;right:0;background:{{ c.card }};border:1px solid {{ c.border }};border-radius:12px;overflow:hidden;z-index:20;text-align:left;box-shadow:0 8px 20px rgba(0,0,0,0.25);">
+                  <sc-for list="{{ addressSuggestions }}" as="a" hint-placeholder-count="3">
+                    <div onClick="{{ a.onPick }}" style="padding:11px 14px;font-size:13px;color:{{ c.text }};border-bottom:1px solid {{ c.border }};">📍 {{ a.label }}</div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="font-size:11px;color:{{ c.mutedDark }};margin-top:8px;">Suggestions are simulated for this prototype</div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:30px;">
+          <sc-if value="{{ canGoPrevStep }}">
+            <button onClick="{{ prevStep }}" style="flex:1;padding:14px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-weight:700;border:1px solid {{ c.border }};">Back</button>
+          </sc-if>
+          <button onClick="{{ nextStep }}" style="flex:2;padding:14px;border-radius:12px;background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;font-weight:700;">{{ nextStepLabel }}</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isVariant2 }}">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <input value="{{ regForm.name }}" onChange="{{ onFieldName }}" placeholder="First name" style="{{ fieldStyle }}" />
+          <input value="{{ regForm.surname }}" onChange="{{ onFieldSurname }}" placeholder="Surname" style="{{ fieldStyle }}" />
+          <input value="{{ regForm.phone }}" onChange="{{ onFieldPhone }}" placeholder="Phone number" style="{{ fieldStyle }}" />
+          <div style="font-size:12px;font-weight:700;color:{{ c.muted }};">Birthday</div>
+          <div style="display:flex;gap:8px;">
+            <select value="{{ regForm.birthDay }}" onChange="{{ onBirthDayChange }}" style="flex:1;padding:14px 4px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:15px;text-align:center;">
+              <sc-for list="{{ dayOptions }}" as="o" hint-placeholder-count="31"><option value="{{ o }}">{{ o }}</option></sc-for>
+            </select>
+            <select value="{{ regForm.birthMonth }}" onChange="{{ onBirthMonthChange }}" style="flex:1.4;padding:14px 4px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:15px;text-align:center;">
+              <sc-for list="{{ monthOptions }}" as="o" hint-placeholder-count="12"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+            </select>
+            <select value="{{ regForm.birthYear }}" onChange="{{ onBirthYearChange }}" style="flex:1.2;padding:14px 4px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:15px;text-align:center;">
+              <sc-for list="{{ yearOptions }}" as="o" hint-placeholder-count="26"><option value="{{ o }}">{{ o }}</option></sc-for>
+            </select>
+          </div>
+          <div style="position:relative;">
+            <input value="{{ regForm.address }}" onChange="{{ onFieldAddress }}" placeholder="Home address" style="{{ fieldStyle }}" />
+            <sc-if value="{{ showAddressSuggestions }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:56px;left:0;right:0;background:{{ c.card }};border:1px solid {{ c.border }};border-radius:12px;overflow:hidden;z-index:20;box-shadow:0 8px 20px rgba(0,0,0,0.25);">
+                <sc-for list="{{ addressSuggestions }}" as="a" hint-placeholder-count="3">
+                  <div onClick="{{ a.onPick }}" style="padding:11px 14px;font-size:13px;color:{{ c.text }};border-bottom:1px solid {{ c.border }};">📍 {{ a.label }}</div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+          <input value="{{ regForm.school }}" onChange="{{ onFieldSchool }}" placeholder="School / Grade" style="{{ fieldStyle }}" />
+          <div style="font-size:12px;font-weight:700;color:{{ c.muted }};margin-top:6px;">Parent / Guardian details</div>
+          <input value="{{ regForm.guardianName }}" onChange="{{ onFieldGuardianName }}" placeholder="Guardian's name" style="{{ fieldStyle }}" />
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <sc-for list="{{ guardianRelationOptions }}" as="r" hint-placeholder-count="5">
+              <button onClick="{{ r.onClick }}" style="flex:1;padding:10px 6px;border-radius:10px;background:{{ r.bg }};color:{{ r.fg }};font-weight:700;font-size:13px;">{{ r.label }}</button>
+            </sc-for>
+          </div>
+          <input value="{{ regForm.guardianPhone }}" onChange="{{ onFieldGuardianPhone }}" placeholder="Guardian's phone number" style="{{ fieldStyle }}" />
+          <div style="font-size:13px;font-weight:700;color:{{ c.muted }};margin-top:6px;">How do you feel today?</div>
+          <div style="display:flex;gap:8px;">
+            <sc-for list="{{ regMoodOptions }}" as="mo" hint-placeholder-count="6">
+              <button onClick="{{ mo.onClick }}" style="font-size:24px;flex:1;padding:8px 0;border-radius:12px;background:{{ mo.bg }};">{{ mo.emoji }}</button>
+            </sc-for>
+          </div>
+          <button onClick="{{ submitVariant2 }}" style="margin-top:8px;padding:16px;border-radius:14px;background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;font-weight:800;font-size:16px;">Complete Registration</button>
+        </div>
+      </sc-if>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <!-- REWARD -->
+  <sc-if value="{{ isReward }}">
+  <div style="position:relative;height:100vh;overflow:hidden;">
+    <sc-for list="{{ confetti }}" as="cf" hint-placeholder-count="14">
+      <div style="position:absolute;top:0;left:{{ cf.left }};font-size:22px;animation:jgFall {{ cf.dur }} linear {{ cf.delay }} infinite;">{{ cf.emoji }}</div>
+    </sc-for>
+    <div style="position:relative;padding:100px 26px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <div style="width:88px;height:88px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:44px;color:#fff;margin-bottom:18px;animation: jgPop 0.6s cubic-bezier(.34,1.56,.64,1) both;">✓</div>
+      <div style="font-size:24px;font-weight:900;margin-bottom:6px;">Registered! ✝️</div>
+      <div style="font-size:15px;color:{{ c.muted }};margin-bottom:26px;">Welcome to Jeremiah Generation 🙏</div>
+      <div style="background:{{ c.card }};border:2px dashed #f59e0b;border-radius:18px;padding:20px;width:100%;max-width:300px;">
+        <div style="font-size:32px;margin-bottom:8px;">🎁</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;">Show this code to your leader for a gift!</div>
+        <div style="font-size:26px;font-weight:900;letter-spacing:3px;color:#f59e0b;">{{ rewardCode }}</div>
+      </div>
+      <button onClick="{{ goHome }}" style="margin-top:30px;padding:14px 34px;border-radius:14px;background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;font-weight:700;">Back to Home</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ADMIN -->
+  <sc-if value="{{ isAdmin }}">
+
+  <!-- ADMIN HOME (hidden entirely while an overlay is open) -->
+  <sc-if value="{{ !hasAdminOverlay }}" hint-placeholder-val="{{ true }}">
+  <div style="padding:60px 18px 30px;">
+    <div style="font-size:22px;font-weight:900;margin-bottom:16px;text-align:center;">Leadership Admin</div>
+
+    <button onClick="{{ openAbsentOverlay }}" style="width:100%;border-radius:24px;background:linear-gradient(135deg,#ef4444,#f59e0b);padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 10px 28px rgba(239,68,68,0.4);margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Absent Today</div>
+      <div style="font-size:56px;font-weight:900;color:#fff;line-height:1;">{{ absentCard.count }}</div>
+      <div style="font-size:16px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:2px;">of {{ absentCard.total }} did not attend</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:10px;font-weight:600;">Tap to see who and follow up</div>
+    </button>
+
+    <sc-for list="{{ groupCards }}" as="g" hint-placeholder-count="3">
+      <button onClick="{{ g.onOpen }}" style="width:100%;text-align:left;background:{{ c.card }};border-radius:18px;padding:18px;margin-bottom:12px;">
+        <div style="font-size:17px;font-weight:800;">{{ g.label }}</div>
+        <div style="font-size:12px;color:{{ c.muted }};margin-top:4px;line-height:1.4;">{{ g.desc }}</div>
+      </button>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <!-- FULLSCREEN OVERLAYS: only the active one is ever visible -->
+  <sc-if value="{{ isOverlayAbsent }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:200;background:{{ c.bg }};overflow-y:auto;animation:jgFlipIn 0.4s ease-out both;transform-origin:top center;">
+    <div style="padding:20px 18px 30px;">
+
+      <sc-if value="{{ showAbsentList }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-size:19px;font-weight:900;">Absent today</div>
+          <button onClick="{{ closeOverlay }}" style="width:36px;height:36px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-size:16px;font-weight:800;">✕</button>
+        </div>
+        <input value="{{ absentSearch }}" onChange="{{ onAbsentSearch }}" placeholder="Search absent names..." style="width:100%;padding:12px 14px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:14px;margin-bottom:14px;" />
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <sc-for list="{{ absentCard.people }}" as="p" hint-placeholder-count="6">
+            <div style="background:{{ c.card }};border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+              <div onClick="{{ p.onOpen }}" style="width:34px;height:34px;border-radius:50%;background:{{ p.avatarBg }};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:13px;flex-shrink:0;">{{ p.initials }}</div>
+              <div onClick="{{ p.onOpen }}" style="flex:1;font-size:14px;font-weight:700;">{{ p.name }}</div>
+              <button onClick="{{ p.onWhatsapp }}" style="padding:9px 12px;border-radius:10px;background:rgba(34,197,94,0.15);color:#22c55e;font-weight:800;font-size:12px;">WhatsApp</button>
+              <button onClick="{{ p.onSms }}" style="padding:9px 12px;border-radius:10px;background:rgba(59,130,246,0.15);color:#3b82f6;font-weight:800;font-size:12px;">SMS</button>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showRecipientPicker }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+          <button onClick="{{ messagingBack }}" style="width:36px;height:36px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-size:16px;">←</button>
+          <div style="font-size:17px;font-weight:800;">Send {{ messagingChannelLabel }} to {{ messagingPersonName }}</div>
+        </div>
+        <div style="font-size:13px;color:{{ c.muted }};margin-bottom:16px;">Who should receive this message?</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ recipientOptions }}" as="r" hint-placeholder-count="2">
+            <button onClick="{{ r.onClick }}" style="padding:20px;border-radius:16px;background:{{ c.card }};font-size:16px;font-weight:800;text-align:left;">{{ r.label }}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showMessageTemplates }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+          <button onClick="{{ messagingBack }}" style="width:36px;height:36px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-size:16px;">←</button>
+          <div style="font-size:17px;font-weight:800;">Choose a message</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <sc-for list="{{ messageOptions }}" as="m" hint-placeholder-count="4">
+            <button onClick="{{ m.onClick }}" style="padding:16px;border-radius:14px;background:{{ m.bg }};border:2px solid {{ m.border }};text-align:left;">
+              <div style="font-size:14px;font-weight:600;color:{{ m.color }};text-decoration:{{ m.strike }};line-height:1.4;">{{ m.text }}</div>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{ canSendMessage }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ sendMessage }}" style="width:100%;margin-top:18px;padding:16px;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-weight:800;font-size:16px;">Send message</button>
+        </sc-if>
+      </sc-if>
+
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isOverlayPeople }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:200;background:{{ c.bg }};overflow-y:auto;animation:jgFlipIn 0.4s ease-out both;transform-origin:top center;">
+    <div style="padding:20px 18px 30px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:19px;font-weight:900;">People</div>
+        <button onClick="{{ closeOverlay }}" style="width:36px;height:36px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-size:16px;font-weight:800;">✕</button>
+      </div>
+      <div style="font-size:13px;font-weight:800;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Members</div>
+      <input value="{{ adminSearch }}" onChange="{{ onAdminSearch }}" placeholder="Search members..." style="width:100%;padding:12px 14px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:14px;margin-bottom:12px;" />
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;">
+        <sc-for list="{{ membersFiltered }}" as="p" hint-placeholder-count="6">
+          <div onClick="{{ p.onOpen }}" style="background:{{ c.card }};border-radius:12px;border-left:4px solid {{ p.borderColor }};padding:12px 14px;display:flex;align-items:center;gap:12px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:{{ p.avatarBg }};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:12px;flex-shrink:0;">{{ p.initials }}</div>
+            <div style="flex:1;font-size:14px;font-weight:700;">{{ p.name }}</div>
+            <div style="font-size:16px;color:{{ c.muted }};">›</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size:13px;font-weight:800;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Visitors</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <sc-for list="{{ visitorsFiltered }}" as="p" hint-placeholder-count="2">
+          <div onClick="{{ p.onOpen }}" style="background:{{ c.card }};border-radius:12px;border-left:4px solid {{ p.borderColor }};padding:12px 14px;display:flex;align-items:center;gap:12px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:{{ p.avatarBg }};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:12px;flex-shrink:0;">{{ p.initials }}</div>
+            <div style="flex:1;font-size:14px;font-weight:700;">{{ p.name }}</div>
+            <div style="font-size:16px;color:{{ c.muted }};">›</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isOverlayLeaders }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:200;background:{{ c.bg }};overflow-y:auto;animation:jgFlipIn 0.4s ease-out both;transform-origin:top center;">
+    <div style="padding:20px 18px 30px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:19px;font-weight:900;">Leaders</div>
+        <button onClick="{{ closeOverlay }}" style="width:36px;height:36px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-size:16px;font-weight:800;">✕</button>
+      </div>
+      <div style="font-size:13px;font-weight:800;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">PINs &amp; attendance</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:22px;">
+        <sc-for list="{{ leaderRows }}" as="l" hint-placeholder-count="3">
+          <div style="background:{{ c.card }};border-radius:12px;padding:12px 14px;">
+            <div style="font-size:14px;font-weight:700;">{{ l.name }}</div>
+            <div style="font-size:12px;color:{{ c.muted }};margin-top:3px;">PIN {{ l.pin }} · {{ l.attendancePct }}% attendance</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:{{ c.card }};border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:800;margin-bottom:4px;">📅 Events</div>
+        <div style="font-size:13px;color:{{ c.muted }};">Next event: Youth Camp, 12 Aug.</div>
+      </div>
+      <div style="background:{{ c.card }};border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:800;margin-bottom:4px;">📱 QR Code</div>
+        <div style="font-size:13px;color:{{ c.muted }};">Show this code at the door for quick self check-in.</div>
+      </div>
+      <div style="background:{{ c.card }};border-radius:12px;padding:14px;">
+        <div style="font-size:13px;font-weight:800;margin-bottom:4px;">⚙️ Reset</div>
+        <div style="font-size:13px;color:{{ c.muted }};">Resets today's check-in list. Use with care.</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isOverlayData }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:200;background:{{ c.bg }};overflow-y:auto;animation:jgFlipIn 0.4s ease-out both;transform-origin:top center;">
+    <div style="padding:20px 18px 30px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:19px;font-weight:900;">Data</div>
+        <button onClick="{{ closeOverlay }}" style="width:36px;height:36px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-size:16px;font-weight:800;">✕</button>
+      </div>
+      <sc-for list="{{ dataCards }}" as="d" hint-placeholder-count="3">
+        <div style="background:{{ c.card }};border-radius:12px;padding:14px;margin-bottom:10px;position:relative;">
+          <div style="font-size:13px;font-weight:800;margin-bottom:4px;">{{ d.emoji }} {{ d.label }}</div>
+          <div style="font-size:13px;color:{{ c.muted }};">{{ d.text }}</div>
+          <sc-if value="{{ d.hasBadge }}">
+            <span style="position:absolute;top:12px;right:14px;background:#ef4444;color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:2px 7px;">{{ d.badge }}</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isOverlayComms }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:200;background:{{ c.bg }};overflow-y:auto;animation:jgFlipIn 0.4s ease-out both;transform-origin:top center;">
+    <div style="padding:20px 18px 30px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:19px;font-weight:900;">Communication</div>
+        <button onClick="{{ closeOverlay }}" style="width:36px;height:36px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-size:16px;font-weight:800;">✕</button>
+      </div>
+      <sc-for list="{{ commsCards }}" as="d" hint-placeholder-count="3">
+        <div style="background:{{ c.card }};border-radius:12px;padding:14px;margin-bottom:10px;position:relative;">
+          <div style="font-size:13px;font-weight:800;margin-bottom:4px;">{{ d.emoji }} {{ d.label }}</div>
+          <div style="font-size:13px;color:{{ c.muted }};">{{ d.text }}</div>
+          <sc-if value="{{ d.hasBadge }}">
+            <span style="position:absolute;top:12px;right:14px;background:#ef4444;color:#fff;font-size:10px;font-weight:800;border-radius:8px;padding:2px 7px;">{{ d.badge }}</span>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isOverlayEvent }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;z-index:200;background:{{ c.bg }};overflow-y:auto;animation:jgFlipIn 0.4s ease-out both;transform-origin:top center;">
+    <div style="padding:20px 18px 30px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:19px;font-weight:900;">Special Events</div>
+        <button onClick="{{ closeOverlay }}" style="width:36px;height:36px;border-radius:12px;background:{{ c.card }};color:{{ c.text }};font-size:16px;font-weight:800;">✕</button>
+      </div>
+
+      <div style="font-size:12px;font-weight:800;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Event details</div>
+      <input value="{{ eventForm.name }}" onChange="{{ onEventName }}" placeholder="Event name" style="width:100%;padding:14px 16px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:15px;margin-bottom:10px;" />
+      <input value="{{ eventForm.date }}" onChange="{{ onEventDate }}" placeholder="Date (e.g. 12 Aug, 4pm)" style="width:100%;padding:14px 16px;border-radius:12px;background:{{ c.card }};border:2px solid {{ c.border }};color:{{ c.text }};font-size:15px;margin-bottom:18px;" />
+
+      <div style="font-size:12px;font-weight:800;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Poster</div>
+      <sc-if value="{{ !eventForm.poster }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ addEventPoster }}" style="width:100%;padding:26px;border-radius:14px;background:{{ c.card }};border:2px dashed {{ c.border }};color:{{ c.muted }};font-size:14px;font-weight:700;margin-bottom:18px;">🖼️ Tap to add a poster image</button>
+      </sc-if>
+      <sc-if value="{{ eventForm.poster }}" hint-placeholder-val="{{ false }}">
+        <div style="width:100%;padding:26px;border-radius:14px;background:linear-gradient(135deg,#6c63ff,#3b82f6);color:#fff;font-weight:800;font-size:14px;text-align:center;margin-bottom:18px;">🖼️ Poster attached</div>
+      </sc-if>
+
+      <div style="font-size:12px;font-weight:800;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Message preview</div>
+      <div style="background:{{ c.card2 }};border-radius:12px;padding:14px;font-size:13px;color:{{ c.textDim }};margin-bottom:18px;">{{ eventPreviewText }}</div>
+
+      <div style="font-size:12px;font-weight:800;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Send</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ eventChannels }}" as="ch" hint-placeholder-count="3">
+          <button onClick="{{ ch.onClick }}" style="display:flex;align-items:center;gap:10px;padding:16px;border-radius:14px;background:{{ c.card }};text-align:left;">
+            <span style="font-size:18px;">{{ ch.icon }}</span>
+            <span style="flex:1;font-size:14px;font-weight:700;">{{ ch.label }}</span>
+            <sc-if value="{{ ch.sent }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:12px;font-weight:800;color:#22c55e;">Sent ✓</span>
+            </sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  </sc-if>
+
+  <!-- MEMBER DETAIL -->
+  <sc-if value="{{ isMemberDetail }}">
+  <div style="padding:60px 18px 24px;">
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:20px;">
+      <div style="width:80px;height:80px;border-radius:50%;background:{{ detail.avatarBg }};display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:28px;margin-bottom:10px;">{{ detail.initials }}</div>
+      <div style="font-size:20px;font-weight:800;">{{ detail.name }}</div>
+      <div style="font-size:13px;color:{{ c.muted }};margin-top:4px;">In Youth since {{ detail.since }}</div>
+    </div>
+
+    <div style="background:{{ c.card }};border-radius:14px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Parent / Guardian</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">{{ detail.guardian.name }} · {{ detail.guardian.relation }}</div>
+          <div style="font-size:12px;color:{{ c.muted }};">{{ detail.guardian.phone }}</div>
+        </div>
+        <button style="padding:9px 14px;border-radius:10px;background:rgba(34,197,94,0.15);color:#22c55e;font-weight:700;font-size:12px;">WhatsApp</button>
+        <button style="padding:9px 14px;border-radius:10px;background:rgba(59,130,246,0.15);color:#3b82f6;font-weight:700;font-size:12px;">SMS</button>
+      </div>
+    </div>
+
+    <div style="background:{{ c.card }};border-radius:14px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Attendance — last 8 Sundays</div>
+      <div style="display:flex;gap:6px;align-items:flex-end;height:44px;">
+        <sc-for list="{{ detail.attendance }}" as="a" hint-placeholder-count="8">
+          <div style="flex:1;height:{{ a.height }};background:{{ a.color }};border-radius:4px;"></div>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:{{ c.muted }};">
+        <span>{{ detail.attendedCount }} attended</span>
+        <span style="color:#ef4444;font-weight:700;">{{ detail.missedCount }} missed</span>
+      </div>
+    </div>
+
+    <div style="background:{{ c.card }};border-radius:14px;padding:14px;">
+      <div style="font-size:12px;font-weight:700;color:{{ c.muted }};text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Communication history</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <sc-for list="{{ detail.comms }}" as="cm" hint-placeholder-count="3">
+          <div style="display:flex;gap:10px;">
+            <div style="font-size:16px;">{{ cm.icon }}</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:700;">{{ cm.note }}</div>
+              <div style="font-size:11px;color:{{ c.muted }};">{{ cm.date }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const MOOD_LIST = [
+  { emoji: '😄', bg: 'rgba(34,197,94,0.15)' },
+  { emoji: '😊', bg: 'rgba(59,130,246,0.15)' },
+  { emoji: '😐', bg: 'rgba(148,163,184,0.15)' },
+  { emoji: '😔', bg: 'rgba(245,158,11,0.15)' },
+  { emoji: '😢', bg: 'rgba(239,68,68,0.15)' },
+  { emoji: '🤩', bg: 'rgba(168,85,247,0.15)' },
+];
+
+const MEMBERS = [
+  { id: 1, name: 'Phillip Ndlovu', firstName: 'Phillip', checkedIn: true, since: 'Jan 2023', attendance: [1,1,1,0,1,1,1,1],
+    guardian: { name: 'Nomsa Ndlovu', relation: 'Mom', phone: '082 111 2233' },
+    comms: [
+      { icon: '💬', note: 'Missed 2 weeks — sent WhatsApp check-in', date: '3 weeks ago' },
+      { icon: '📞', note: 'Called about youth camp signup', date: '2 months ago' },
+    ]},
+  { id: 2, name: 'Amanda Cele', firstName: 'Amanda', checkedIn: false, isVisitor: true, since: 'Aug 2024', attendance: [1,0,0,1,0,0,1,0],
+    guardian: { name: 'David Cele', relation: 'Dad', phone: '083 222 3344' },
+    comms: [
+      { icon: '💬', note: 'Reached out — no reply yet', date: '1 week ago' },
+    ]},
+  { id: 3, name: 'Sipho Mokoena', firstName: 'Sipho', checkedIn: false, since: 'Mar 2022', attendance: [1,1,1,1,1,1,0,1],
+    guardian: { name: 'Zanele Mokoena', relation: 'Aunt', phone: '084 333 4455' },
+    comms: []},
+  { id: 4, name: 'Grace van Wyk', firstName: 'Grace', checkedIn: true, since: 'Nov 2023', attendance: [1,1,1,1,0,1,1,1],
+    guardian: { name: 'Pieter van Wyk', relation: 'Dad', phone: '072 444 5566' },
+    comms: [
+      { icon: '🎉', note: 'Sent birthday message', date: '5 days ago' },
+    ]},
+  { id: 5, name: 'Thabo Dube', firstName: 'Thabo', checkedIn: false, isVisitor: true, since: 'Jun 2024', attendance: [0,0,1,0,0,1,0,0],
+    guardian: { name: 'Bongani Dube', relation: 'Uncle', phone: '071 555 6677' },
+    comms: [
+      { icon: '💬', note: 'Missed 4 weeks — leader following up', date: '2 days ago' },
+      { icon: '📞', note: 'No answer', date: '1 week ago' },
+    ]},
+  { id: 6, name: 'Nomvula Khumalo', firstName: 'Nomvula', checkedIn: true, since: 'Feb 2025', attendance: [1,1,1,1,1,0,1,1],
+    guardian: { name: 'Thandiwe Khumalo', relation: 'Mom', phone: '079 666 7788' },
+    comms: []},
+];
+
+const MESSAGE_TEMPLATES = [
+  "Hey! We missed you at Youth this week \u2014 hope you're doing okay \ud83d\udc9b",
+  "Just checking in \u2014 everything alright? Would love to see you soon!",
+  "Reminder: Youth Group meets every Sunday at 4pm \u2014 come join us!",
+  "Hi! We haven't seen [name] in a while \u2014 always welcome back.",
+];
+
+const LEADERS = [
+  { name: 'Joshua Mahlangu', pin: '1234', attendancePct: 96 },
+  { name: 'Priscilla Ngcobo', pin: '5678', attendancePct: 91 },
+  { name: 'Pastor Billy Radebe', pin: '9012', attendancePct: 100 },
+];
+
+function darkPalette() {
+  return { pageBg:'#05070d', bg:'#0f172a', card:'#1e293b', card2:'#243244', text:'#e2e8f0', textDim:'#cbd5e1', muted:'#94a3b8', mutedDark:'#64748b', border:'#334155', mint:'#6ee7b7' };
+}
+function lightPalette() {
+  return { pageBg:'#dfe3ee', bg:'#f5f6fb', card:'#ffffff', card2:'#eef0fa', text:'#0f172a', textDim:'#1e293b', muted:'#64748b', mutedDark:'#94a3b8', border:'#e2e8f0', mint:'#059669' };
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+}
+function avatarBgFor(id) {
+  const colors = ['#6c63ff','#22c55e','#3b82f6','#f59e0b','#a855f7','#ef4444'];
+  return colors[id % colors.length];
+}
+
+const ADDRESS_MOCK = [
+  '12 Oak Avenue, Sandton', '45 Church Street, Pretoria', '8 Baobab Road, Durban North',
+  '221 Long Street, Cape Town', '5 Jacaranda Lane, Bloemfontein', '77 Protea Drive, Johannesburg',
+  '19 Willow Close, Port Elizabeth', '3 Marula Street, Polokwane', '14 Cypress Avenue, Centurion',
+];
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CURRENT_YEAR = 2026;
+
+const GUARDIAN_RELATIONS = ['Mom','Dad','Aunt','Uncle','Guardian'];
+
+const REG_STEPS = [
+  { key: 'name', label: 'What is your name?', placeholder: 'First name' },
+  { key: 'surname', label: 'And your surname?', placeholder: 'Surname' },
+  { key: 'phone', label: 'Phone number?', placeholder: '082 000 0000' },
+  { key: 'birthday', label: 'When is your birthday?', placeholder: 'DD / MM' },
+  { key: 'address', label: 'Home address?', placeholder: 'Address' },
+  { key: 'school', label: 'School or grade?', placeholder: 'School / Grade' },
+  { key: 'guardianName', label: "Parent / guardian's name?", placeholder: 'Guardian name' },
+  { key: 'guardianRelation', label: 'Relationship to you?', placeholder: '' },
+  { key: 'guardianPhone', label: "Parent / guardian's phone?", placeholder: '082 000 0000' },
+  { key: 'mood', label: 'How do you feel today?', placeholder: '' },
+];
+
+class Component extends DCLogic {
+  state = {
+    theme: 'dark',
+    screen: 'home',
+    pin: '',
+    pinError: '',
+    pinShake: false,
+    checkinSearch: '',
+    flippedId: null,
+    personType: null,
+    regVariant: 1,
+    regStep: 0,
+    regForm: { name:'', surname:'', phone:'', birthDay:'', birthMonth:'', birthYear:'', address:'', school:'', guardianName:'', guardianRelation:'', guardianPhone:'' },
+    regMood: null,
+    rewardCode: '',
+    adminSearch: '',
+    absentSearch: '',
+    selectedMemberId: null,
+    addressOpen: false,
+    adminOverlay: null,
+    messaging: null,
+    usedMessages: {},
+    checkinMoods: {},
+    eventForm: { name: '', date: '', poster: false },
+    eventSentFlags: {},
+  };
+
+  toggleTheme = () => this.setState(s => ({ theme: s.theme === 'dark' ? 'light' : 'dark' }));
+
+  goHome = () => this.setState({ screen: 'home', personType: null, regStep: 0, regForm: { name:'', surname:'', phone:'', birthDay:'', birthMonth:'', birthYear:'', address:'', school:'', guardianName:'', guardianRelation:'', guardianPhone:'' }, regMood: null, flippedId: null });
+  goRegister = () => this.setState({ screen: 'register' });
+  goCheckin = () => this.setState({ screen: 'checkin' });
+  goPin = () => this.setState({ screen: 'pin', pin: '', pinError: '' });
+  goAdmin = () => this.setState({ screen: 'admin' });
+
+  goBack = () => {
+    const s = this.state.screen;
+    if (s === 'memberDetail') return this.setState({ screen: 'admin', selectedMemberId: null });
+    if (s === 'admin') return this.goHome();
+    if (s === 'register' && this.state.personType) return this.setState({ personType: null, regStep: 0 });
+    return this.goHome();
+  };
+
+  pressDigit = (d) => {
+    if (this.state.pin.length >= 5) return;
+    const pin = this.state.pin + d;
+    this.setState({ pin, pinError: '' });
+    if (pin.length === 5) {
+      if (pin === '12345') {
+        setTimeout(() => this.setState({ screen: 'admin', pin: '' }), 150);
+      } else {
+        this.setState({ pinShake: true, pinError: 'Incorrect PIN' });
+        setTimeout(() => this.setState({ pin: '', pinShake: false }), 500);
+      }
+    }
+  };
+  pressDelete = () => this.setState(s => ({ pin: s.pin.slice(0, -1), pinError: '' }));
+
+  onCheckinSearch = (e) => this.setState({ checkinSearch: e.target.value });
+  toggleFlip = (id) => this.setState(s => ({ flippedId: s.flippedId === id ? null : id }));
+  confirmCheckin = (id) => {
+    MEMBERS.forEach(m => { if (m.id === id) m.checkedIn = true; });
+    this.setState({ flippedId: null });
+  };
+
+  pickVisitor = () => this.setState({ personType: 'visitor' });
+  pickMember = () => this.setState({ personType: 'member' });
+  setVariant1 = () => this.setState({ regVariant: 1, regStep: 0 });
+  setVariant2 = () => this.setState({ regVariant: 2 });
+
+  onStepChange = (e) => {
+    const key = REG_STEPS[this.state.regStep].key;
+    this.setState(s => ({ regForm: { ...s.regForm, [key]: e.target.value } }));
+  };
+  nextStep = () => {
+    if (this.state.regStep >= REG_STEPS.length - 1) return this.finishRegistration();
+    this.setState(s => ({ regStep: s.regStep + 1 }));
+  };
+  prevStep = () => this.setState(s => ({ regStep: Math.max(0, s.regStep - 1) }));
+  pickMood = (emoji) => this.setState({ regMood: emoji });
+  pickCheckinMood = (id, emoji) => this.setState(s => ({ checkinMoods: { ...s.checkinMoods, [id]: emoji } }));
+  pickMoodAndAdvance = (emoji) => {
+    this.setState({ regMood: emoji });
+    setTimeout(() => this.finishRegistration(), 200);
+  };
+
+  onFieldName = (e) => this.setState(s => ({ regForm: { ...s.regForm, name: e.target.value } }));
+  onFieldSurname = (e) => this.setState(s => ({ regForm: { ...s.regForm, surname: e.target.value } }));
+  onFieldPhone = (e) => this.setState(s => ({ regForm: { ...s.regForm, phone: e.target.value } }));
+  onBirthDayChange = (e) => this.setState(s => ({ regForm: { ...s.regForm, birthDay: e.target.value } }));
+  onBirthMonthChange = (e) => this.setState(s => ({ regForm: { ...s.regForm, birthMonth: e.target.value } }));
+  onBirthYearChange = (e) => this.setState(s => ({ regForm: { ...s.regForm, birthYear: e.target.value } }));
+  onFieldAddress = (e) => this.setState(s => ({ regForm: { ...s.regForm, address: e.target.value }, addressOpen: e.target.value.length > 1 }));
+  pickAddress = (label) => this.setState(s => ({ regForm: { ...s.regForm, address: label }, addressOpen: false }));
+  onFieldSchool = (e) => this.setState(s => ({ regForm: { ...s.regForm, school: e.target.value } }));
+  onFieldGuardianName = (e) => this.setState(s => ({ regForm: { ...s.regForm, guardianName: e.target.value } }));
+  onFieldGuardianRelation = (e) => this.setState(s => ({ regForm: { ...s.regForm, guardianRelation: e.target.value } }));
+  onFieldGuardianPhone = (e) => this.setState(s => ({ regForm: { ...s.regForm, guardianPhone: e.target.value } }));
+  submitVariant2 = () => this.finishRegistration();
+
+  finishRegistration = () => {
+    const code = 'JG-' + Math.floor(1000 + Math.random() * 9000);
+    this.setState({ screen: 'reward', rewardCode: code });
+  };
+
+  onAdminSearch = (e) => this.setState({ adminSearch: e.target.value });
+  onAbsentSearch = (e) => this.setState({ absentSearch: e.target.value });
+  openOverlay = (key) => this.setState({ adminOverlay: key, adminSearch: '', absentSearch: '', messaging: null });
+  openAbsentOverlay = () => this.openOverlay('absent');
+  closeOverlay = () => this.setState({ adminOverlay: null, messaging: null });
+  startMessage = (personId, channel) => this.setState({ messaging: { personId, channel, recipient: null, messageIdx: null } });
+  pickRecipient = (recipient) => this.setState(s => ({ messaging: { ...s.messaging, recipient } }));
+  pickMessage = (idx) => this.setState(s => {
+    const key = s.messaging.personId + '_' + s.messaging.channel + '_' + idx;
+    return { usedMessages: { ...s.usedMessages, [key]: true }, messaging: { ...s.messaging, messageIdx: idx } };
+  });
+  sendMessage = () => this.setState({ messaging: null });
+  messagingBack = () => this.setState(s => {
+    if (!s.messaging) return {};
+    if (s.messaging.recipient !== null) return { messaging: { ...s.messaging, recipient: null, messageIdx: null } };
+    return { messaging: null };
+  });
+  onEventName = (e) => this.setState(s => ({ eventForm: { ...s.eventForm, name: e.target.value } }));
+  onEventDate = (e) => this.setState(s => ({ eventForm: { ...s.eventForm, date: e.target.value } }));
+  addEventPoster = () => this.setState(s => ({ eventForm: { ...s.eventForm, poster: true } }));
+  sendEventChannel = (channel) => this.setState(s => ({ eventSentFlags: { ...s.eventSentFlags, [channel]: true } }));
+  openMember = (id) => this.setState({ screen: 'memberDetail', selectedMemberId: id });
+  toggleAbsentFlip = () => this.setState(s => ({ absentFlipped: !s.absentFlipped }));
+  toggleTileFlip = (key) => this.setState(s => ({ flippedTile: s.flippedTile === key ? null : key, adminSearch: '' }));
+
+  renderVals() {
+    const s = this.state;
+    const c = s.theme === 'dark' ? darkPalette() : lightPalette();
+    const themeIcon = s.theme === 'dark' ? '🌙' : '☀️';
+
+    const isHome = s.screen === 'home';
+    const isPin = s.screen === 'pin';
+    const isCheckin = s.screen === 'checkin';
+    const isRegister = s.screen === 'register';
+    const isReward = s.screen === 'reward';
+    const isAdmin = s.screen === 'admin';
+    const isMemberDetail = s.screen === 'memberDetail';
+    const showBack = !isHome && !isReward;
+
+    // PIN
+    const pinDotsArr = [0,1,2,3,4].map(i => ({ filled: i < s.pin.length ? c.mint : 'transparent' }));
+    const pinShakeAnim = s.pinShake ? 'jgShake 0.4s' : 'none';
+    const numKeys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+    const numpadKeys = numKeys.map(k => {
+      if (k === '') return { label: '', bg: 'transparent', color: 'transparent', onClick: () => {} };
+      if (k === '⌫') return { label: '⌫', bg: 'rgba(239,68,68,0.15)', color: '#ef4444', onClick: this.pressDelete };
+      return { label: k, bg: c.card, color: c.text, onClick: () => this.pressDigit(k) };
+    });
+
+    // CHECK-IN list
+    const filtered = MEMBERS.filter(m => m.name.toLowerCase().includes(s.checkinSearch.toLowerCase()));
+    const checkinList = filtered.map(m => {
+      const flipped = s.flippedId === m.id;
+      return {
+        name: m.name,
+        firstName: m.firstName,
+        initials: initials(m.name),
+        avatarBg: avatarBgFor(m.id),
+        borderColor: m.checkedIn ? '#22c55e' : '#f59e0b',
+        statusLabel: m.checkedIn ? '✓ Checked in' : 'Not checked in yet',
+        chevron: flipped ? '×' : '›',
+        cardHeight: flipped ? '190px' : '68px',
+        flipTransform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+        onFlip: () => this.toggleFlip(m.id),
+        onConfirm: () => this.confirmCheckin(m.id),
+        moodOptions: MOOD_LIST.map(mo => ({
+          emoji: mo.emoji,
+          bg: s.checkinMoods[m.id] === mo.emoji ? mo.bg.replace('0.15','0.6') : mo.bg,
+          border: s.checkinMoods[m.id] === mo.emoji ? '2px solid rgba(0,0,0,0.15)' : '2px solid transparent',
+          onClick: () => this.pickCheckinMood(m.id, mo.emoji),
+        })),
+      };
+    });
+
+    // REGISTER
+    const needsPersonType = isRegister && !s.personType;
+    const showRegForm = isRegister && !!s.personType;
+    const isVariant1 = s.regVariant === 1;
+    const isVariant2 = s.regVariant === 2;
+    const variant1Bg = isVariant1 ? '#6c63ff' : 'transparent';
+    const variant1Fg = isVariant1 ? '#fff' : c.muted;
+    const variant2Bg = isVariant2 ? '#6c63ff' : 'transparent';
+    const variant2Fg = isVariant2 ? '#fff' : c.muted;
+
+    const curStep = REG_STEPS[s.regStep];
+    const stepDots = REG_STEPS.map((_, i) => ({ bg: i === s.regStep ? '#6c63ff' : c.border }));
+    const stepLabel = curStep ? curStep.label : '';
+    const stepIsMood = curStep && curStep.key === 'mood';
+    const stepIsBirthday = curStep && curStep.key === 'birthday';
+    const stepIsAddress = curStep && curStep.key === 'address';
+    const stepIsGuardianRelation = curStep && curStep.key === 'guardianRelation';
+    const stepIsField = curStep && !stepIsMood && !stepIsBirthday && !stepIsAddress && !stepIsGuardianRelation;
+    const stepValue = stepIsField ? (s.regForm[curStep.key] || '') : '';
+    const stepPlaceholder = curStep ? curStep.placeholder : '';
+
+    const dayOptions = Array.from({length:31}, (_,i) => String(i+1));
+    const monthOptions = MONTH_NAMES.map((label, i) => ({ label, value: String(i+1) }));
+    const yearOptions = Array.from({length:26}, (_,i) => String(CURRENT_YEAR - i));
+    const guardianRelationOptions = GUARDIAN_RELATIONS.map(r => ({
+      label: r, bg: s.regForm.guardianRelation === r ? '#6c63ff' : c.card, fg: s.regForm.guardianRelation === r ? '#fff' : c.text,
+      onClick: () => this.setState(st => ({ regForm: { ...st.regForm, guardianRelation: r } })),
+    }));
+    const addressQuery = (s.regForm.address || '').toLowerCase();
+    const addressMatches = addressQuery.length > 1 ? ADDRESS_MOCK.filter(a => a.toLowerCase().includes(addressQuery)).slice(0,5) : [];
+    const showAddressSuggestions = s.addressOpen && addressMatches.length > 0;
+    const addressSuggestions = addressMatches.map(label => ({ label, onPick: () => this.pickAddress(label) }));
+    const canGoPrevStep = s.regStep > 0;
+    const nextStepLabel = s.regStep === REG_STEPS.length - 1 ? 'Finish 🎉' : 'Next →';
+    const regMoodOptions = MOOD_LIST.map(mo => ({
+      emoji: mo.emoji,
+      bg: s.regMood === mo.emoji ? mo.bg.replace('0.15','0.5') : mo.bg,
+      onClick: isVariant1 ? (() => this.pickMoodAndAdvance(mo.emoji)) : (() => this.pickMood(mo.emoji)),
+    }));
+    const fieldStyle = `width:100%;padding:14px 16px;border-radius:12px;background:${c.card};border:2px solid ${c.border};color:${c.text};font-size:15px;`;
+
+    // REWARD
+    const confettiEmojis = ['🎉','🎊','✨','🎈'];
+    const confetti = Array.from({length:14}).map((_,i) => ({
+      emoji: confettiEmojis[i % confettiEmojis.length],
+      left: `${(i*7 + 3) % 100}%`,
+      dur: `${2.4 + (i % 5) * 0.4}s`,
+      delay: `${(i % 7) * 0.3}s`,
+    }));
+
+    // ADMIN — overlay-driven navigation (one full screen at a time)
+    const hasAdminOverlay = !!s.adminOverlay;
+    const isOverlayAbsent = s.adminOverlay === 'absent';
+    const isOverlayPeople = s.adminOverlay === 'people';
+    const isOverlayLeaders = s.adminOverlay === 'leaders';
+    const isOverlayData = s.adminOverlay === 'data';
+    const isOverlayComms = s.adminOverlay === 'comms';
+    const isOverlayEvent = s.adminOverlay === 'event';
+
+    const absentAll = MEMBERS.filter(m => !m.checkedIn);
+    const absentSearchLower = s.absentSearch.toLowerCase();
+    const absentFiltered = absentAll.filter(m => m.name.toLowerCase().includes(absentSearchLower));
+    const absentCard = {
+      count: absentAll.length,
+      total: MEMBERS.length,
+      people: absentFiltered.map(m => ({
+        name: m.name, initials: initials(m.name), avatarBg: avatarBgFor(m.id),
+        onOpen: () => this.openMember(m.id),
+        onWhatsapp: () => this.startMessage(m.id, 'whatsapp'),
+        onSms: () => this.startMessage(m.id, 'sms'),
+      })),
+    };
+
+    const personRow = (m) => ({
+      name: m.name, initials: initials(m.name), avatarBg: avatarBgFor(m.id),
+      borderColor: m.checkedIn ? '#22c55e' : '#f59e0b',
+      onOpen: () => this.openMember(m.id),
+    });
+    const adminSearchLower = s.adminSearch.toLowerCase();
+    const membersFiltered = MEMBERS.filter(m => m.name.toLowerCase().includes(adminSearchLower)).map(personRow);
+    const visitorsFiltered = MEMBERS.filter(m => m.isVisitor && m.name.toLowerCase().includes(adminSearchLower)).map(personRow);
+    const leaderRows = LEADERS;
+
+    const groupCards = [
+      { key: 'people', label: 'People', desc: 'Members, visitors and rosters', onOpen: () => this.openOverlay('people') },
+      { key: 'leaders', label: 'Leaders', desc: 'PINs, attendance, events, QR code, reset', onOpen: () => this.openOverlay('leaders') },
+      { key: 'event', label: 'Special Events', desc: 'Create an event, add a poster, and blast it out', onOpen: () => this.openOverlay('event') },
+      { key: 'comms', label: 'Communication', desc: 'WhatsApp group, SMS, suggestions', onOpen: () => this.openOverlay('comms') },
+      { key: 'data', label: 'Data', desc: 'Reports, export/import, pending sync', onOpen: () => this.openOverlay('data') },
+    ];
+
+    const dataCards = [
+      { emoji: '📊', label: 'Reports', text: 'Average attendance is 82% over the last 8 Sundays.' },
+      { emoji: '📁', label: 'Export / Import', text: 'Last export was 2 days ago. Import a spreadsheet to bulk-update records.' },
+      { emoji: '⏳', label: 'Pending Sync', text: '4 check-ins are queued and waiting to upload.', hasBadge: true, badge: 4 },
+    ];
+
+    const commsCards = [
+      { emoji: '✅', label: 'Sent Today', text: '12 check-in confirmations sent to parents today.' },
+      { emoji: '💚', label: 'WA Group', text: '3 pending requests to join the WhatsApp group.', hasBadge: true, badge: 3 },
+      { emoji: '💬', label: 'Suggestions', text: '1 new suggestion from a member this week.', hasBadge: true, badge: 1 },
+    ];
+
+    // Special Events
+    const eventForm = s.eventForm;
+    const eventReady = eventForm.name.trim().length > 0 && eventForm.date.trim().length > 0;
+    const eventChannels = [
+      { key: 'yWa', label: 'Send poster to Youth WhatsApp group', icon: '💚', includesPoster: true },
+      { key: 'pWa', label: 'Send poster to Parents WhatsApp group', icon: '💚', includesPoster: true },
+      { key: 'pSms', label: 'Send SMS to parents (text only, no image)', icon: '✉️', includesPoster: false },
+    ].map(ch => ({
+      ...ch,
+      sent: !!s.eventSentFlags[ch.key],
+      onClick: () => this.sendEventChannel(ch.key),
+    }));
+    const eventPreviewText = eventReady
+      ? `📣 ${eventForm.name} — ${eventForm.date}. See you there!`
+      : 'Fill in the event name and date to preview the message.';
+
+    // Messaging sub-flow (nested inside the Absent overlay)
+    const messaging = s.messaging;
+    const showAbsentList = isOverlayAbsent && !messaging;
+    const showRecipientPicker = isOverlayAbsent && !!messaging && messaging.recipient === null;
+    const showMessageTemplates = isOverlayAbsent && !!messaging && messaging.recipient !== null;
+    const messagingPerson = messaging ? MEMBERS.find(m => m.id === messaging.personId) : null;
+    const messagingChannelLabel = messaging && messaging.channel === 'whatsapp' ? 'WhatsApp' : 'SMS';
+    const messagingPersonName = messagingPerson ? messagingPerson.firstName : '';
+    const recipientOptions = messaging ? (messaging.channel === 'whatsapp'
+      ? [{ label: 'Parent', onClick: () => this.pickRecipient('Parent') }, { label: 'Member', onClick: () => this.pickRecipient('Member') }]
+      : [{ label: 'Parent', onClick: () => this.pickRecipient('Parent') }, { label: 'Child', onClick: () => this.pickRecipient('Child') }]
+    ) : [];
+    const canSendMessage = showMessageTemplates && messaging.messageIdx !== null;
+    const messageOptions = showMessageTemplates ? MESSAGE_TEMPLATES.map((tpl, idx) => {
+      const key = messaging.personId + '_' + messaging.channel + '_' + idx;
+      const used = !!s.usedMessages[key];
+      const selected = messaging.messageIdx === idx;
+      const text = tpl.replace('[name]', messagingPersonName);
+      return {
+        text, idx,
+        strike: used ? 'line-through' : 'none',
+        color: used ? c.muted : c.text,
+        bg: selected ? 'rgba(108,99,255,0.12)' : c.card,
+        border: selected ? '#6c63ff' : c.border,
+        onClick: () => this.pickMessage(idx),
+      };
+    }) : [];
+
+    // MEMBER DETAIL
+    let detail = null;
+    if (s.selectedMemberId) {
+      const m = MEMBERS.find(x => x.id === s.selectedMemberId);
+      if (m) {
+        const missedCount = m.attendance.filter(a => a === 0).length;
+        detail = {
+          name: m.name,
+          initials: initials(m.name),
+          avatarBg: avatarBgFor(m.id),
+          since: m.since,
+          guardian: m.guardian || { name: '—', relation: '', phone: '—' },
+          attendedCount: m.attendance.filter(a => a === 1).length,
+          missedCount,
+          attendance: m.attendance.map(a => ({ height: a ? '100%' : '30%', color: a ? '#22c55e' : '#ef4444' })),
+          comms: m.comms.length ? m.comms : [{ icon: '—', note: 'No communication logged yet', date: '' }],
+        };
+      }
+    }
+
+    return {
+      c, themeIcon, toggleTheme: this.toggleTheme, showBack, goBack: this.goBack,
+      isHome, isPin, isCheckin, isRegister, isReward, isAdmin, isMemberDetail,
+      stats: { registered: MEMBERS.length, here: MEMBERS.filter(m=>m.checkedIn).length, visitors: 2 },
+      goRegister: this.goRegister, goCheckin: this.goCheckin, goPin: this.goPin, goAdmin: this.goAdmin, goHome: this.goHome,
+      pinDotsArr, pinError: s.pinError, pinShakeAnim, numpadKeys,
+      checkinSearch: s.checkinSearch, onCheckinSearch: this.onCheckinSearch, checkinList,
+      needsPersonType, showRegForm, pickVisitor: this.pickVisitor, pickMember: this.pickMember,
+      isVariant1, isVariant2, setVariant1: this.setVariant1, setVariant2: this.setVariant2,
+      variant1Bg, variant1Fg, variant2Bg, variant2Fg,
+      stepDots, stepLabel, stepIsMood, stepIsField, stepIsBirthday, stepIsAddress, stepIsGuardianRelation, stepValue, stepPlaceholder, onStepChange: this.onStepChange,
+      canGoPrevStep, prevStep: this.prevStep, nextStep: this.nextStep, nextStepLabel, regMoodOptions,
+      regForm: s.regForm, fieldStyle, guardianRelationOptions,
+      dayOptions, monthOptions, yearOptions, onBirthDayChange: this.onBirthDayChange, onBirthMonthChange: this.onBirthMonthChange, onBirthYearChange: this.onBirthYearChange,
+      showAddressSuggestions, addressSuggestions,
+      onFieldName: this.onFieldName, onFieldSurname: this.onFieldSurname, onFieldPhone: this.onFieldPhone,
+      onFieldAddress: this.onFieldAddress, onFieldSchool: this.onFieldSchool,
+      onFieldGuardianName: this.onFieldGuardianName, onFieldGuardianRelation: this.onFieldGuardianRelation, onFieldGuardianPhone: this.onFieldGuardianPhone,
+      submitVariant2: this.submitVariant2,
+      rewardCode: s.rewardCode, confetti,
+      hasAdminOverlay, isOverlayAbsent, isOverlayPeople, isOverlayLeaders, isOverlayData, isOverlayComms, isOverlayEvent,
+      openAbsentOverlay: this.openAbsentOverlay, closeOverlay: this.closeOverlay, groupCards,
+      absentCard, absentSearch: s.absentSearch, onAbsentSearch: this.onAbsentSearch,
+      adminSearch: s.adminSearch, onAdminSearch: this.onAdminSearch, membersFiltered, visitorsFiltered, leaderRows, dataCards, commsCards,
+      showAbsentList, showRecipientPicker, showMessageTemplates, messagingBack: this.messagingBack,
+      messagingChannelLabel, messagingPersonName, recipientOptions, messageOptions, canSendMessage, sendMessage: this.sendMessage,
+      eventForm, eventReady, eventChannels, eventPreviewText,
+      onEventName: this.onEventName, onEventDate: this.onEventDate, addEventPoster: this.addEventPoster,
+      detail,
+    };
+  }
+}
+</script>
+</body>
+</html>
