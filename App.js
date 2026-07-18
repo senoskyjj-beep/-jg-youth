@@ -241,9 +241,13 @@ function isProfileIncomplete(m){
   return false;
 }
 
-function computeStatus(m,checkins){ if(m.originalStatus==="Member")return "Member"; var v=(checkins||[]).filter(function(c){return c&&c.memberId===m.id;}).length; return v>=3?"Member":v>=2?"Returning Visitor":"Visitor"; }
-function visitCount(m,checkins){ return (checkins||[]).filter(function(c){return c&&c.memberId===m.id;}).length; }
-function lastCheckin(m,checkins){ var mc=(checkins||[]).filter(function(c){return c&&c.memberId===m.id;}).map(function(c){return c.date;}).sort(); return mc[mc.length-1]||null; }
+// NOTE: memberId/id are compared as String() throughout this file - Google Sheets
+// can hand these back as numbers instead of strings, and a strict === on mismatched
+// types silently fails (a check-in stops counting toward that member, "Here Today"
+// undercounts, etc) rather than throwing, so it's easy to miss without this guard.
+function computeStatus(m,checkins){ if(m.originalStatus==="Member")return "Member"; var v=(checkins||[]).filter(function(c){return c&&String(c.memberId)===String(m.id);}).length; return v>=3?"Member":v>=2?"Returning Visitor":"Visitor"; }
+function visitCount(m,checkins){ return (checkins||[]).filter(function(c){return c&&String(c.memberId)===String(m.id);}).length; }
+function lastCheckin(m,checkins){ var mc=(checkins||[]).filter(function(c){return c&&String(c.memberId)===String(m.id);}).map(function(c){return c.date;}).sort(); return mc[mc.length-1]||null; }
 function pctColor(p){ return p>=75?"#22c55e":p>=50?"#f59e0b":"#ef4444"; }
 
 // Track when a message has been sent to a person today
@@ -485,13 +489,15 @@ async function syncGoogle(payload){
   if(!ok)addToPendingQueue(payload,"initial send failed");
 }
 
-// Try to send everything in the queue. Stops on first failure
-// to preserve order and avoid hammering a down endpoint.
+// Try to send everything in the queue. A single item that keeps failing must
+// never block every OTHER person's registration/check-in behind it from ever
+// syncing - so this only stops early on several failures IN A ROW (a real
+// sign the endpoint/network is down), not on the very first one.
 var _flushing=false;
 async function flushPendingQueue(){
   if(_flushing)return {sent:0,remaining:loadPendingQueue().length};
   _flushing=true;
-  var sent=0;
+  var sent=0, consecutiveFailures=0;
   try{
     var q=loadPendingQueue();
     for(var i=0;i<q.length;i++){
@@ -500,8 +506,10 @@ async function flushPendingQueue(){
       if(ok){
         removeFromPendingQueue(item.id);
         sent++;
+        consecutiveFailures=0;
       }else{
-        // Bump attempt counter and stop; next tick will retry
+        consecutiveFailures++;
+        // Bump attempt counter, then move on to try the rest of the queue.
         var cur=loadPendingQueue();
         var idx=cur.findIndex(function(x){return x.id===item.id;});
         if(idx>=0){
@@ -509,7 +517,7 @@ async function flushPendingQueue(){
           cur[idx].lastError="retry failed";
           savePendingQueue(cur);
         }
-        break;
+        if(consecutiveFailures>=3)break; // endpoint/network looks down - stop hammering it
       }
     }
   }finally{
@@ -527,7 +535,10 @@ async function verifyMemberInCloud(memberId){
     var res=await fetch(url,{method:"GET"});
     var json=await res.json();
     if(json.status==="ok"){
-      return (json.members||[]).some(function(m){return m.id===memberId;});
+      // String() guard: a numeric-vs-string id mismatch here means a registration
+      // that DID save successfully still shows "not synced yet" to the leader,
+      // who then re-uploads or re-registers a person who was already fine.
+      return (json.members||[]).some(function(m){return String(m.id)===String(memberId);});
     }
   }catch(e){ console.log("Verify fail:",e&&e.message||e); }
   return false;
@@ -1000,13 +1011,21 @@ function exportXL(members,checkins,feedback){
   } else { run(); }
 }
 
+// HTML-escape untrusted text before it goes into any hand-built HTML string
+// (member names/school/address, free-text feedback comments, etc). Without
+// this, anyone who can submit a registration or feedback comment could plant
+// markup that runs when a leader later opens Export PDF / Reports.
+function escHtml(s){
+  return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
 function exportPDF(members,checkins,feedback){
   try{
     var sheets=buildAllSheets(members,checkins,feedback);
     var today=new Date().toLocaleDateString("en-ZA",{year:"numeric",month:"long",day:"numeric"});
     function tbl(hdr,rows,title,color){
-      var h="<h2 style='color:"+color+";margin:20px 0 8px;font-size:13px;border-left:4px solid "+color+";padding-left:8px;'>"+title+"</h2>";
-      h+="<table><thead><tr>"+hdr.map(function(x){return "<th style='background:"+color+"'>"+x+"</th>";}).join("")+"</tr></thead><tbody>";
+      var h="<h2 style='color:"+color+";margin:20px 0 8px;font-size:13px;border-left:4px solid "+color+";padding-left:8px;'>"+escHtml(title)+"</h2>";
+      h+="<table><thead><tr>"+hdr.map(function(x){return "<th style='background:"+color+"'>"+escHtml(x)+"</th>";}).join("")+"</tr></thead><tbody>";
       rows.forEach(function(r){
         h+="<tr>";
         r.forEach(function(v){
@@ -1015,7 +1034,7 @@ function exportPDF(members,checkins,feedback){
           if(vc==="CRITICAL"||vc==="ACTION NEEDED"||vc==="IMMEDIATE ACTION")style="color:red;font-weight:bold;";
           else if(vc==="WARNING"||vc==="MONITOR"||vc==="NEEDS ATTENTION")style="color:darkorange;font-weight:bold;";
           else if(vc==="GOOD"||vc==="Improving"||vc==="YES")style="color:green;font-weight:bold;";
-          h+="<td style='"+style+"'>"+vc+"</td>";
+          h+="<td style='"+style+"'>"+escHtml(vc)+"</td>";
         });
         h+="</tr>";
       });
@@ -1033,13 +1052,13 @@ function exportPDF(members,checkins,feedback){
       var statusCol=status==="Member"?"#22c55e":status==="Returning Visitor"?"#f59e0b":"#a855f7";
       memberPhotoHtml+="<div style='border:1px solid #e2e8f0;border-radius:10px;padding:8px;width:140px;text-align:center;break-inside:avoid;'>";
       if(photo){
-        memberPhotoHtml+="<img src='"+photo+"' width='70' height='70' style='border-radius:50%;object-fit:cover;border:2px solid "+statusCol+";margin-bottom:4px;display:block;margin:0 auto 4px;'/>";
+        memberPhotoHtml+="<img src='"+escHtml(photo)+"' width='70' height='70' style='border-radius:50%;object-fit:cover;border:2px solid "+statusCol+";margin-bottom:4px;display:block;margin:0 auto 4px;'/>";
       } else {
         memberPhotoHtml+="<div style='width:70px;height:70px;border-radius:50%;background:#e2e8f0;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-size:24px;'>👤</div>";
       }
-      memberPhotoHtml+="<div style='font-weight:bold;font-size:10px;'>"+m.name+" "+m.surname+"</div>";
-      memberPhotoHtml+="<div style='font-size:9px;color:"+statusCol+";font-weight:bold;'>"+status+"</div>";
-      memberPhotoHtml+="<div style='font-size:8px;color:#64748b;'>"+visits+" visits | "+m.school+"</div>";
+      memberPhotoHtml+="<div style='font-weight:bold;font-size:10px;'>"+escHtml(m.name)+" "+escHtml(m.surname)+"</div>";
+      memberPhotoHtml+="<div style='font-size:9px;color:"+statusCol+";font-weight:bold;'>"+escHtml(status)+"</div>";
+      memberPhotoHtml+="<div style='font-size:8px;color:#64748b;'>"+visits+" visits | "+escHtml(m.school)+"</div>";
       memberPhotoHtml+="</div>";
     });
     memberPhotoHtml+="</div>";
@@ -1069,6 +1088,9 @@ function exportPDF(members,checkins,feedback){
     html+="</body></html>";
     var w=window.open("","_blank","width=1100,height=800");
     if(!w){alert("Please allow popups to generate PDF.");return;}
+    // Defense in depth: even with the content above escaped, don't leave the
+    // popup holding a live reference back into this app's window/localStorage.
+    try{w.opener=null;}catch(e){}
     w.document.write(html);w.document.close();
     setTimeout(function(){w.print();},900);
   }catch(e){alert("PDF error: "+e.message);}
@@ -1184,12 +1206,28 @@ function RegistrationForm({existingMembers,onDone,onBack,prefill}){
     if(photoNote){setPhotoSkipped(true);}
     var nkey=memberKey({name:form.name,surname:form.surname});
     var fpk=phoneKey(form.phone);
-    var existing=existingMembers.find(function(m){ return memberKey(m)===nkey || (fpk && phoneKey(m.phone)===fpk); });
+    var candidate=existingMembers.find(function(m){ return memberKey(m)===nkey || (fpk && phoneKey(m.phone)===fpk); });
+    // SAFETY: a name or phone match alone isn't enough to be sure it's the same
+    // person - two different people can share a surname, or list the same house/
+    // parent phone. Only treat it as the same person if nothing about this
+    // submission actively conflicts with a strong identifier already on file
+    // (reuses the same over-merge guard the admin "Clean Duplicates" tool uses).
+    var existing=(candidate && !dupConflict(candidate,form)) ? candidate : null;
     // Mark incomplete if any key field is missing: photo, parent phone, birthday
     var isIncomplete=!form.photo||!form.parentPhone||!form.birthday;
-    var member=existing
-      ?Object.assign({},existing,form,{incomplete:isIncomplete,wantsWhatsApp:form.wantsWhatsApp===true})
-      :Object.assign({},form,{id:String(Date.now()),originalStatus:form.status,wantsWhatsApp:form.wantsWhatsApp===true,visitReason:form.visitReason||"",registeredOn:todayStr(),incomplete:isIncomplete});
+    var member;
+    if(existing){
+      // Field-level merge: this submission's real values win, but never let a
+      // blank field here erase a value that was already on file (e.g. no new
+      // photo taken this time shouldn't wipe out their existing photo).
+      member=Object.assign({},existing);
+      Object.keys(form).forEach(function(k){ if(!dupBlank(form[k]))member[k]=form[k]; });
+      member.photo=form.photo||existing.photo;
+      member.wantsWhatsApp=form.wantsWhatsApp===true;
+      member.incomplete=isIncomplete;
+    } else {
+      member=Object.assign({},form,{id:String(Date.now()),originalStatus:form.status,wantsWhatsApp:form.wantsWhatsApp===true,visitReason:form.visitReason||"",registeredOn:todayStr(),incomplete:isIncomplete});
+    }
     onDone(member,!existing);setDone(true);
   }
 
@@ -3585,7 +3623,7 @@ function ImportTab({data,setData}){
   var [previewData,setPreviewData]=useState(null);
   var [msg,setMsg]=useState("");
 
-  function key(m){return (m.name+m.surname).toLowerCase().replace(/\s/g,"");}
+  function key(m){return (String(m.name||"")+String(m.surname||"")).toLowerCase().replace(/\s/g,"");}
 
   function doImport(list,extraCheckins){
     var existing=new Set((data.members||[]).map(function(m){return key(m);}));
@@ -3938,13 +3976,13 @@ function App(){
   var [homeTilePinUnlocked,setHomeTilePinUnlocked]=useState(false);
 
   async function checkHomeTilePin(p){
-    var leaders=[]; try{leaders=JSON.parse(localStorage.getItem("jg_leaders")||"[]");}catch(e){}
-    // Any leader (Senior or Junior) can view names from home tiles. Their PINs
-    // live in the synced Leaders list on this device, so we can match locally.
-    var anyLeader=leaders.find(function(L){return String(L.pin)===String(p);});
-    var ok=!!anyLeader;
-    // A master PIN is NOT stored on the device — ask the server to confirm it.
-    if(!ok){ var res=await verifyAdminPin(p); ok=!!(res&&res.status==="ok"); }
+    // SECURITY: always verify server-side. Never compare against the locally-cached
+    // leaders list — that list sits in this device's localStorage and comparing a
+    // typed PIN against it client-side would let anyone who can read that storage
+    // (or who obtains a PIN some other way) unlock this popup without ever going
+    // through the real, rate-limited server check.
+    var res=await verifyAdminPin(p);
+    var ok=!!(res&&res.status==="ok");
     if(ok){
       setHomeTilePinUnlocked(true);
       setHomeTilePin("");
@@ -4096,14 +4134,16 @@ function App(){
         var local=loadData();
         var googleMembers=(json.members||[]).filter(function(m){return m&&m.id!=null;});
         var googleCheckins=(json.checkins||[]).filter(function(c){return c&&c.memberId!=null;});
-        var googleIds=new Set(googleMembers.map(function(m){return m.id;}));
+        // String()-keyed: Google can hand ids back as numbers, so comparing raw
+        // values here would silently fail to recognise a member as already synced.
+        var googleIds=new Set(googleMembers.map(function(m){return String(m.id);}));
         // Build lookup of who's already in Google, by normalised name and by phone,
         // so a LOCAL duplicate of the same person (different id) isn't re-added/re-uploaded.
         var googleByKey={}, googleByPhone={};
         googleMembers.forEach(function(m){ googleByKey[memberKey(m)]=m.id; var pk=phoneKey(m.phone); if(pk)googleByPhone[pk]=m.id; });
         var idRemap={};   // localDupId -> googleId
         var localOnly=(local.members||[]).filter(function(m){
-          if(googleIds.has(m.id))return false;                 // already in Google by id
+          if(googleIds.has(String(m.id)))return false;         // already in Google by id
           var gid=googleByKey[memberKey(m)]||googleByPhone[phoneKey(m.phone)];
           if(gid){ idRemap[m.id]=gid; return false; }           // same person, drop the local duplicate
           return true;                                          // genuinely new on this device
